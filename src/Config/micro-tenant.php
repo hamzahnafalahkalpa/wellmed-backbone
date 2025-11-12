@@ -4,7 +4,7 @@ use Projects\WellmedBackbone\Contracts\Supports\ConnectionManager;
 
 return [
     'dev_mode'     => false,
-    'direct_provider_access' => true,
+    'direct_provider_access' => false,
     'database' => [
         'connection_manager' => ConnectionManager::class,
         'app_tenant'   => [
