@@ -9,7 +9,6 @@ use Hanafalah\ModuleWorkspace\Enums\Workspace\Status;
 use Hanafalah\WellmedPlusStarterpack\Concerns\HasComposer;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Artisan;
-use Illuminate\Support\Str;
 
 class WorkspaceSeeder extends Seeder{
     use HasRequestData, HasComposer;
@@ -143,7 +142,6 @@ class WorkspaceSeeder extends Seeder{
                 ]
             ));
 
-            $product = 
             $tenant = $tenant_schema->prepareStoreTenant($this->requestDTO(TenantData::class,[
                 'parent_id'      => $group_tenant->getKey(),
                 'name'           => 'Tenant Wellmed Plus',
@@ -172,41 +170,6 @@ class WorkspaceSeeder extends Seeder{
             $group_tenant   = $tenant->parent;
             $project_tenant = $group_tenant->parent;
         }
-        $tenant_path = $generator_config['patterns']['tenant']['published_at'];
-
-        $providers = config('wellmed-plus-starterpack.packages');
-        $providers = array_keys($providers);
-        $package_providers = [];
-        $requires = [
-            'require' => []
-        ];
-        $repositories = [
-            'repositories' => []
-        ];
-        foreach ($providers as $provider) {
-            $original    = $provider;
-            $provider    = explode("/", $provider);
-            $provider[0] = Str::studly($provider[0]);
-            $provider[1] = Str::studly($provider[1]);
-            $provider    = implode('\\',$provider).'\\'.$provider[1].'ServiceProvider';
-            $package_providers[$original] = [
-                'provider' => $provider
-            ];
-
-            $repositories['repositories'][Str::kebab($original)] = [
-                'type' => 'path',
-                'url'  => '../../repositories/'.Str::afterLast($original,'/'),
-                'options' => [
-                    'symlink' => true
-                ]
-            ];
-            if (Str::kebab($original) != 'hanafalah/microtenant'){
-                $requires['require'][Str::kebab($original)] = 'dev-main as 1.0'; 
-            }
-        }
-        
-        $project_tenant->setAttribute('packages',$package_providers);
-        $project_tenant->save();
 
         Artisan::call('impersonate:cache',[
             '--app_id'    => $project_tenant->getKey(),
