@@ -16,8 +16,9 @@ return [
         include __DIR__.'/setting/finance.php',
         include __DIR__.'/setting/general-setting.php',
         include __DIR__.'/setting/item-management.php',
-        // include __DIR__.'/setting/patient-emr.php',
-        // include __DIR__.'/setting/stakeholder.php',
+        include __DIR__.'/setting/patient-emr.php',
+        include __DIR__.'/setting/stakeholder.php',
+        include __DIR__.'/setting/satu-sehat-integration.php',
         include __DIR__.'/setting/treatment.php'
     ]
 ];
