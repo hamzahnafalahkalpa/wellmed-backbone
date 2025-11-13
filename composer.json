@@ -22,7 +22,8 @@
         "wellmed-plus/ms-plus-apotek": "dev-main",
         "wellmed-plus/ms-plus-organization": "dev-main",
         "hanafalah/satu-sehat": "dev-main",
-        "projects/wellmed-gateway": "dev-main"
+        "projects/wellmed-gateway": "dev-main",
+        "hanafalah/module-license": "dev-main"
     },
     "extra": {
         "laravel": {
@@ -184,6 +185,13 @@
         "hanafalah/api-helper": {
             "type": "path",
             "url": "../../repositories/api-helper",
+            "options": {
+                "symlink": true
+            }
+        },
+        "hanafalah/module-license": {
+            "type": "path",
+            "url": "../../repositories/module-license",
             "options": {
                 "symlink": true
             }

@@ -2,9 +2,8 @@
 
 namespace Projects\WellmedBackbone\Database\Seeders;
 
-// use Illuminate\Database\Console\Seeds\WithoutModelEvents;
-
 use Illuminate\Database\Seeder;
+use Hanafalah\WellmedFeature\Database\Seeders\DatabaseSeeder as MasterFeatureSeeder;
 
 class DatabaseSeeder extends Seeder
 {
@@ -13,8 +12,14 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        $this->call([
-            //ADD YOUR SEEDER HERE
-        ]);
+        try {
+            $this->call([
+                WorkspaceSeeder::class,
+                ApiAccessSeeder::class,
+                InstallerSeeder::class,
+            ]);
+        } catch (\Throwable $th) {
+            throw $th;
+        }
     }
 }

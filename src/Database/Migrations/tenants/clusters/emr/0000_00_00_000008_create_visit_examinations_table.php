@@ -36,6 +36,7 @@ return new class extends Migration
                 $visit_patient = app(config('database.models.VisitPatient', VisitPatient::class));
                 $visit_registration = app(config('database.models.VisitRegistration', VisitRegistration::class));
                 $patient = app(config('database.models.Patient', Patient::class));
+                $patient = app(config('database.models.Patient', Patient::class));
 
                 $table->ulid('id')->primary();
                 $table->string('visit_examination_code', 100)->nullable();

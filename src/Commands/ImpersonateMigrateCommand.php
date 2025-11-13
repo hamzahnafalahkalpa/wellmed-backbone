@@ -14,4 +14,19 @@ class ImpersonateMigrateCommand extends ImpersonateImpersonateMigrateCommand
                                 {--group_id= : The id of the group}
                                 {--tenant_id= : The id of the tenant}
                             ';
+
+    protected function impersonateConfig(array $config_path) : self{
+        foreach($config_path as $key => $config) {
+            if(isset($config)) {
+                $path         = $config->path.DIRECTORY_SEPARATOR.'wellmed-backbone'.'/src/'.$config['config']['generates']['config']['path'];
+                $config       = $path.DIRECTORY_SEPARATOR.'config.php';
+                if (is_file($config)){
+                    $this->basePathResolver($config);
+                    $config       = include($config);
+                    $this->__impersonate[$key] = $config;
+                }
+            }
+        }
+        return $this;
+    }
 }

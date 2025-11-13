@@ -13,6 +13,7 @@ use Projects\WellmedBackbone\{
 };
 use Projects\WellmedBackbone\Contracts\Supports\ConnectionManager;
 use Projects\WellmedBackbone\Supports\ConnectionManager as SupportsConnectionManager;
+use Illuminate\Support\Facades\DB;
 
 class WellmedBackboneServiceProvider extends WellmedBackboneEnvironment
 {
@@ -45,6 +46,7 @@ class WellmedBackboneServiceProvider extends WellmedBackboneEnvironment
 
     public function boot(){        
         $this->registerModel();
+        $databaseName = config('database.connections.central.database');
         $this->app->booted(function(){
             try {
                 $this->registers([
@@ -64,14 +66,13 @@ class WellmedBackboneServiceProvider extends WellmedBackboneEnvironment
                 $this->registerRouteService(RouteServiceProvider::class);
                 $this->app->singleton(PathRegistry::class, function() {
                     $registry = new PathRegistry();
-    
+
                     $config = config("wellmed-backbone");
                     foreach ($config['libs'] as $key => $lib) $registry->set($key, 'projects'.$lib);
                     
                     return $registry;
                 });
             } catch (\Throwable $th) {
-                dd($th->getMessage());
             }
         });
     }    
