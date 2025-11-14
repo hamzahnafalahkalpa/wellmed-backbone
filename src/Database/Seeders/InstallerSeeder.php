@@ -18,7 +18,8 @@ class InstallerSeeder extends Seeder
                 // MasterFeatureSeeder::class,
                 EncodingSeeder::class,
                 MasterSeeder::class,
-                AssetSeeder::class
+                AssetSeeder::class,
+                SuspendedSeeder::class
             ]);
         } catch (\Throwable $th) {
             throw $th;

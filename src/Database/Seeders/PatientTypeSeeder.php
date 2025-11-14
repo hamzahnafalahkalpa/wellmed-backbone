@@ -1,6 +1,6 @@
 <?php
 
-namespace Hanafalah\KlinikStarterpack\Database\Seeders;
+namespace Projects\WellmedBackbone\Database\Seeders;
 use Hanafalah\LaravelSupport\Concerns\Support\HasRequest;
 use Hanafalah\ModulePatient\Contracts\Data\PatientTypeData;
 use Illuminate\Database\Seeder;

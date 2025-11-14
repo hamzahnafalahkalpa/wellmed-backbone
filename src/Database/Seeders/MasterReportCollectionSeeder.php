@@ -1,6 +1,6 @@
 <?php
 
-namespace Hanafalah\KlinikStarterpack\Database\Seeders;
+namespace Projects\WellmedBackbone\Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
