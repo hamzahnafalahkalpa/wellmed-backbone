@@ -3,7 +3,6 @@
 namespace Projects\WellmedBackbone\Database\Seeders;
 
 use Hanafalah\LaravelSupport\Concerns\Support\HasRequestData;
-use Hanafalah\ModuleMedicService\Contracts\Data\MedicServiceData;
 use Hanafalah\ModuleMedicService\Enums\Label;   
 use Illuminate\Database\Seeder;
 

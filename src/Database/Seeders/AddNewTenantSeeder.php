@@ -18,16 +18,34 @@ class AddNewTenantSeeder extends Seeder{
      */
     public function run(): void
     {
-        $workspace_id = request()->workspace_id;
-        $workspace = app(config('database.models.Workspace'))->findOrFail($workspace_id);
-        $prop_product = $workspace->prop_product;
+        Artisan::call('optimize:clear');
+        if (isset(request()->workspace)){
+            $workspace = request()->workspace;
+            $workspace_id = $workspace->getKey();
+            $prop_product = $workspace->prop_product;
+        }else{
+            $workspace_id = request()->workspace_id ?? '01ka0n03zscafheh1nv6rq04gg';
+            $workspace = app(config('database.models.Workspace'))->findOrFail($workspace_id);
+            $prop_product = $workspace->prop_product;
+        }
 
-        $group_tenant_id = request()->group_tenant_id;
-        $group_tenant = app(config('database.models.Tenant'))->findOrFail($group_tenant_id);
-        $tenant_namespace = Str::studly($group_tenant->name);
+        if (isset(request()->group_tenant)){
+            $group_tenant = request()->group_tenant;
+            $group_tenant_id = $group_tenant->getKey();
+            $tenant_namespace = Str::studly($group_tenant->name);
+        }else{
+            $group_tenant_id = request()->group_tenant_id ?? 10;
+            $group_tenant = app(config('database.models.Tenant'))->findOrFail($group_tenant_id);
+            $tenant_namespace = Str::studly($group_tenant->name);
+        }
 
-        $app_tenant_id = request()->app_tenant_id;
-        $app_tenant = app(config('database.models.Tenant'))->findOrFail($app_tenant_id);
+        if (isset(request()->app_tenant)){
+            $app_tenant = request()->app_tenant;
+            $app_tenant_id = $app_tenant->getKey();
+        }else{
+            $app_tenant_id = request()->app_tenant_id ?? 9;
+            $app_tenant = app(config('database.models.Tenant'))->findOrFail($app_tenant_id);
+        }
 
         $tenant_schema  = app(config('app.contracts.Tenant'));
         $tenant_model   = app(config('database.models.Tenant'));
@@ -55,6 +73,11 @@ class AddNewTenantSeeder extends Seeder{
         ]));
         $tenant->db_name = $tenant->tenancy_db_name;
         $tenant->save();
+
+        // $tenant = $tenant_model->findOrFail(25);
+        Artisan::call('impersonate:cache',[
+            '--forget'    => true,
+        ]);
         Artisan::call('impersonate:cache',[
             '--app_id'    => $app_tenant->getKey(),
             '--group_id'  => $group_tenant->getKey(),

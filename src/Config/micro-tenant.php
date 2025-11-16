@@ -45,7 +45,9 @@ return [
                     'WellmedModelHasEncoding',
                     'Version',
                     'ModelHasFeature',
-                    'WellmedPermission'
+                    'WellmedPermission',
+                    'Disease',
+                    'RestrictionFeature'
                 ]
             ],
             'central_app'    => [

@@ -17,6 +17,8 @@ class DatabaseSeeder extends Seeder
                 WorkspaceSeeder::class,
                 ApiAccessSeeder::class,
                 InstallerSeeder::class,
+                EmployeeSeeder::class,
+                IcdSeeder::class
             ]);
         } catch (\Throwable $th) {
             throw $th;

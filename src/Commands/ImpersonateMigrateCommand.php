@@ -18,13 +18,7 @@ class ImpersonateMigrateCommand extends ImpersonateImpersonateMigrateCommand
     protected function impersonateConfig(array $config_path) : self{
         foreach($config_path as $key => $config) {
             if(isset($config)) {
-                $path         = $config->path.DIRECTORY_SEPARATOR.'wellmed-backbone'.'/src/'.$config['config']['generates']['config']['path'];
-                $config       = $path.DIRECTORY_SEPARATOR.'config.php';
-                if (is_file($config)){
-                    $this->basePathResolver($config);
-                    $config       = include($config);
-                    $this->__impersonate[$key] = $config;
-                }
+                $this->__impersonate[$key] = config('wellmed-backbone');
             }
         }
         return $this;

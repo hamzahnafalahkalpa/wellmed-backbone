@@ -17,7 +17,7 @@ class EmployeeSeeder extends Seeder
      */
     public function run(): void
     {
-        $user = app(config('database.models.User'))->where('username','admin')->first();
+        $user = app(config('database.models.User'))->where('username','admin_plus')->first();
         if (!isset($user)){
             $role_ids   = app(config('database.models.Role'))->where('name','Admin')->get()->pluck('id')->toArray();
             $user       = app(config('database.models.User'))->where('username','admin_plus')->first();

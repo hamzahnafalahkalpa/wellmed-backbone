@@ -18,7 +18,7 @@ class WorkspaceSeeder extends Seeder{
      */
     public function run(): void
     {
-        $workspace = app(config('database.models.Workspace'))->uuid('9e7ff0f6-7679-46c8-ac3e-71da818160ff')->first();        
+        $workspace = app(config('database.models.Workspace'))->uuid('9e7ff0f6-7679-46c8-ac3e-71da818160ff')->first();                
         $generator_config = config('laravel-package-generator');
         $project_namespace = 'Projects';
         $group_namespace   = 'WellmedPlus';
@@ -26,11 +26,9 @@ class WorkspaceSeeder extends Seeder{
             $tenant_namespace  = 'WellmedPlusGroup';
 
             $db_tenant_name = config('micro-tenant.database.database_tenant_name');
-            $default = config('tenancy.database.central_connection');
             config([
                 'tenancy.database.prefix' => 'plus_',
                 'tenancy.database.suffix' => '',
-                // 'tenancy.database.central_connection' => 'central_app'
             ]);
 
             $tenant_schema  = app(config('app.contracts.Tenant'));
@@ -170,7 +168,9 @@ class WorkspaceSeeder extends Seeder{
             $group_tenant   = $tenant->parent;
             $project_tenant = $group_tenant->parent;
         }
-
+        request()->merge([
+            'workspace_id' => $workspace->getKey()
+        ]);
         Artisan::call('impersonate:cache',[
             '--app_id'    => $project_tenant->getKey(),
             '--group_id'  => $group_tenant->getKey(),

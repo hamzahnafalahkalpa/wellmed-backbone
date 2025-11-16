@@ -2,9 +2,6 @@
 
 use Hanafalah\LaravelPermission\Enums\Permission\Type;
 
-$prefix = 'employee-management.';
-$prefix_directory = 'employee-management';
-
 return [
     'name'          => 'Data Pegawai',
     'alias'         => 'employee',

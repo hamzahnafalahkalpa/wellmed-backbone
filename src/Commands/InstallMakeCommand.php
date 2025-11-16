@@ -9,7 +9,7 @@ class InstallMakeCommand extends EnvironmentCommand
      *
      * @var string
      */
-    protected $signature = 'wellmed-backbone:install
+    protected $signature = 'wellmed-backbone:install {type}
                             {--drop : Drop database before installing}';
 
 
@@ -61,14 +61,23 @@ class InstallMakeCommand extends EnvironmentCommand
         $this->call('db:seed');
         config(['micro-tenant.direct_provider_access' => $direct_access]);
 
+        $type = $this->argument('type');
         $this->info('Wellmed Backbone Starterpack Seeding');
-        $this->call('wellmed-backbone:seed');
+        $this->call('wellmed-backbone:seed', [
+            'class' => $type == 'LITE' ? 'LiteDatabaseSeeder' : 'DatabaseSeeder'
+        ]);
         $this->info('✔️  Wellmed Backbone Starterpack Seeded');
 
         $this->call('impersonate:cache');
-        $this->info('Wellmed Plus Migrating');
-        $this->call('wellmed-plus:migrate');
-        $this->info('✔️  Wellmed Plus Migrated');
+        if ($type == 'LITE'){
+            $this->info('Wellmed LITE Migrating');
+            $this->call('wellmed-lite:migrate');
+            $this->info('✔️  Wellmed LITE Migrated');
+        }else{
+            $this->info('Wellmed Plus Migrating');
+            $this->call('wellmed-plus:migrate');
+            $this->info('✔️  Wellmed Plus Migrated');
+        }
         
         // $this->call('wellmed-plus:impersonate-migrate');
 

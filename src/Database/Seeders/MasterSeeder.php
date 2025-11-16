@@ -35,7 +35,6 @@ class MasterSeeder extends Seeder{
                 AnatomyCollectionSeeder::class,
                 KlinikStarterpack\RegionalSeeder::class,
                 EmployeeTypeSeeder::class,
-                EmployeeSeeder::class,
                 KlinikStarterpack\PatientOccupationSeeder::class,
                 KlinikStarterpack\FundingSeeder::class,
                 WalletSeeder::class,

@@ -16,15 +16,15 @@ class EncodingSeeder extends Seeder{
      */
     public function run()
     {
-        $workspace  = app(config('database.models.Workspace'))->uuid('9e7ff0f6-7679-46c8-ac3e-71da818160ff')->firstOrFail();        
+        $workspace_id = request()->workspace_id;
         foreach (config('module-encoding.encodings') as $encoding) {
             app(config('app.contracts.Encoding'))->prepareStoreEncoding(
                 $this->requestDTO(config('app.contracts.EncodingData'),[
                     'label' => $encoding['label'],
                     'name' => $encoding['name'],
                     'model_has_encoding' => [
-                        'reference_id' => $workspace->getKey(),
-                        'reference_type' => $workspace->getMorphClass()
+                        'reference_id' => $workspace_id,
+                        'reference_type' => 'Workspace'
                     ]
                 ])
             );

@@ -5,6 +5,10 @@ use Hanafalah\ModulePatient\{
 };
 
 return [
+    'direct_referral_froms' => [
+        //DIRECT REFERRAL FROM POLY
+        'RADIOLOGY','PATOLOGI KLINIK','PATOLOGI ANATOMI'
+    ],
     'practitioner' => 'Employee',
     'payment_detail' => 'PaymentDetail',
     'transaction' => 'PosTransaction',
