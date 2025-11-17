@@ -28,6 +28,8 @@ class OccupationSeeder extends Seeder
      */
     public function run(): void
     {
+        echo "[DEBUG] Booting ".class_basename($this)."\n";
+
         foreach ($this->occupations as $group) {
             $group['flag'] = 'Occupation';
             app(config('app.contracts.Occupation'))->prepareStoreOccupation(

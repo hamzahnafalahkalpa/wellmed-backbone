@@ -47,7 +47,8 @@ return [
                     'ModelHasFeature',
                     'WellmedPermission',
                     'Disease',
-                    'RestrictionFeature'
+                    'RestrictionFeature',
+                    'Timezone'
                 ]
             ],
             'central_app'    => [

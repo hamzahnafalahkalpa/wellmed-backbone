@@ -229,6 +229,8 @@ class SampleSeeder extends Seeder{
 
     public function run()
     {
+        echo "[DEBUG] Booting ".class_basename($this)."\n";
+
         foreach ($this->datas as $key => $data) {
             app(config('app.contracts.Sample'))->prepareStoreSample(
                 $this->requestDTO(config('app.contracts.SampleData'), $data)

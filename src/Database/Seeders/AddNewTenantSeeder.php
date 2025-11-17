@@ -9,6 +9,7 @@ use Hanafalah\WellmedPlusStarterpack\Concerns\HasComposer;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Str;
+use Projects\WellmedBackbone\Jobs\JobRequest;
 
 class AddNewTenantSeeder extends Seeder{
     use HasRequestData, HasComposer;
@@ -18,53 +19,39 @@ class AddNewTenantSeeder extends Seeder{
      */
     public function run(): void
     {
-        Artisan::call('optimize:clear');
-        if (isset(request()->workspace)){
-            $workspace = request()->workspace;
-            $workspace_id = $workspace->getKey();
-            $prop_product = $workspace->prop_product;
-        }else{
-            $workspace_id = request()->workspace_id ?? '01ka0n03zscafheh1nv6rq04gg';
-            $workspace = app(config('database.models.Workspace'))->findOrFail($workspace_id);
-            $prop_product = $workspace->prop_product;
-        }
+        echo "[DEBUG] Booting ".class_basename($this)."\n";
 
-        if (isset(request()->group_tenant)){
-            $group_tenant = request()->group_tenant;
-            $group_tenant_id = $group_tenant->getKey();
-            $tenant_namespace = Str::studly($group_tenant->name);
-        }else{
-            $group_tenant_id = request()->group_tenant_id ?? 10;
-            $group_tenant = app(config('database.models.Tenant'))->findOrFail($group_tenant_id);
-            $tenant_namespace = Str::studly($group_tenant->name);
-        }
+        $data = JobRequest::all();
+        $tenantName = $data['tenant_name'] ?? 'default';
+        $workspace_id = $data['workspace_id'];
+        $workspace_name = $data['workspace_name'];
 
-        if (isset(request()->app_tenant)){
-            $app_tenant = request()->app_tenant;
-            $app_tenant_id = $app_tenant->getKey();
-        }else{
-            $app_tenant_id = request()->app_tenant_id ?? 9;
-            $app_tenant = app(config('database.models.Tenant'))->findOrFail($app_tenant_id);
-        }
+        $group_tenant_id = $data['group_tenant_id'];
+        $group_tenant = app(config('database.models.Tenant'))->findOrFail($group_tenant_id);
+        $tenant_namespace = Str::studly($group_tenant->name);
+
+        $app_tenant_id = $data['app_tenant_id'];
+        $app_tenant = app(config('database.models.Tenant'))->findOrFail($app_tenant_id);
 
         $tenant_schema  = app(config('app.contracts.Tenant'));
         $tenant_model   = app(config('database.models.Tenant'));
         $generator_config = config('laravel-package-generator');
+        $studlyname = Str::studly($workspace_name);
         $tenant = $tenant_schema->prepareStoreTenant($this->requestDTO(TenantData::class,[
             'parent_id'      => $group_tenant_id,
-            'name'           => $workspace->name,
+            'name'           => $workspace_name,
             'flag'           => $tenant_model::FLAG_TENANT,
             'reference_id'   => $workspace_id,
             'reference_type' => 'Workspace',
             'domain'         => [
                 'domain' => 'localhost:9000'
             ],
-            'provider' => $tenant_namespace.'\\TenantWellmedPlus\\Providers\\TenantWellmedPlusServiceProvider',
+            'provider' => $tenant_namespace.'\\Tenant'.$studlyname.'\\Providers\\Tenant'.$studlyname.'ServiceProvider',
             'path'     => $generator_config['patterns']['tenant']['published_at'],
             'app'      => ['provider' => $app_tenant->provider],
             'group'    => ['provider' => $group_tenant->provider],
             'packages' => [],
-            'product_type'     => $prop_product['label'],
+            'product_type'     => request()->product_label,
             'is_recurring'     => true,
             'recurring_period' => 'MONTHLY',
             'started_at' => now(),
@@ -74,10 +61,9 @@ class AddNewTenantSeeder extends Seeder{
         $tenant->db_name = $tenant->tenancy_db_name;
         $tenant->save();
 
-        // $tenant = $tenant_model->findOrFail(25);
-        Artisan::call('impersonate:cache',[
-            '--forget'    => true,
-        ]);
+        // Artisan::call('impersonate:cache',[
+        //     '--forget'    => true,
+        // ]);
         Artisan::call('impersonate:cache',[
             '--app_id'    => $app_tenant->getKey(),
             '--group_id'  => $group_tenant->getKey(),

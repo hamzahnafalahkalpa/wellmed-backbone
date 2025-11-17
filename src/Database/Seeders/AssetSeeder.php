@@ -10,6 +10,8 @@ class AssetSeeder extends Seeder
 {
     public function run()
     {
+        echo "[DEBUG] Booting ".class_basename($this)."\n";
+
         $asset_path = __DIR__ . '/data/images';
         $disk = Storage::disk(config('filesystems.default'));
         $is_s3 = config('filesystems.default') === 's3';

@@ -16,6 +16,8 @@ class InfrastructureSeeder extends Seeder
      */
     public function run()
     {
+        echo "[DEBUG] Booting ".class_basename($this)."\n";
+
         $admin = app(config('database.models.Employee'))->where('name','Hamzah')->first();
 
         $building = $this->schema('Building',[

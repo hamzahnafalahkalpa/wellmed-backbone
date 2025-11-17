@@ -30,7 +30,7 @@ class WellmedProduct extends Unicode
         ];
     }
 
-    protected function isUsingService(): bool{
+    public function isUsingService(): bool{
         return true;
     }
 

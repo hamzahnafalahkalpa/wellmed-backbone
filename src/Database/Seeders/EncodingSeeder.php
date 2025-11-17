@@ -2,9 +2,9 @@
 
 namespace Projects\WellmedBackbone\Database\Seeders;
 
-use Hanafalah\LaravelSupport\Concerns\Support\HasRequest;
 use Hanafalah\LaravelSupport\Concerns\Support\HasRequestData;
 use Illuminate\Database\Seeder;
+use Projects\WellmedBackbone\Jobs\JobRequest;
 
 class EncodingSeeder extends Seeder{
     use HasRequestData;
@@ -16,7 +16,10 @@ class EncodingSeeder extends Seeder{
      */
     public function run()
     {
-        $workspace_id = request()->workspace_id;
+        echo "[DEBUG] Booting ".class_basename($this)."\n";
+
+        $data = JobRequest::all();
+        $workspace_id = $data['workspace_id'];
         foreach (config('module-encoding.encodings') as $encoding) {
             app(config('app.contracts.Encoding'))->prepareStoreEncoding(
                 $this->requestDTO(config('app.contracts.EncodingData'),[

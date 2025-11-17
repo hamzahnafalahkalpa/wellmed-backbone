@@ -11,6 +11,8 @@ class InstallerSeeder extends Seeder
      */
     public function run(): void
     {
+        echo "[DEBUG] Booting ".class_basename($this)."\n";
+
         try {
             $this->call([
                 PermissionSeeder::class,

@@ -38,6 +38,8 @@ class ItemStuffSeeder extends Seeder{
 
     public function run()
     {
+        echo "[DEBUG] Booting ".class_basename($this)."\n";
+
         foreach ($this->datas as $key => $data) {
             foreach ($data as $value) {
                 $value['flag'] = $key;

@@ -16,6 +16,8 @@ class LiteRestrictionSeeder extends Seeder
      */
     public function run(): void
     {
+        echo "[DEBUG] Booting ".class_basename($this)."\n";
+
         $medic_services = app(config('database.models.MedicService'))->withoutGlobalScopes(['restriction'])->get();
         $skips = [
             'ADMINISTRASI', 'RAWAT JALAN'

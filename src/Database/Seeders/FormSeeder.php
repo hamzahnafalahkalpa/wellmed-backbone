@@ -19,6 +19,8 @@ class FormSeeder extends Seeder{
      */
     public function run()
     {
+        echo "[DEBUG] Booting ".class_basename($this)."\n";
+
         $this->__form = app(config('database.models.Form', Form::class));
 
         $forms = [

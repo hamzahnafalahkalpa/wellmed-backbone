@@ -32,13 +32,9 @@ return new class extends Migration
                 $medic_service = app(config('database.models.MedicService',MedicService::class));
                 $service_cluster = app(config('database.models.ServiceCluster',ServiceCluster::class));
 
-                $table->foreignIdFor($medic_service::class)->nullable()
-                      ->after('name')
-                      ->index()->constrained()->cascadeOnUpdate()->restrictOnDelete();
+                $table->foreignIdFor($medic_service::class)->nullable()->after('name')->index();
 
-                $table->foreignIdFor($service_cluster::class)->nullable()
-                      ->after('medic_service_id')
-                      ->index()->constrained()->cascadeOnUpdate()->restrictOnDelete();
+                $table->foreignIdFor($service_cluster::class)->nullable()->after('medic_service_id')->index();
             });
         });
     }

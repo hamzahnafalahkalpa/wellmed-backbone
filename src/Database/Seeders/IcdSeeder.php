@@ -9,6 +9,8 @@ class IcdSeeder extends Seeder
 {
     public function run()
     {
+        echo "[DEBUG] Booting ".class_basename($this)."\n";
+
         $sqlFile = __DIR__ . '/data/diseases.sql';
                 
         if (File::exists($sqlFile)) {

@@ -14,6 +14,8 @@ class ScreeningSeeder extends Seeder
 
     public function run()
     {
+        echo "[DEBUG] Booting ".class_basename($this)."\n";
+
         $arr = [
             [
                 'id' => null,

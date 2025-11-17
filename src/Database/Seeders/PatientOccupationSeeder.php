@@ -88,6 +88,8 @@ class PatientOccupationSeeder extends Seeder
      */
     public function run(): void
     {
+        echo "[DEBUG] Booting ".class_basename($this)."\n";
+
         foreach ($this->occupations as $group) {
             $parent = app(config('database.models.PatientOccupation'))->updateOrCreate(
                 ['name' => $group['name'], 'parent_id' => null],

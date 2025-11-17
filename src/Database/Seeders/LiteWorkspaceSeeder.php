@@ -9,6 +9,7 @@ use Hanafalah\ModuleWorkspace\Enums\Workspace\Status;
 use Hanafalah\WellmedLiteStarterpack\Concerns\HasComposer;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Artisan;
+use Projects\WellmedBackbone\Jobs\JobRequest;
 
 class LiteWorkspaceSeeder extends Seeder{
     use HasRequestData, HasComposer;
@@ -18,6 +19,8 @@ class LiteWorkspaceSeeder extends Seeder{
      */
     public function run(): void
     {
+        echo "[DEBUG] Booting ".class_basename($this)."\n";
+
         request()->merge([
             'workspace_uuid' => '9e7ff0f6-7679-46c8-ac3e-71da818160sf'
         ]);
@@ -78,6 +81,7 @@ class LiteWorkspaceSeeder extends Seeder{
                 // 'tenancy.database.central_connection' => $default
             ]);
 
+            $timezone = app(config('database.models.Timezone'))->where('label','WIB')->first();
             $workspace = app(config('app.contracts.Workspace'))->prepareStoreWorkspace($this->requestDTO(
                 config('app.contracts.WorkspaceData'),[
                     'uuid'    => '9e7ff0f6-7679-46c8-ac3e-71da818160sf',
@@ -85,6 +89,8 @@ class LiteWorkspaceSeeder extends Seeder{
                     'status'  => Status::ACTIVE->value,
                     'product_type'   => 'LITE',
                     'setting' => [
+                        'timezone_id' => $timezone->getKey(),
+                        'timezone' => $timezone->toViewApi()->resolve(),
                         'address' => [
                             'name'           => 'sangkuriang',
                             'province_id'    => null,
@@ -188,5 +194,8 @@ class LiteWorkspaceSeeder extends Seeder{
         ]);
 
         MicroTenant::tenantImpersonate($tenant);
+        JobRequest::set([
+            'workspace_id' => $workspace->getKey()
+        ]);
     }
 }

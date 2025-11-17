@@ -24,6 +24,8 @@ class RadiologySeeder extends \Illuminate\Database\Seeder
 
     public function run()
     {
+        echo "[DEBUG] Booting ".class_basename($this)."\n";
+
         $this->__service = app(config('database.models.Service', Service::class))->where('reference_type', 'MedicService')
                     ->whereLike('name','Radiologi')->first();
         if (isset($this->__service)){

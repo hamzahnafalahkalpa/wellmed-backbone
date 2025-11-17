@@ -17,6 +17,8 @@ class LiteEmployeeSeeder extends Seeder
      */
     public function run(): void
     {
+        echo "[DEBUG] Booting ".class_basename($this)."\n";
+
         $user = app(config('database.models.User'))->where('username','admin')->first();
         if (!isset($user)){
             $role_ids   = app(config('database.models.Role'))->where('name','Admin')->get()->pluck('id')->toArray();

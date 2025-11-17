@@ -125,6 +125,8 @@ class ProfessionSeeder extends Seeder
      */
     public function run(): void
     {
+        echo "[DEBUG] Booting ".class_basename($this)."\n";
+
         foreach ($this->professions as $group) {
             $group['flag'] = 'Profession';
             app(config('app.contracts.Profession'))->prepareStoreProfession($this->requestDTO(ProfessionData::class,$group));

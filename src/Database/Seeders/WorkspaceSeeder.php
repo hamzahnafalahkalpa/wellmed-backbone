@@ -9,6 +9,7 @@ use Hanafalah\ModuleWorkspace\Enums\Workspace\Status;
 use Hanafalah\WellmedPlusStarterpack\Concerns\HasComposer;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Artisan;
+use Projects\WellmedBackbone\Jobs\JobRequest;
 
 class WorkspaceSeeder extends Seeder{
     use HasRequestData, HasComposer;
@@ -18,6 +19,8 @@ class WorkspaceSeeder extends Seeder{
      */
     public function run(): void
     {
+        echo "[DEBUG] Booting ".class_basename($this)."\n";
+
         $workspace = app(config('database.models.Workspace'))->uuid('9e7ff0f6-7679-46c8-ac3e-71da818160ff')->first();                
         $generator_config = config('laravel-package-generator');
         $project_namespace = 'Projects';
@@ -75,6 +78,7 @@ class WorkspaceSeeder extends Seeder{
                 // 'tenancy.database.central_connection' => $default
             ]);
 
+            $timezone = app(config('database.models.Timezone'))->where('label','WIB')->first();
             $workspace = app(config('app.contracts.Workspace'))->prepareStoreWorkspace($this->requestDTO(
                 config('app.contracts.WorkspaceData'),[
                     'uuid'    => '9e7ff0f6-7679-46c8-ac3e-71da818160ff',
@@ -82,6 +86,8 @@ class WorkspaceSeeder extends Seeder{
                     'status'  => Status::ACTIVE->value,
                     'product_type'   => 'PLUS',
                     'setting' => [
+                        'timezone_id' => $timezone->getKey(),
+                        'timezone' => $timezone->toViewApi()->resolve(),
                         'address' => [
                             'name'           => 'sangkuriang',
                             'province_id'    => null,
@@ -185,5 +191,9 @@ class WorkspaceSeeder extends Seeder{
         ]);
 
         MicroTenant::tenantImpersonate($tenant);
+        JobRequest::set([
+            'workspace_id' => $workspace->getKey()
+        ]);
+
     }
 }

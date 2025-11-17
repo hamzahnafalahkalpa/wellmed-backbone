@@ -11,6 +11,8 @@ class ApiAccessSeeder extends Seeder{
      */
     public function run(): void
     {
+        echo "[DEBUG] Booting ".class_basename($this)."\n";
+
         // $workspace_uuid = request()->workspace_uuid ?? '9e7ff0f6-7679-46c8-ac3e-71da818160ff';
         // $workspace  = app(config('database.models.Workspace'))->uuid($workspace_uuid)->firstOrFail();
         // $api_access = app(config('database.models.ApiAccess'))

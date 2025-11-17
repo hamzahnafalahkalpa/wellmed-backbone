@@ -26,6 +26,8 @@ class FreqUnitSeeder extends Seeder{
 
     public function run()
     {
+        echo "[DEBUG] Booting ".class_basename($this)."\n";
+
         foreach ($this->datas as $data) {
             app(config('app.contracts.FreqUnit'))->prepareStoreFreqUnit(
                 $this->requestDTO(config('app.contracts.FreqUnitData'), $data)

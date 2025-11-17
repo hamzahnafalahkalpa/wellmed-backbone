@@ -12,6 +12,10 @@ class Service extends ModelsService
         'medic_service_label' => 'string'
     ];
 
+    protected static function booted(): void{
+        parent::booted();        
+    }
+
     public function getPropsQuery(): array
     {
         return [

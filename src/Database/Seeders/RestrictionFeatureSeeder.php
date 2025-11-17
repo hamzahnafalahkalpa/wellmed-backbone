@@ -13,6 +13,8 @@ class RestrictionFeatureSeeder extends Seeder
      */
     public function run(): void
     {
+        echo "[DEBUG] Booting ".class_basename($this)."\n";
+
         $tenant = tenancy()->tenant;
         if ($tenant->product_type == 'LITE'){
             $this->call([

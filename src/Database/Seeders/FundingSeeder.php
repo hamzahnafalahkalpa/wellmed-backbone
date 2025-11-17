@@ -13,6 +13,8 @@ class FundingSeeder extends Seeder
      */
     public function run(): void
     {
+        echo "[DEBUG] Booting ".class_basename($this)."\n";
+
         $fundingModel = app(config('database.models.Funding'));
 
         $fundings = [

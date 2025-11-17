@@ -15,6 +15,8 @@ class PermissionSeeder extends Seeder
      */
     public function run(): void
     {
+        echo "[DEBUG] Booting ".class_basename($this)."\n";
+
         $permissions = LaravelPermission::scanPermissions(__DIR__.'/data/permissions');
         app(config('app.contracts.Permission'))->prepareStorePermission($permissions);
     }

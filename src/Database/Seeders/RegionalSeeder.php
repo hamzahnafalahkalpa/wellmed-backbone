@@ -15,6 +15,8 @@ class RegionalSeeder extends Seeder
      */
     public function run()
     {
+        echo "[DEBUG] Booting ".class_basename($this)."\n";
+
         $files = ['Country','Province', 'District', 'Subdistrict', 'Village'];
         foreach ($files as $file) {
             $model = app(config('database.models.'.$file));

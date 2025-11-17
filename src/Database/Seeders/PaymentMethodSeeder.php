@@ -17,6 +17,8 @@ class PaymentMethodSeeder extends Seeder
      */
     public function run()
     {
+        echo "[DEBUG] Booting ".class_basename($this)."\n";
+
         $arr = [
             [
                 'name' => 'CASH',

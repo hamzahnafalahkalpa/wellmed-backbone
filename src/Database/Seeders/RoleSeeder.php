@@ -17,6 +17,8 @@ class RoleSeeder extends Seeder
      */
     public function run(): void
     {
+        echo "[DEBUG] Booting ".class_basename($this)."\n";
+
         LaravelPermission::scanRoles(__DIR__.'/data/roles');
     }
 }

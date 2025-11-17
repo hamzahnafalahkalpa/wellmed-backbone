@@ -19,13 +19,15 @@ use Illuminate\Database\Seeder;
 class MasterSeeder extends Seeder{
     public function run()
     {
+        echo "[DEBUG] Booting ".class_basename($this)."\n";
+
         $this->call([
                 CoaSeeder::class,
                 PeopleCollectionSeeder::class,
                 KlinikStarterpack\ItemStuffSeeder::class,
                 KlinikStarterpack\PatientTypeSeeder::class,
                 KlinikStarterpack\PatientTypeServiceSeeder::class,
-                KlinikStarterpack\MedicServiceSeeder::class,
+                MedicServiceSeeder::class,
                 KlinikStarterpack\PaymentMethodSeeder::class,
                 KlinikStarterpack\ProfessionSeeder::class,
                 KlinikStarterpack\OccupationSeeder::class,

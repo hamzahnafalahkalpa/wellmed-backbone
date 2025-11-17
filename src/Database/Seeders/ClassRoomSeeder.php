@@ -55,6 +55,8 @@ class ClassRoomSeeder extends Seeder{
 
     public function run()
     {
+        echo "[DEBUG] Booting ".class_basename($this)."\n";
+
         foreach (['Rawat Inap', 'Persalinan'] as $service_name){
             $service = app(config('database.models.Service'))->where('name', $service_name)->first();
             if (isset($service)){

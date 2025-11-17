@@ -25,6 +25,8 @@ class MixUnitSeeder extends Seeder{
 
     public function run()
     {
+        echo "[DEBUG] Booting ".class_basename($this)."\n";
+
         foreach ($this->datas as $data) {
             app(config('app.contracts.MixUnit'))->prepareStoreMixUnit(
                 $this->requestDTO(config('app.contracts.MixUnitData'), $data)

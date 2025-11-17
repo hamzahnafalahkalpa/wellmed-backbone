@@ -14,6 +14,8 @@ class ProgramCategorySeeder extends Seeder
      */
     public function run(): void
     {
+        echo "[DEBUG] Booting ".class_basename($this)."\n";
+
         $arr = [
             ["label" => "Promosi Kesehatan dan Pemberdayaan Masyarakat","name" => "Promosi Kesehatan dan Pemberdayaan Masyarakat"],
             ["label" => "Kesehatan Ibu","name" => "Kesehatan Ibu"],
