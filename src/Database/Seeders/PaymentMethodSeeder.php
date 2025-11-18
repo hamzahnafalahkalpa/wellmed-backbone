@@ -41,7 +41,7 @@ class PaymentMethodSeeder extends Seeder
                         [
                             'label'          => 'Nama Bank',
                             'key'            => 'value',
-                            'type'           => 'INPUT',
+                            'type'           => 'InputText',
                             'component_name' => null,
                             'default_value'  => null,
                             'attribute'      => null,
@@ -52,7 +52,7 @@ class PaymentMethodSeeder extends Seeder
                         [
                             'label'          => 'Nomor Rekening',
                             'key'            => 'value',
-                            'type'           => 'INPUT',
+                            'type'           => 'InputText',
                             'component_name' => null,
                             'default_value'  => null,
                             'attribute'      => null,
@@ -63,7 +63,7 @@ class PaymentMethodSeeder extends Seeder
                         [
                             'label'          => 'Atas Nama',
                             'key'            => 'value',
-                            'type'           => 'INPUT',
+                            'type'           => 'InputText',
                             'component_name' => null,
                             'default_value'  => null,
                             'attribute'      => null,
@@ -74,7 +74,7 @@ class PaymentMethodSeeder extends Seeder
                         [
                             'label'          => 'Kode Transaksi',
                             'key'            => 'value',
-                            'type'           => 'INPUT',
+                            'type'           => 'InputText',
                             'component_name' => null,
                             'default_value'  => null,
                             'attribute'      => null,
@@ -96,7 +96,7 @@ class PaymentMethodSeeder extends Seeder
                         [
                             'label'          => 'Nomor Kartu',
                             'key'            => 'value',
-                            'type'           => 'INPUT',
+                            'type'           => 'InputText',
                             'component_name' => null,
                             'default_value'  => null,
                             'attribute'      => null,
@@ -107,7 +107,7 @@ class PaymentMethodSeeder extends Seeder
                         [
                             'label'          => 'Tipe Kartu',
                             'key'            => 'value',
-                            'type'           => 'INPUT',
+                            'type'           => 'InputText',
                             'component_name' => null,
                             'default_value'  => null,
                             'attribute'      => null,
@@ -118,7 +118,7 @@ class PaymentMethodSeeder extends Seeder
                         [
                             'label'          => 'Tanggal Kadaluarsa',
                             'key'            => 'value',
-                            'type'           => 'INPUT',
+                            'type'           => 'InputText',
                             'component_name' => null,
                             'default_value'  => null,
                             'attribute'      => null,
@@ -129,7 +129,7 @@ class PaymentMethodSeeder extends Seeder
                         [
                             'label'          => 'Kode Transaksi',
                             'key'            => 'value',
-                            'type'           => 'INPUT',
+                            'type'           => 'InputText',
                             'component_name' => null,
                             'default_value'  => null,
                             'attribute'      => null,
@@ -156,7 +156,7 @@ class PaymentMethodSeeder extends Seeder
                         [
                             'label'          => 'No Telpon',
                             'key'            => 'value',
-                            'type'           => 'INPUT',
+                            'type'           => 'InputText',
                             'component_name' => null,
                             'default_value'  => null,
                             'attribute'      => null,
