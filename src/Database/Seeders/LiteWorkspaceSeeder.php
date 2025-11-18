@@ -33,7 +33,7 @@ class LiteWorkspaceSeeder extends Seeder{
 
             $db_tenant_name = config('micro-tenant.database.database_tenant_name');
             config([
-                'tenancy.database.prefix' => 'lite_',
+                'tenancy.database.prefix' => env('BACKBONE_DATABASE_PREFIX', 'app_'),
                 'tenancy.database.suffix' => '',
             ]);
 

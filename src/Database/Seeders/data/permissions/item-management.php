@@ -12,7 +12,9 @@ return [
     'ordering'    => 3,
     'childs'      => [
         include __DIR__.'/item-management/item.php',
-        // include __DIR__.'/item-management/medical-item.php',
+        include __DIR__.'/item-management/supply-chain.php',
+        include __DIR__.'/item-management/inventory.php',
+        include __DIR__.'/item-management/opname-stock.php',
     ]
 ];
 

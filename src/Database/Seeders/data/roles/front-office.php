@@ -1,7 +1,10 @@
 <?php
 
 return [
-    'api.patient-management.patient.*',
+    'api.patient-emr.index',
+    'api.patient-emr.patient.*',
+    'api.patient-emr.referral.*',
+    'api.patient-emr.letter-queue.*',
     // 'api.patient-management.reservation.*',
     // 'api.patient-management.letter-queue.*',
     // 'api.patient-management.referral.*',

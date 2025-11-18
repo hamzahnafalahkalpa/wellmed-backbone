@@ -8,7 +8,7 @@ return [
     'database' => [
         'connection_manager' => ConnectionManager::class,
         'app_tenant'   => [
-            'prefix' => 'plus_',
+            'prefix' => env('BACKBONE_DATABASE_PREFIX', 'app_'),
             'suffix' => ''
         ],
         'laravel-support' => [
