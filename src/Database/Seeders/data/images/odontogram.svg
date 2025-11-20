@@ -1,5 +1,5 @@
 <svg id="v2-odontogram" width="1200" height="750" style="" class="nk-size-pw nk-margin-auto nk-shading" viewBox="0 0 1200 677" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <g id="Odonto_Dental" style="translateX(calc(50% - 550px))">
+  <g id="Odonto_Dental" style="transform: translateX(calc(50% - 550px))">
     <g id="Odonto_Gigi_Sekunder" class="OdontoToothType">
       <g id="Odonto_Lower_Dental" class="OdontoGroupPosition OdontoPositionBottom">
         <g class="OdontoDentalGroup" dental-position="1" order="1" akronim="" id="Odonto_Wisdom_Tooth_3rd_Molar_48">
