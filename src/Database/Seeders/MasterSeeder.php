@@ -63,8 +63,8 @@ class MasterSeeder extends Seeder{
                 KlinikStarterpack\ClinicalPathologySeeder::class,
                 KlinikStarterpack\RadiologySeeder::class,
                 KlinikStarterpack\ProgramCategorySeeder::class,
-                KlinikStarterpack\ProgramOccupationSeeder::class,
-                KlinikStarterpack\ScreeningSeeder::class,
+                KlinikStarterpack\ProgramOccupationSeeder::class
+                // KlinikStarterpack\ScreeningSeeder::class,
             ]);
     }
 }
