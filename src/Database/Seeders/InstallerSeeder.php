@@ -17,7 +17,6 @@ class InstallerSeeder extends Seeder
             $this->call([
                 PermissionSeeder::class,
                 RoleSeeder::class,
-                // MasterFeatureSeeder::class,
                 EncodingSeeder::class,
                 MasterSeeder::class,
                 AssetSeeder::class,

@@ -41,10 +41,10 @@ class MasterReportCollectionSeeder extends Seeder
                             "default_value" => "TRANSACTION",
                             "attribute" => null,
                             "options" => [
-                                "TRANSACTION",
-                                "DAILY",
-                                "MONTHLY",
-                                "YEARLY"
+                                "TRANSACTION"
+                                // "DAILY",
+                                // "MONTHLY",
+                                // "YEARLY"
                             ]
                         ],
                     ],
@@ -113,9 +113,9 @@ class MasterReportCollectionSeeder extends Seeder
                             "attribute" => null,
                             "options" => [
                                 "TRANSACTION",
-                                "DAILY",
-                                "MONTHLY",
-                                "YEARLY"
+                                // "DAILY",
+                                // "MONTHLY",
+                                // "YEARLY"
                             ]
                         ],
                     ],
@@ -178,6 +178,126 @@ class MasterReportCollectionSeeder extends Seeder
                         "key"     => "people.dob",
                         "label"   => "Tanggal Lahir"
                     ]
+                ]
+            ],
+            [
+                "name"              => "Transaksi Billing",
+                "label"              => "TRANSACTION_BILLING_REPORT",
+                "data_type"         => "DataTable",
+                "filters"        => [
+                    "default_filters" => [
+                        [
+                            "label"         => "Jenis Filter",
+                            "key"           => "value",
+                            "type"          => "Select",
+                            "component_name" => null,
+                            "default_value" => "TRANSACTION",
+                            "attribute" => null,
+                            "options" => [
+                                "TRANSACTION",
+                                // "DAILY",
+                                // "MONTHLY",
+                                // "YEARLY"
+                            ]
+                        ],
+                    ],
+                    "additional_filters" => []
+                ]
+            ],
+            [
+                "name"              => "Rekap Pembayaran",
+                "label"              => "PAYMENT_RECAP_REPORT",
+                "data_type"         => "DataTable",
+                "filters"        => [
+                    "default_filters" => [
+                        [
+                            "label"         => "Jenis Filter",
+                            "key"           => "value",
+                            "type"          => "Select",
+                            "component_name" => null,
+                            "default_value" => "TRANSACTION",
+                            "attribute" => null,
+                            "options" => [
+                                "TRANSACTION",
+                                // "DAILY",
+                                // "MONTHLY",
+                                // "YEARLY"
+                            ]
+                        ],
+                    ],
+                    "additional_filters" => []
+                ]
+            ],
+            [
+                "name"              => "Rekap Observasi",
+                "label"              => "MEDIC_OBSERVATION_RECAP_REPORT",
+                "data_type"         => "DataTable",
+                "filters"        => [
+                    "default_filters" => [
+                        [
+                            "label"         => "Jenis Filter",
+                            "key"           => "value",
+                            "type"          => "Select",
+                            "component_name" => null,
+                            "default_value" => "TRANSACTION",
+                            "attribute" => null,
+                            "options" => [
+                                "TRANSACTION",
+                                // "DAILY",
+                                // "MONTHLY",
+                                // "YEARLY"
+                            ]
+                        ],
+                    ],
+                    "additional_filters" => []
+                ]
+            ],
+            [
+                "name"              => "Refund dan Diskon",
+                "label"              => "REFUND_DISCOUNT_RECAP_REPORT",
+                "data_type"         => "DataTable",
+                "filters"        => [
+                    "default_filters" => [
+                        [
+                            "label"         => "Jenis Filter",
+                            "key"           => "value",
+                            "type"          => "Select",
+                            "component_name" => null,
+                            "default_value" => "TRANSACTION",
+                            "attribute" => null,
+                            "options" => [
+                                "TRANSACTION",
+                                // "DAILY",
+                                // "MONTHLY",
+                                // "YEARLY"
+                            ]
+                        ],
+                    ],
+                    "additional_filters" => []
+                ]
+            ],
+            [
+                "name"              => "Diagnosa Pasien",
+                "label"              => "DIAGNOSIS_RECAP_REPORT",
+                "data_type"         => "DataTable",
+                "filters"        => [
+                    "default_filters" => [
+                        [
+                            "label"         => "Jenis Filter",
+                            "key"           => "value",
+                            "type"          => "Select",
+                            "component_name" => null,
+                            "default_value" => "TRANSACTION",
+                            "attribute" => null,
+                            "options" => [
+                                "TRANSACTION",
+                                // "DAILY",
+                                // "MONTHLY",
+                                // "YEARLY"
+                            ]
+                        ],
+                    ],
+                    "additional_filters" => []
                 ]
             ]
         ];

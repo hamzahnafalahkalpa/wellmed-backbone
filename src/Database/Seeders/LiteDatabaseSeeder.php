@@ -20,7 +20,8 @@ class LiteDatabaseSeeder extends Seeder
                 ApiAccessSeeder::class,
                 InstallerSeeder::class,
                 LiteEmployeeSeeder::class,
-                IcdSeeder::class
+                IcdSeeder::class,
+                ElasticSeeder::class
             ]);
         } catch (\Throwable $th) {
             throw $th;

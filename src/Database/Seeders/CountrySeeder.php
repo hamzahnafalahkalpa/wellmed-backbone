@@ -9,7 +9,9 @@ class CountrySeeder extends Seeder{
         $countries = include_once(__DIR__ . '/data/countries.php');
         $country_model = app(config('database.models.Country'));
         foreach ($countries as $country) {
-            $country_model->updateOrCreate($country);
+            $country_data_model = $country_model->updateOrCreate($country);
+            $country_resource = $country_data_model->toViewApi()->resolve();
+            
         }
     }
 }

@@ -53,6 +53,9 @@ class MasterReportCollectionSeederBackups extends Seeder
                         ],
                     ]
                 ],
+                "attributes" => [
+                    "groupRowsBy" => 'visit_code'
+                ],
                 "columns"        => [
                     [
                         "key"     => "date",
