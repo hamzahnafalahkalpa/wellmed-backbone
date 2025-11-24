@@ -54,6 +54,9 @@ return [
         "contracts" => [
         ],
     ],
+    'hq' => [
+        'url' => env('HQ_URL', 'http://host.docker.internal:9001'),
+    ],
     "database"     => [
         "models"   => [
         ]
