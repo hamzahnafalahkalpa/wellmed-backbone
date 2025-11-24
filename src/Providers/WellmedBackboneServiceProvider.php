@@ -29,17 +29,6 @@ class WellmedBackboneServiceProvider extends WellmedBackboneEnvironment
                         ConnectionManager::class => SupportsConnectionManager::class
                     ]);   
                 }
-                // 'Provider' => function(){
-                //     $config = config('wellmed-backbone');
-                //     $this->bootedRegisters($config['packages'], 'wellmed-backbone', __DIR__.'/../'.$config['libs']['migration'] ?? 'Migrations');
-                //     $this->registerOverideConfig('wellmed-backbone',__DIR__.'/../'.$config['libs']['config']);
-                // }
-                // 'Config' => function() {
-                //     $this->__config_wellmed_backbone = config('wellmed-backbone');
-                // },
-                // 'Provider' => function(){
-                //     $this->registerOverideConfig('wellmed-backbone',__DIR__.'/../'.$this->__config_wellmed_backbone['libs']['config']);
-                // }
             ]);
     }
 

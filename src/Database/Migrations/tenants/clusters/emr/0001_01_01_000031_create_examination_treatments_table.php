@@ -39,19 +39,19 @@ return new class extends Migration
                 $table->string('name')->nullable(false);
 
                 $table->foreignIdFor($visit_examination::class)
-                    ->nullable()->constrained($visit_examination->getTable(), $visit_examination->getKeyName(), 've_et')
+                    ->nullable()
                     ->cascadeOnUpdate()->restrictOnDelete();
 
                 $table->foreignIdFor($examination_summary::class)
-                    ->nullable()->constrained($examination_summary->getTable(), $examination_summary->getKeyName(), 'es_et')
+                    ->nullable()
                     ->cascadeOnUpdate()->restrictOnDelete();
 
                 $table->foreignIdFor($patient_summary::class)
-                    ->nullable()->constrained('summaries', $patient_summary->getKeyName(), 'ps_et')
+                    ->nullable()
                     ->cascadeOnUpdate()->restrictOnDelete();
 
                 $table->foreignIdFor($treatment::class,'treatment_id')
-                    ->nullable()->constrained($treatment->getTable(), $treatment->getKeyName(), 'tr_et')
+                    ->nullable()
                     ->cascadeOnUpdate()->restrictOnDelete();
 
                 $table->string('reference_type', 50)->nullable();
