@@ -28,15 +28,15 @@ return new class extends Migration
         $table_name = $this->__table->getTable();
         $this->isNotTableExists(function() use ($table_name){
             Schema::create($table_name, function (Blueprint $table) {
-                $masterFeature  = app(config('database.models.MasterFeature', ModelsMasterFeature::class));
                 $version  = app(config('database.models.Version', Version::class));
 
                 $table->ulid('id')->primary();
+                $table->string('name', 255)->nullable(false);
                 $table->string('model_type', 50)->nullable(false);
                 $table->string('model_id', 36)->nullable(false);
-                $table->foreignIdFor($masterFeature::class)->nullable()
-                    ->index()->constrained()->restrictOnDelete()->cascadeOnUpdate();
-                $table->foreignIdFor($version::class)->nullable(false)
+                $table->string('master_feature_type', 50)->nullable(false);
+                $table->string('master_feature_id', 36)->nullable(false);
+                $table->foreignIdFor($version::class)->nullable(null)
                     ->index()->constrained()->restrictOnDelete()->cascadeOnUpdate();
                 $table->unsignedTinyInteger('current')->default(1)->nullable(false);
                 $table->unsignedTinyInteger('batch')->nullable();
@@ -45,6 +45,7 @@ return new class extends Migration
                 $table->softDeletes();
 
                 $table->index(['model_type', 'model_id'], 'feature_model');
+                $table->index(['master_feature_type', 'master_feature_id'], 'feature_master_feature');
             });
         });
 

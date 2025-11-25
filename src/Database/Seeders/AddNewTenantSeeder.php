@@ -22,21 +22,21 @@ class AddNewTenantSeeder extends Seeder{
         echo "[DEBUG] Booting ".class_basename($this)."\n";
 
         $data = JobRequest::all();
-        $tenantName = $data['tenant_name'] ?? 'default';
-        $workspace_id = $data['workspace_id'];
+        $tenantName     = $data['tenant_name'] ?? 'default';
+        $workspace_id   = $data['workspace_id'];
         $workspace_name = $data['workspace_name'];
 
-        $group_tenant_id = $data['group_tenant_id'];
-        $group_tenant = app(config('database.models.Tenant'))->findOrFail($group_tenant_id);
+        $group_tenant_id  = $data['group_tenant_id'];
+        $group_tenant     = app(config('database.models.Tenant'))->findOrFail($group_tenant_id);
         $tenant_namespace = Str::studly($group_tenant->name);
 
         $app_tenant_id = $data['app_tenant_id'];
-        $app_tenant = app(config('database.models.Tenant'))->findOrFail($app_tenant_id);
+        $app_tenant    = app(config('database.models.Tenant'))->findOrFail($app_tenant_id);
 
-        $tenant_schema  = app(config('app.contracts.Tenant'));
-        $tenant_model   = app(config('database.models.Tenant'));
+        $tenant_schema    = app(config('app.contracts.Tenant'));
+        $tenant_model     = app(config('database.models.Tenant'));
         $generator_config = config('laravel-package-generator');
-        $studlyname = Str::studly($workspace_name);
+        $studlyname       = Str::studly($workspace_name);
         $tenant = $tenant_schema->prepareStoreTenant($this->requestDTO(TenantData::class,[
             'parent_id'      => $group_tenant_id,
             'name'           => $workspace_name,
@@ -51,7 +51,7 @@ class AddNewTenantSeeder extends Seeder{
             'app'      => ['provider' => $app_tenant->provider],
             'group'    => ['provider' => $group_tenant->provider],
             'packages' => [],
-            'product_type'     => request()->product_label,
+            'product_type'     => $data['product_label'],
             'is_recurring'     => true,
             'recurring_period' => 'MONTHLY',
             'started_at' => now(),
@@ -60,8 +60,6 @@ class AddNewTenantSeeder extends Seeder{
         ]));
         $tenant->db_name = $tenant->tenancy_db_name;
         $tenant->save();
-
-        // $tenant = $tenant_model->findOrFail(8);
 
         // Artisan::call('impersonate:cache',[
         //     '--forget'    => true,

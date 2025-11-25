@@ -6,6 +6,7 @@ namespace Projects\WellmedBackbone\Database\Seeders;
 
 use Hanafalah\LaravelSupport\Concerns\Support\HasRequestData;
 use Illuminate\Database\Seeder;
+use Projects\WellmedBackbone\Jobs\JobRequest;
 
 class LiteRestrictionSeeder extends Seeder
 {
@@ -18,10 +19,18 @@ class LiteRestrictionSeeder extends Seeder
     {
         echo "[DEBUG] Booting ".class_basename($this)."\n";
 
+        $data = JobRequest::all();
+        $workspace = app(config('database.models.Workspace'))->with('installedFeatures')->findOrFail($data['workspace_id']);
         $medic_services = app(config('database.models.MedicService'))->withoutGlobalScopes(['restriction'])->get();
         $skips = [
             'ADMINISTRASI', 'RAWAT JALAN'
         ];
+        foreach ($workspace->installedFeatures as $installed_feature) {
+            if ($installed_feature->master_feature_type == 'MedicService'){
+                $medic_service = app(config('database.models.WellmedUnicode'))->withoutGlobalScope('flag')->findOrFail($installed_feature->master_feature_id);
+                $skips[] = $medic_service->label;
+            }
+        }
         $restriction_schema = app(config('app.contracts.RestrictionFeature'));
 
         foreach ($medic_services as $medic_service) {
