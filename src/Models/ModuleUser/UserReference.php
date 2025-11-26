@@ -11,9 +11,9 @@ class UserReference extends UserUserReference{
 
     protected static function booted(): void{
         parent::booted();
-        static::addGlobalScope('license',function($query){
-            $query->whereHas('modelHasLicense');
-        });
+        // static::addGlobalScope('license',function($query){
+        //     $query->whereHas('modelHasLicense');
+        // });
     }
 
     public function tenant(){return $this->morphTo(__FUNCTION__, "workspace_type", "workspace_id");}
