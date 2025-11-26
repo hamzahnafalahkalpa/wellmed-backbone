@@ -46,7 +46,7 @@ return new class extends Migration
                 $table->string('last_name', 50)->nullable();
                 $table->date('dob')->nullable();
                 $table->string('pob', 150)->nullable();
-                $table->string('sex',100)->comment(implode(', ',array_column(Sex::cases(), 'value')))->nullable(false);
+                $table->string('sex',100)->comment(implode(', ',array_column(Sex::cases(), 'value')))->nullable();
                 $table->foreignIdFor($marital_status::class)->nullable()->index();
                 $table->foreignIdFor($religion::class)->nullable()->index();
 

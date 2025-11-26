@@ -197,5 +197,14 @@ class LiteWorkspaceSeeder extends Seeder{
         JobRequest::set([
             'workspace_id' => $workspace->getKey()
         ]);
+
+        $transaction = app(config('app.contracts.Transaction'))
+            ->prepareStoreTransaction($this->requestDTO(config('app.contracts.TransactionData'),[
+                'reference_model' => $workspace,
+                'reference_id' => $workspace->getKey(),
+                'reference_type' => $workspace->getMorphClass()
+            ]));
+        $workspace->prop_transaction = $transaction->toViewApi()->resolve();
+        $workspace->save();
     }
 }

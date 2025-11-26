@@ -16,6 +16,7 @@ class AddDatabaseSeeder extends Seeder
             $this->call([
                 AddNewTenantSeeder::class,                
                 InstallerSeeder::class,
+                UserAdminSeeder::class,
             ]);
         } catch (\Throwable $th) {
             throw $th;

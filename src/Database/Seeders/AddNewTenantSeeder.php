@@ -61,14 +61,14 @@ class AddNewTenantSeeder extends Seeder{
         $tenant->db_name = $tenant->tenancy_db_name;
         $tenant->save();
 
-        // Artisan::call('impersonate:cache',[
-        //     '--forget'    => true,
-        // ]);
+        // $tenant = $tenant_model->find(75);
+
         Artisan::call('impersonate:cache',[
             '--app_id'    => $app_tenant->getKey(),
             '--group_id'  => $group_tenant->getKey(),
             '--tenant_id' => $tenant->getKey()
         ]);
+        
         Artisan::call('wellmed-backbone:impersonate-migrate',[
             '--app'       => true,
             '--app_id'    => $app_tenant->getKey(),

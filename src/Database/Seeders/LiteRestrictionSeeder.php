@@ -36,8 +36,8 @@ class LiteRestrictionSeeder extends Seeder
         foreach ($medic_services as $medic_service) {
             if (in_array($medic_service->label,$skips)) {
                 $medic_service->is_restricted = false;
-                $medic_service->save();
             }else{
+                $medic_service->is_restricted = true;
                 $restriction_schema->prepareStoreRestrictionFeature($this->requestDTO(config('app.contracts.RestrictionFeatureData'),[
                     'model_type' => $medic_service->getMorphClass(),
                     'model_id' => $medic_service->getKey(),
@@ -45,6 +45,7 @@ class LiteRestrictionSeeder extends Seeder
                     'reference_id' => tenancy()->tenant->getKey()
                 ]));
             }
+            $medic_service->save();
         }
 
         $permissions = app(config('database.models.Permission'))->withoutGlobalScopes(['restriction'])->whereIn('type',['MENU','MODULE'])->get();

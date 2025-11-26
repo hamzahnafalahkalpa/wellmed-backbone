@@ -4,7 +4,6 @@ use Hanafalah\LaravelFeature\Models\InstalledFeature;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
-use Hanafalah\LaravelFeature\Models\MasterFeature as ModelsMasterFeature;
 use Hanafalah\LaravelFeature\Models\Version;
 
 return new class extends Migration
@@ -36,7 +35,7 @@ return new class extends Migration
                 $table->string('model_id', 36)->nullable(false);
                 $table->string('master_feature_type', 50)->nullable(false);
                 $table->string('master_feature_id', 36)->nullable(false);
-                $table->foreignIdFor($version::class)->nullable(null)
+                $table->foreignIdFor($version::class)->nullable()
                     ->index()->constrained()->restrictOnDelete()->cascadeOnUpdate();
                 $table->unsignedTinyInteger('current')->default(1)->nullable(false);
                 $table->unsignedTinyInteger('batch')->nullable();
