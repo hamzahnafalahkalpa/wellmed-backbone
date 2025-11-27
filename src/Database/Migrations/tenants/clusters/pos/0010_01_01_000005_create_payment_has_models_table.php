@@ -33,6 +33,7 @@ return new class extends Migration
                 $table->string('payment_id', 36)->nullable(false);
                 $table->string('model_type', 50)->nullable(false);
                 $table->string('model_id', 36)->nullable(false);
+                $table->json('props')->nullable();
                 $table->timestamps();
 
                 $table->index(['model_type', 'model_id'], 'model_phhm');
