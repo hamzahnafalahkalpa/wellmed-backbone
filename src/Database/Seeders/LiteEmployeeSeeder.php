@@ -62,7 +62,8 @@ class LiteEmployeeSeeder extends Seeder
                     "family_relationship" => [ // Hubungan keluarga
                         "people_id" => null,
                         "family_role" => [
-                            "name" => "Anak"
+                            "name" => "Anak",
+                            "label" => "Anak"
                         ], // Contoh: Anak, Suami, Istri, dll.
                         "name" => "Fathan",
                         "phone" => "081906521808",

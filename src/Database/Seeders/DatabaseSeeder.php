@@ -15,6 +15,12 @@ class DatabaseSeeder extends Seeder
         echo "[DEBUG] Booting ".class_basename($this)."\n";
 
         try {
+            config([
+                'laravel-feature.is_validate_restriction' => false,
+                'laravel-support.use_id_as_primary_validation_unicode' => false,
+                'app.use_license_validation' => false,
+                'app.is_seeding' => true
+            ]);
             $this->call([
                 WorkspaceSeeder::class,
                 ApiAccessSeeder::class,

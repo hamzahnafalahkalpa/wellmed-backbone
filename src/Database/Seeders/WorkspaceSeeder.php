@@ -146,6 +146,23 @@ class WorkspaceSeeder extends Seeder{
                 ]
             ));
 
+            $now = now();
+            app(config('app.contracts.License'))->prepareStoreLicense($this->requestDTO(
+                config('app.contracts.LicenseData'),[
+                    'reference_type' => $workspace->getMorphClass(),
+                    'reference_id'   => $workspace->getKey(),
+                    'expired_at' => $now->addMonth(),
+                    'last_paid' => $now,
+                    'status' => 'ACTIVE',
+                    'recurring_type' => 'MONTHLY',
+                    'flag' => 'WORKSPACE_LICENSE',
+                    'model_has_license' => [
+                        'model_type' => $workspace->getMorphClass(),
+                        'model_id'   => $workspace->getKey(),
+                    ]
+                ]
+            ));
+
             $tenant = $tenant_schema->prepareStoreTenant($this->requestDTO(TenantData::class,[
                 'parent_id'      => $group_tenant->getKey(),
                 'name'           => 'Tenant Wellmed Plus',
