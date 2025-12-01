@@ -81,7 +81,6 @@ class Patient extends SchemasPatient implements ModulePatientPatient
             $patient->setAttribute('prop_card_identity',$prop_card_identity);
             $patient->save();
         } catch (\Throwable $th) {
-            dd($th->getMessage());
         }
 
         $this->fillingProps($patient, $patient_dto->props);
