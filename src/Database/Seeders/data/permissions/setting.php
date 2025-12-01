@@ -9,7 +9,7 @@ return [
     'type'        => Type::MENU->value,
     'show_in_acl' => true,
     'guard_name'  => 'api',
-    'ordering'    => 10,
+    'ordering'    => 99,
     'childs'      => [
         include __DIR__.'/setting/acl.php',
         include __DIR__.'/setting/faskes-service.php',

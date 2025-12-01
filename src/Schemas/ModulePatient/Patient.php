@@ -15,6 +15,7 @@ class Patient extends SchemasPatient implements ModulePatientPatient
             config('app.contracts.IntegrationData'),[
             ]
         );
+        $patient->setAttribute('integration',$patient_dto->props['integration']->toArray());
         $patient->load([
             'patientSatuSehat',
             'reference.addresses' => function($query){
@@ -80,6 +81,7 @@ class Patient extends SchemasPatient implements ModulePatientPatient
             $patient->setAttribute('prop_card_identity',$prop_card_identity);
             $patient->save();
         } catch (\Throwable $th) {
+            dd($th->getMessage());
         }
 
         $this->fillingProps($patient, $patient_dto->props);

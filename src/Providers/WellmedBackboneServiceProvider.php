@@ -77,28 +77,29 @@ class WellmedBackboneServiceProvider extends WellmedBackboneEnvironment
 
                 $channel->close();
                 $connection->close();
-                
-                $hosts = config('app.elasticsearch.hosts','localhost:9002');
-                if (isset($hosts)){
-                    $client = ClientBuilder::create()->setHosts($hosts)
-                        ->setApiKey(
-                            config('app.elasticsearch.username','elastic'),
-                            config('app.elasticsearch.password','password')
-                        )
-                        ->build();
-                    config(['app.elasticsearch.client' => $client]);
-                    foreach (config('app.elasticsearch.indexes',[]) as $index_key => $index_config){
-                        $full_index_name = 
-                            config('app.elasticsearch.index_prefix', 'development')
-                            .config('app.elasticsearch.index_separator', '.')
-                            .$index_config['name'];
-                        config(['app.elasticsearch.indexes.'.$index_key.'.full_name' => $full_index_name]);
-                        if ($client->indices()->exists(['index' => $full_index_name])->asBool()) {
-                            continue;
+                if (config('app.elasticsearch.enabled', false)) {
+                    $hosts = config('app.elasticsearch.hosts','localhost:9002');
+                    if (isset($hosts)){
+                        $client = ClientBuilder::create()->setHosts($hosts)
+                            ->setApiKey(
+                                config('app.elasticsearch.username','elastic'),
+                                config('app.elasticsearch.password','password')
+                            )
+                            ->build();
+                        config(['app.elasticsearch.client' => $client]);
+                        foreach (config('app.elasticsearch.indexes',[]) as $index_key => $index_config){
+                            $full_index_name = 
+                                config('app.elasticsearch.index_prefix', 'development')
+                                .config('app.elasticsearch.index_separator', '.')
+                                .$index_config['name'];
+                            config(['app.elasticsearch.indexes.'.$index_key.'.full_name' => $full_index_name]);
+                            if ($client->indices()->exists(['index' => $full_index_name])->asBool()) {
+                                continue;
+                            }
+                            $client->indices()->create([
+                                'index' => $full_index_name
+                            ]);
                         }
-                        $client->indices()->create([
-                            'index' => $full_index_name
-                        ]);
                     }
                 }
             } catch (\Throwable $th) {
