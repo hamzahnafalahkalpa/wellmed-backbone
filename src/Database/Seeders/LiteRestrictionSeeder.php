@@ -81,7 +81,7 @@ class LiteRestrictionSeeder extends Seeder
             'api.setting.treatment.index',
             'api.setting.treatment.medical-treatment.index',
             'api.setting.satu-sehat-integration.index',
-            'api.setting.satu-sehat-integration.general-integration.index',
+            'api.setting.satu-sehat-integration.general-setting.index',
             'api.transaction.index',
             'api.transaction.point-of-sale.index',
             'api.transaction.point-of-sale.show.billing.index',
