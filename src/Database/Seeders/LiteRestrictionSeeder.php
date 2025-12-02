@@ -25,12 +25,23 @@ class LiteRestrictionSeeder extends Seeder
         $skips = [
             'ADMINISTRASI', 'RAWAT JALAN'
         ];
+        $room_payloads = [];
+        $building = app(config('database.models.Building'))->first();
         foreach ($workspace->installedFeatures as $installed_feature) {
             if ($installed_feature->master_feature_type == 'MedicService'){
                 $medic_service = app(config('database.models.WellmedUnicode'))->withoutGlobalScope('flag')->findOrFail($installed_feature->master_feature_id);
                 $skips[] = $medic_service->label;
+                $room_payloads[] = [
+                    "name" => "Ruang ".$medic_service->name,
+                    "floor"=> 1,
+                    "phone"=> null,
+                    "medic_service_id"=> $medic_service->getKey(), //nullable, GET FROM SETTING > FASKES SERVICE > MEDICAL SERVICE
+                    'medic_service_model' => $medic_service,
+                    "building_id"=> $building->getKey(),
+                ];
             }
         }
+
         $restriction_schema = app(config('app.contracts.RestrictionFeature'));
 
         foreach ($medic_services as $medic_service) {
@@ -46,6 +57,11 @@ class LiteRestrictionSeeder extends Seeder
                 ]));
             }
             $medic_service->save();
+        }
+        foreach ($room_payloads as $room_payload) {
+            app(config('app.contracts.Room'))->prepareStoreRoom(
+                $this->requestDTO(config('app.contracts.RoomData'),$room_payload)
+            );
         }
 
         $permissions = app(config('database.models.Permission'))->withoutGlobalScopes(['restriction'])->whereIn('type',['MENU','MODULE'])->get();

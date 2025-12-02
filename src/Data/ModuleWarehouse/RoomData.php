@@ -17,6 +17,10 @@ class RoomData extends DataRoomData implements DataModuleWarehouseRoomData{
     #[MapName('medic_service_id')]
     public mixed $medic_service_id = null;
 
+    #[MapInputName('medic_service_model')]
+    #[MapName('medic_service_model')]
+    public ?object $medic_service_model = null;
+
     #[MapInputName('service_cluster_id')]
     #[MapName('service_cluster_id')]
     public mixed $service_cluster_id = null;
@@ -71,8 +75,12 @@ class RoomData extends DataRoomData implements DataModuleWarehouseRoomData{
 
         $props = &$data->props;
 
-        $medic_service = $new->MedicServiceModel();
-        $medic_service = isset($data->medic_service_id) ? $medic_service->findOrFail($data->medic_service_id) : $medic_service;
+        if (isset($data->medic_service_model)){
+            $medic_service = $data->medic_service_model;
+        }else{
+            $medic_service = $new->MedicServiceModel();
+            $medic_service = isset($data->medic_service_id) ? $medic_service->findOrFail($data->medic_service_id) : $medic_service;
+        }
         $props['prop_medic_service'] = $medic_service->toViewApi()->only(['id','name']);
 
         $data->as_pharmacy = (isset($medic_service) && $medic_service->label == Label::PHARMACY_UNIT->value);
