@@ -53,7 +53,7 @@ class MasterSeeder extends Seeder{
                 KlinikStarterpack\UsageRouteSeeder::class,
                 ItemCollectionSeeder::class,
                 KlinikStarterpack\BrandSeeder::class,
-                KlinikStarterpack\InfrastructureSeeder::class,
+                InfrastructureSeeder::class,
                 MasterInformedConsentSeeder::class,
                 KlinikStarterpack\SoapSeeder::class,
                 KlinikStarterpack\RoomItemCategorySeeder::class,
