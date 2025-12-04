@@ -35,24 +35,24 @@ class PatientTypeSeeder extends Seeder
                 'label' => 'MEMBER',
                 'is_delete_able' => true
             ],
-            [
-                'name'  => 'Crew',
-                'flag'  => 'PatientType',
-                'label' => 'CREW',
-                'is_delete_able' => true
-            ],
+            // [
+            //     'name'  => 'Crew',
+            //     'flag'  => 'PatientType',
+            //     'label' => 'CREW',
+            //     'is_delete_able' => true
+            // ],
             [
                 'name'  => 'Partner',
                 'flag'  => 'PatientType',
                 'label' => 'PARTNER',
                 'is_delete_able' => true
-            ],
-            [
-                'name'  => 'Unidentified',
-                'flag'  => 'PatientType',
-                'label' => 'UNIDENTIFIED',
-                'is_delete_able' => false
             ]
+            // [
+            //     'name'  => 'Unidentified',
+            //     'flag'  => 'PatientType',
+            //     'label' => 'UNIDENTIFIED',
+            //     'is_delete_able' => false
+            // ]
         ];
         foreach ($arr as $data) {
             app(config('app.contracts.PatientType'))->prepareStorePatientType($this->requestDTO(PatientTypeData::class,$data));

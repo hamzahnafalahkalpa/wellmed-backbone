@@ -21,7 +21,6 @@ class InstallerSeeder extends Seeder
                 MasterSeeder::class,
                 AssetSeeder::class,
                 MasterReportCollectionSeeder::class,
-                RestrictionFeatureSeeder::class
             ]);
         } catch (\Throwable $th) {
             throw $th;

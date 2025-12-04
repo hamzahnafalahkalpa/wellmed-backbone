@@ -61,6 +61,8 @@ class AddNewTenantSeeder extends Seeder{
         $tenant->db_name = $tenant->tenancy_db_name;
         $tenant->save();
 
+        // $tenant = $tenant_model->find(8);
+
         Artisan::call('impersonate:cache',[
             '--app_id'    => $app_tenant->getKey(),
             '--group_id'  => $group_tenant->getKey(),
