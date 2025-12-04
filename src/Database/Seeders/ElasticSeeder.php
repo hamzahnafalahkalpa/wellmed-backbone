@@ -31,12 +31,17 @@ class ElasticSeeder extends Seeder
         $datas = app(config('database.models.'.$model))->get();
         foreach ($datas as $data) {
             $resource = $data->toViewApi()->resolve();
-            $bulks['body'][] = [
-                'index' => [
-                    '_index' => $indexes[Str::lower($model)]['full_name'],
-                    '_id'    => $data->getKey(),
-                ]
-            ];
+            try {
+                $bulks['body'][] = [
+                    'index' => [
+                        '_index' => $indexes[Str::lower($model)]['full_name'],
+                        '_id'    => $data->getKey(),
+                    ]
+                ];
+            } catch (\Throwable $th) {
+                // dd(Str::lower($model), $indexes[Str::lower($model)]);
+                //throw $th;
+            }
 
             $bulks['body'][] = $resource;
         }

@@ -63,7 +63,6 @@ class LiteRestrictionSeeder extends Seeder
                 $this->requestDTO(config('app.contracts.RoomData'),$room_payload)
             );
         }
-
         $permissions = app(config('database.models.Permission'))->withoutGlobalScopes(['restriction'])->whereIn('type',['MENU','MODULE'])->get();
         $skips = [
             'api.setting.index',

@@ -37,6 +37,8 @@ return new class extends Migration
                 $table->string('flag', 100)->nullable(false);
                 $table->string('status', 10)->nullable(false)
                       ->default(Status::ACTIVE->value);
+                $table->string('reference_type', 50)->nullable();
+                $table->string('reference_id', 36)->nullable();
                 $table->string('balance_type', 10)->nullable(true)->comment('DEBIT, CREDIT, MIX');
                 $table->foreignIdFor($coa_type::class)->nullable()->index()
                     ->constrained()->cascadeOnUpdate()->nullOnDelete();
@@ -49,6 +51,11 @@ return new class extends Migration
             Schema::table($table_name,function (Blueprint $table) use ($table_name){
                 $table->foreignIdFor($this->__table, 'parent_id')
                     ->nullable()->after('id')
+                    ->index()->constrained($table_name)
+                    ->onUpdate('cascade')->onDelete('restrict');
+
+                $table->foreignIdFor($this->__table, 'coa_template_id')
+                    ->nullable()->after('parent_id')
                     ->index()->constrained($table_name)
                     ->onUpdate('cascade')->onDelete('restrict');
             });

@@ -14,4 +14,8 @@ class Workspace extends WorkspaceWorkspace
     public function getSettingResource(){
         return SettingWorkspace::class;
     }
+
+    public function installedFeatures(){
+        return $this->morphManyModel('InstalledFeature','model');
+    }
 }

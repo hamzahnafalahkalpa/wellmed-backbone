@@ -37,31 +37,31 @@ class AddNewTenantSeeder extends Seeder{
         $tenant_model     = app(config('database.models.Tenant'));
         $generator_config = config('laravel-package-generator');
         $studlyname       = Str::studly($workspace_name);
-        $tenant = $tenant_schema->prepareStoreTenant($this->requestDTO(TenantData::class,[
-            'parent_id'      => $group_tenant_id,
-            'name'           => $workspace_name,
-            'flag'           => $tenant_model::FLAG_TENANT,
-            'reference_id'   => $workspace_id,
-            'reference_type' => 'Workspace',
-            'domain'         => [
-                'domain' => 'localhost:9000'
-            ],
-            'provider' => $tenant_namespace.'\\Tenant'.$studlyname.'\\Providers\\Tenant'.$studlyname.'ServiceProvider',
-            'path'     => $generator_config['patterns']['tenant']['published_at'],
-            'app'      => ['provider' => $app_tenant->provider],
-            'group'    => ['provider' => $group_tenant->provider],
-            'packages' => [],
-            'product_type'     => $data['product_label'],
-            'is_recurring'     => true,
-            'recurring_period' => 'MONTHLY',
-            'started_at' => now(),
-            'expired_at' => now()->addYear(),
-            'config'   => $generator_config['patterns']['tenant']
-        ]));
-        $tenant->db_name = $tenant->tenancy_db_name;
-        $tenant->save();
+        // $tenant = $tenant_schema->prepareStoreTenant($this->requestDTO(TenantData::class,[
+        //     'parent_id'      => $group_tenant_id,
+        //     'name'           => $workspace_name,
+        //     'flag'           => $tenant_model::FLAG_TENANT,
+        //     'reference_id'   => $workspace_id,
+        //     'reference_type' => 'Workspace',
+        //     'domain'         => [
+        //         'domain' => 'localhost:9000'
+        //     ],
+        //     'provider' => $tenant_namespace.'\\Tenant'.$studlyname.'\\Providers\\Tenant'.$studlyname.'ServiceProvider',
+        //     'path'     => $generator_config['patterns']['tenant']['published_at'],
+        //     'app'      => ['provider' => $app_tenant->provider],
+        //     'group'    => ['provider' => $group_tenant->provider],
+        //     'packages' => [],
+        //     'product_type'     => $data['product_label'],
+        //     'is_recurring'     => true,
+        //     'recurring_period' => 'MONTHLY',
+        //     'started_at' => now(),
+        //     'expired_at' => now()->addYear(),
+        //     'config'   => $generator_config['patterns']['tenant']
+        // ]));
+        // $tenant->db_name = $tenant->tenancy_db_name;
+        // $tenant->save();
 
-        // $tenant = $tenant_model->find(75);
+        $tenant = $tenant_model->find(6);
 
         Artisan::call('impersonate:cache',[
             '--app_id'    => $app_tenant->getKey(),
