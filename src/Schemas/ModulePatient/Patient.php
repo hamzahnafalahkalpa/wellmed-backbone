@@ -6,6 +6,7 @@ use Hanafalah\ModulePatient\Contracts\Data\PatientData;
 use Hanafalah\ModulePatient\Schemas\Patient as SchemasPatient;
 use Illuminate\Support\Str;
 use Projects\WellmedBackbone\Contracts\Schemas\ModulePatient\Patient as ModulePatientPatient;
+use Illuminate\Support\Facades\Log;
 
 class Patient extends SchemasPatient implements ModulePatientPatient
 {
@@ -81,6 +82,7 @@ class Patient extends SchemasPatient implements ModulePatientPatient
             $patient->setAttribute('prop_card_identity',$prop_card_identity);
             $patient->save();
         } catch (\Throwable $th) {
+            Log::channel('satu-sehat')->error($th->getMessage());
         }
 
         $this->fillingProps($patient, $patient_dto->props);
