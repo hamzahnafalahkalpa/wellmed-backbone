@@ -43,7 +43,6 @@ return new class extends Migration
                 $table->softDeletes();
 
                 $table->index(['reference_id', 'reference_type'], 'tenants_reference_index');
-                $table->unique(['name', 'flag'], 'tenant_unique');
             });
         });
         $this->isNotColumnExists('parent_id',function() use ($table_name){
