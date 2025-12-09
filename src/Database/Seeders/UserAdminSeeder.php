@@ -53,6 +53,8 @@ class UserAdminSeeder extends Seeder
                     'reference_id'      => $data['workspace_id'],
                     'expired_at'        => $now->addMonth(),
                     'last_paid'         => $now,
+                    'billing_generated_at' => $now,
+                    'is_billing_generated' => false,
                     'status'            => 'ACTIVE',
                     'recurring_type'    => 'MONTHLY',
                     'flag'              => 'USER_LICENSE',

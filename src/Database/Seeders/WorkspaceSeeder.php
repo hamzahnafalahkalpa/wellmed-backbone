@@ -153,6 +153,8 @@ class WorkspaceSeeder extends Seeder{
                     'reference_id'   => $workspace->getKey(),
                     'expired_at' => $now->addMonth(),
                     'last_paid' => $now,
+                    'billing_generated_at' => $now,
+                    'is_billing_generated' => true,
                     'status' => 'ACTIVE',
                     'recurring_type' => 'MONTHLY',
                     'flag' => 'WORKSPACE_LICENSE',
