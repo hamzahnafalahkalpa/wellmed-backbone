@@ -26,6 +26,7 @@ class UserAdminSeeder extends Seeder
         if (!isset($user)){
             $role_ids   = app(config('database.models.Role'))->where('name','Admin')->get()->pluck('id')->toArray();
             $user = app(config('app.contracts.User'))->prepareStoreUser($this->requestDTO(config('app.contracts.UserData'),[
+                'name' => $admin['name'],
                 "username" => $admin['username'],
                 "password" => $admin['password'],
                 "password_confirmation" => $admin['password_confirmation'], // Konfirmasi password
@@ -51,6 +52,7 @@ class UserAdminSeeder extends Seeder
                 config('app.contracts.LicenseData'),[
                     'reference_type'    => 'Workspace',
                     'reference_id'      => $data['workspace_id'],
+                    'name' => $user->name,
                     'expired_at'        => $now->addMonth(),
                     'last_paid'         => $now,
                     'billing_generated_at' => $now,
