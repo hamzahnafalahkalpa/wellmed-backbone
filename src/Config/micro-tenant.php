@@ -75,7 +75,7 @@ return [
                     'ActivityStatus',
                     'Billing',
                     'Invoice',
-                    'TransactionHasConsument',
+                    // 'TransactionHasConsument',
                     // 'PosTransactionItem',
                     'PaymentSummary',
                     'PaymentHistory',
