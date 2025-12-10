@@ -9,7 +9,7 @@ use Hanafalah\ModulePayment\Models\Consument\Consument;
 return new class extends Migration
 {
     use NowYouSeeMe;
-    private $__table, $__table_service;
+    private $__table_service;
 
     public function __construct()
     {

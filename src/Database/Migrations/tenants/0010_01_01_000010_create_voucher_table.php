@@ -8,7 +8,7 @@ return new class extends Migration
 {
     use Hanafalah\MicroTenant\Concerns\Tenant\NowYouSeeMe;
 
-    private $__table;
+    
 
     public function __construct()
     {

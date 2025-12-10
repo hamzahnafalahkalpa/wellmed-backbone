@@ -10,7 +10,7 @@ use Hanafalah\ModuleUser\Models\User\UserReference;
 return new class extends Migration
 {
     use NowYouSeeMe;
-    private $__table;
+    
 
     public function __construct()
     {

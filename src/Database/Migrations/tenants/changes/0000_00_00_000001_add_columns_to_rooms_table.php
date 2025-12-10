@@ -12,7 +12,7 @@ use Hanafalah\ModuleWarehouse\Models\Building\Room;
 return new class extends Migration
 {
     use NowYouSeeMe;
-    private $__table;
+    
 
     public function __construct()
     {

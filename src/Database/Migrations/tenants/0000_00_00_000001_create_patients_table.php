@@ -13,7 +13,7 @@ use Hanafalah\MicroTenant\Concerns\Tenant\NowYouSeeMe;
 return new class extends Migration
 {
     use NowYouSeeMe;
-    private $__table, $__table_patient_type;
+    private $__table_patient_type;
 
     public function __construct()
     {

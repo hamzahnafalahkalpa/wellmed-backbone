@@ -15,7 +15,7 @@ return new class extends Migration
 {
     use NowYouSeeMe;
 
-    private $__table;
+    
 
     public function __construct()
     {

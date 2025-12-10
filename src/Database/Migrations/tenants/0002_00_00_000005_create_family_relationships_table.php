@@ -13,7 +13,7 @@ return new class extends Migration
 {
     use NowYouSeeMe;
 
-    private $__table,$__table_patient,$__table_people;
+    private $__table_patient,$__table_people;
 
     public function __construct(){
         $this->__table = app(config('database.models.FamilyRelationship', FamilyRelationship::class));
