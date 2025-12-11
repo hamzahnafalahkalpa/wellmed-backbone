@@ -61,30 +61,15 @@ class WellmedBackboneServiceProvider extends WellmedBackboneEnvironment
                     return $registry;
                 });
 
-                $connection = new AMQPStreamConnection(
-                    env('RABBITMQ_HOST'),
-                    env('RABBITMQ_PORT'),
-                    env('RABBITMQ_USER'),
-                    env('RABBITMQ_PASSWORD'),
-                    '/'
-                );
-
-                $channel = $connection->channel();
-
-                foreach (['default', 'installation', 'elasticsearch'] as $queue) {
-                    $channel->queue_declare($queue, false, true, false, false);
-                }
-
-                $channel->close();
-                $connection->close();
                 if (config('app.elasticsearch.enabled', false)) {
-                    $hosts = config('app.elasticsearch.hosts','localhost:9002');
+                    $hosts = config('app.elasticsearch.hosts','localhost:9200');
                     if (isset($hosts)){
                         $client = ClientBuilder::create()->setHosts($hosts)
                             ->setApiKey(
                                 config('app.elasticsearch.username','elastic'),
                                 config('app.elasticsearch.password','password')
                             )
+                            ->setSSLVerification(env('ELASTICSEARCH_SSL_VERIFY') === 'true')
                             ->build();
                         config(['app.elasticsearch.client' => $client]);
                         foreach (config('app.elasticsearch.indexes',[]) as $index_key => $index_config){
@@ -102,6 +87,23 @@ class WellmedBackboneServiceProvider extends WellmedBackboneEnvironment
                         }
                     }
                 }
+
+                $connection = new AMQPStreamConnection(
+                    env('RABBITMQ_HOST'),
+                    env('RABBITMQ_PORT'),
+                    env('RABBITMQ_USER'),
+                    env('RABBITMQ_PASSWORD'),
+                    '/'
+                );
+
+                $channel = $connection->channel();
+
+                foreach (['default', 'installation', 'elasticsearch'] as $queue) {
+                    $channel->queue_declare($queue, false, true, false, false);
+                }
+
+                $channel->close();
+                $connection->close();
             } catch (\Throwable $th) {
             }
         });
