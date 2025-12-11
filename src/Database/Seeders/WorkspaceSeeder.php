@@ -210,10 +210,15 @@ class WorkspaceSeeder extends Seeder{
         ]);
 
         MicroTenant::tenantImpersonate($tenant);
-        JobRequest::set([
-            'workspace_id' => $workspace->getKey()
-        ]);
         
+        JobRequest::set([
+            'workspace_id'    => $workspace->getKey(),
+            'workspace_name'  => $workspace->name,
+            'product_label'   => 'PLUS',
+            'app_tenant_id'   => $project_tenant->getKey(),
+            'group_tenant_id' => $group_tenant->getKey()
+        ]);
+
         $transaction = app(config('app.contracts.Transaction'))
             ->prepareStoreTransaction($this->requestDTO(config('app.contracts.TransactionData'),[
                 'reference_model' => $workspace,

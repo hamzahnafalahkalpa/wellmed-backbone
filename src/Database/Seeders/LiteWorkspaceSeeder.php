@@ -212,7 +212,11 @@ class LiteWorkspaceSeeder extends Seeder{
 
         MicroTenant::tenantImpersonate($tenant);
         JobRequest::set([
-            'workspace_id' => $workspace->getKey()
+            'workspace_id'    => $workspace->getKey(),
+            'workspace_name'  => $workspace->name,
+            'product_label'   => 'LITE',
+            'app_tenant_id'   => $project_tenant->getKey(),
+            'group_tenant_id' => $group_tenant->getKey()
         ]);
 
         $transaction = app(config('app.contracts.Transaction'))

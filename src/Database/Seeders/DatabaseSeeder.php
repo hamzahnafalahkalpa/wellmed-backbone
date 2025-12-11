@@ -26,6 +26,7 @@ class DatabaseSeeder extends Seeder
                 ApiAccessSeeder::class,
                 InstallerSeeder::class,
                 EmployeeSeeder::class,
+                RestrictionFeatureSeeder::class,
                 IcdSeeder::class
             ]);
         } catch (\Throwable $th) {

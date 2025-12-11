@@ -13,15 +13,7 @@ class AddDatabaseSeeder extends Seeder
     public function run(): void
     {
         echo "[DEBUG] Booting ".class_basename($this)."\n";
-        // JobRequest::set([
-        //     'workspace_id'    => $workspace->getKey(),
-        //     'workspace_name'  => $workspace->name,
-        //     'product_label'   => $product_model->label,
-        //     'app_tenant_id'   => $app_tenant->getKey(),
-        //     'group_tenant_id' => $group_tenant->getKey(),
-        //     'admin'           => $workspace->admin
-        // ]);      
-
+              
         try {
             config([
                 'laravel-feature.is_validate_restriction' => false,
