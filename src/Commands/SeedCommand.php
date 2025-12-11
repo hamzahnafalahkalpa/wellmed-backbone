@@ -27,7 +27,8 @@ class SeedCommand extends EnvironmentCommand{
     {
         $class = $this->argument('class') ?? "DatabaseSeeder";
         Artisan::call('db:seed',[
-            '--class' => "Projects\WellmedBackbone\\Database\Seeders\\$class"
+            '--class' => "Projects\WellmedBackbone\\Database\Seeders\\$class",
+            '--force' => true
         ]);   
     }
 }

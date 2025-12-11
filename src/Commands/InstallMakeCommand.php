@@ -57,8 +57,12 @@ class InstallMakeCommand extends EnvironmentCommand
         
         $direct_access = config('micro-tenant.direct_provider_access');
         config(['micro-tenant.direct_provider_access' => false]);
-        $this->call('migrate');
-        $this->call('db:seed');
+        $this->call('migrate',[
+            '--force' => true,   // menambahkan flag force
+        ]);
+        $this->call('db:seed',[
+            '--force' => true,   // menambahkan flag force
+        ]);
         config(['micro-tenant.direct_provider_access' => $direct_access]);
 
         $type = $this->argument('type');
