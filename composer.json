@@ -23,7 +23,8 @@
         "wellmed-plus/ms-plus-organization": "dev-main",
         "hanafalah/satu-sehat": "dev-main",
         "projects/wellmed-gateway": "dev-main",
-        "hanafalah/module-license": "dev-main"
+        "hanafalah/module-license": "dev-main",
+        "maatwebsite/excel": "^3.1"
     },
     "extra": {
         "laravel": {
@@ -451,13 +452,6 @@
         "hanafalah/module-disease": {
             "type": "path",
             "url": "../../repositories/module-disease",
-            "options": {
-                "symlink": true
-            }
-        },
-        "hanafalah/module-informed-consent": {
-            "type": "path",
-            "url": "../../repositories/module-informed-consent",
             "options": {
                 "symlink": true
             }

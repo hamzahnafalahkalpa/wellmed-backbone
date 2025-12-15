@@ -98,13 +98,14 @@ class WellmedBackboneServiceProvider extends WellmedBackboneEnvironment
 
                 $channel = $connection->channel();
 
-                foreach (['default', 'installation', 'elasticsearch'] as $queue) {
+                foreach (['default', 'installation', 'elasticsearch', 'import', 'export'] as $queue) {
                     $channel->queue_declare($queue, false, true, false, false);
                 }
 
                 $channel->close();
                 $connection->close();
             } catch (\Throwable $th) {
+                dd($th->getMessage());
             }
         });
     }    

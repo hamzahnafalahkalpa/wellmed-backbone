@@ -36,6 +36,20 @@ return [
             ]
         ],
         [
+            'name'       => 'Import Data Pasien',
+            'alias'      => 'import',
+            'type'       => Type::PERMISSION->value,
+            'guard_name' => 'api',
+            'show_in_acl' => true
+        ],
+        [
+            'name'       => 'Export Data Pasien',
+            'alias'      => 'export',
+            'type'       => Type::PERMISSION->value,
+            'guard_name' => 'api',
+            'show_in_acl' => true
+        ],
+        [
             'name'       => 'Hapus Data Pasien',
             'alias'      => 'destroy',
             'type'       => Type::PERMISSION->value,

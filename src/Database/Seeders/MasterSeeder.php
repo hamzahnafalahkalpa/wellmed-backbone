@@ -11,7 +11,6 @@ use Hanafalah\ModuleExamination\Seeders\{
 use Hanafalah\ModulePeople\Database\Seeders\DatabaseSeeder as PeopleCollectionSeeder;
 use Hanafalah\ModuleAnatomy\Database\Seeders\DatabaseSeeder as AnatomyCollectionSeeder;
 use Hanafalah\ModuleItem\Database\Seeders\DatabaseSeeder as ItemCollectionSeeder;
-use Hanafalah\ModuleInformedConsent\Seeders\MasterInformedConsentSeeder;
 use Hanafalah\ModulePayment\Database\Seeders\CoaSeeder;
 use Hanafalah\ModulePayment\Database\Seeders\WalletSeeder;
 use Illuminate\Database\Seeder;
@@ -54,7 +53,6 @@ class MasterSeeder extends Seeder{
                 ItemCollectionSeeder::class,
                 KlinikStarterpack\BrandSeeder::class,
                 InfrastructureSeeder::class,
-                MasterInformedConsentSeeder::class,
                 KlinikStarterpack\SoapSeeder::class,
                 KlinikStarterpack\RoomItemCategorySeeder::class,
                 KlinikStarterpack\ClassRoomSeeder::class,

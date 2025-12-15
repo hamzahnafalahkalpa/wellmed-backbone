@@ -104,7 +104,6 @@ return [
         'hanafalah/module-examination'          => ['repository' => 'hamzahnafalahkalpa/module-examination','provider' => 'Hanafalah\\ModuleExamination\\ModuleExaminationServiceProvider'],
         'hanafalah/module-procurement'          => ['repository' => 'hamzahnafalahkalpa/module-procurement','provider' => 'Hanafalah\\ModuleProcurement\\ModuleProcurementServiceProvider'],
         'hanafalah/module-disease'              => ['repository' => 'hamzahnafalahkalpa/module-disease','provider' => 'Hanafalah\\ModuleDisease\\ModuleDiseaseServiceProvider'],
-        'hanafalah/module-informed-consent'     => ['repository' => 'hamzahnafalahkalpa/module-informed-consent','provider' => 'Hanafalah\\ModuleInformedConsent\\ModuleInformedConsentServiceProvider'],
         'hanafalah/module-icd'                  => ['repository' => 'hamzahnafalahkalpa/module-icd','provider' => 'Hanafalah\\ModuleIcd\\ModuleIcdServiceProvider'],
         'hanafalah/module-anatomy'              => ['repository' => 'hamzahnafalahkalpa/module-anatomy','provider' => 'Hanafalah\\ModuleAnatomy\\ModuleAnatomyServiceProvider'],
         'hanafalah/module-physical-examination' => ['repository' => 'hamzahnafalahkalpa/module-physical-examination','provider' => 'Hanafalah\\ModulePhysicalExamination\\ModulePhysicalExaminationServiceProvider'],

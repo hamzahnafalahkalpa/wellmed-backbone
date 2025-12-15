@@ -1,7 +1,8 @@
 <?php
 
 use Hanafalah\MicroTenant\Concerns\Tenant\NowYouSeeMe;
-use Hanafalah\ModulePatient\Models\EMR\ExaminationSummary;
+use Hanafalah\ModuleSupport\Models\DocumentReference;
+use Hanafalah\ModuleSupport\Models\DocumentType;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -10,11 +11,11 @@ return new class extends Migration
 {
     use NowYouSeeMe;
 
-    
+    private $__table;
 
     public function __construct()
     {
-        $this->__table = app(config('database.models.ExaminationSummary', ExaminationSummary::class));
+        $this->__table = app(config('database.models.DocumentReference', DocumentReference::class));
     }
 
     /**
@@ -27,21 +28,18 @@ return new class extends Migration
         $table_name = $this->__table->getTable();
         $this->isNotTableExists(function() use ($table_name){
             Schema::create($table_name, function (Blueprint $table) {
+                $document_type = app(config('database.models.DocumentType', DocumentType::class));
+
                 $table->ulid('id')->primary();
-                $table->string('reference_type', 50)->nullable(false);
-                $table->string('reference_id', 36)->nullable(false);
+                $table->string('name', 200)->nullable(false);
+                $table->string('reference_type',50)->nullable(false);
+                $table->string('reference_id',36)->nullable(false);
+                $table->foreignIdFor($document_type::class)->index()->constrained()->restrictOnDelete()->cascadeOnUpdate();
                 $table->json('props')->nullable();
                 $table->timestamps();
                 $table->softDeletes();
 
-                $table->index(['reference_type', 'reference_id'], 'summary_ref');
-            });
-
-            Schema::table($table_name, function (Blueprint $table) {
-                $table->foreignIdFor($this->__table::class, 'parent_id')
-                    ->nullable()->after('id')
-                    ->index()->constrained()
-                    ->cascadeOnUpdate()->restrictOnDelete();
+                $table->index(['reference_type','reference_id'],'ref_docRef');
             });
         });
     }

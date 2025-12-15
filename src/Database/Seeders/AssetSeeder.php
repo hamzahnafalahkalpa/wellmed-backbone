@@ -12,37 +12,39 @@ class AssetSeeder extends Seeder
     {
         echo "[DEBUG] Booting ".class_basename($this)."\n";
 
-        $asset_path = __DIR__ . '/data/images';
         $disk = Storage::disk(config('filesystems.default'));
         $is_s3 = config('filesystems.default') === 's3';
 
-        // Gunakan folder assets, baik untuk local maupun s3
-        $target_dir = 'assets';
-
-        $files = File::files($asset_path);
-
-        foreach ($files as $file) {
-            $filename = $file->getFilename();
-            $target_path = $target_dir . '/' . $filename;
-
-            // Baca konten file dari local source
-            $content = File::get($file->getRealPath());
-
-            // Cek apakah file sudah ada dan apakah isinya sama
-            if ($disk->exists($target_path)) {
-                $existing_content = $disk->get($target_path);
-
-                // Bandingkan isi file — kalau beda, overwrite
-                if (md5($existing_content) !== md5($content)) {
-                    $disk->put($target_path, $content);
-                    $this->command->info("Updated changed file: {$target_path}");
+        $asset_paths = [__DIR__ . '/data/images', __DIR__ . '/data/documents'];
+        foreach ($asset_paths as $asset_path) {
+            // Gunakan folder assets, baik untuk local maupun s3
+            $target_dir = 'assets';
+    
+            $files = File::files($asset_path);
+    
+            foreach ($files as $file) {
+                $filename = $file->getFilename();
+                $target_path = $target_dir . '/' . $filename;
+    
+                // Baca konten file dari local source
+                $content = File::get($file->getRealPath());
+    
+                // Cek apakah file sudah ada dan apakah isinya sama
+                if ($disk->exists($target_path)) {
+                    $existing_content = $disk->get($target_path);
+    
+                    // Bandingkan isi file — kalau beda, overwrite
+                    if (md5($existing_content) !== md5($content)) {
+                        $disk->put($target_path, $content);
+                        $this->command->info("Updated changed file: {$target_path}");
+                    } else {
+                        $this->command->info("Skipped identical file: {$target_path}");
+                    }
                 } else {
-                    $this->command->info("Skipped identical file: {$target_path}");
+                    // Belum ada, simpan baru
+                    $disk->put($target_path, $content);
+                    $this->command->info("Uploaded new file: {$target_path}");
                 }
-            } else {
-                // Belum ada, simpan baru
-                $disk->put($target_path, $content);
-                $this->command->info("Uploaded new file: {$target_path}");
             }
         }
     }
