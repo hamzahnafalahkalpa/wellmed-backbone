@@ -40,16 +40,13 @@ return new class extends Migration
                 $table->string('name')->nullable(false);
 
                 $table->foreignIdFor($patient::class)
-                    ->nullable()->index('pat_pi')->constrained()
-                    ->cascadeOnUpdate()->restrictOnDelete();
+                    ->nullable()->index('pat_pi');
 
                 $table->foreignIdFor($examination_summary::class)
-                    ->nullable()->index('es_pi')->constrained()
-                    ->cascadeOnUpdate()->restrictOnDelete();
+                    ->nullable()->index('es_pi');
 
                 $table->foreignIdFor($patient_summary::class)
-                    ->nullable()->index('ps_pi')->constrained('summaries')
-                    ->cascadeOnUpdate()->restrictOnDelete();
+                    ->nullable()->index('ps_pi');
 
                 $table->string('disease_type', 50)->nullable(false);
                 $table->string('disease_id', 36)->nullable(false);

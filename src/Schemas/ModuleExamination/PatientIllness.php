@@ -14,7 +14,7 @@ class PatientIllness extends ExaminationPatientIllness implements ModuleExaminat
     {
         $patient_illness = parent::prepareStorePatientIllness($patient_illness_dto);
         $visit_examination_model = $patient_illness_dto->visit_examination_model;
-        if (isset($visit_examination_model->sign_off_at) || true){
+        if (isset($visit_examination_model->sign_off_at) && config('app.elasticsearch.enabled', false)) {
             dispatch(new ElasticJob([
                 'type'  => 'BULK',
                 'datas' => [

@@ -2,21 +2,16 @@
 
 namespace Projects\WellmedBackbone\Imports;
 
+use Hanafalah\LaravelSupport\Concerns\Support\HasRequestData;
 use Projects\WellmedBackbone\Imports\BaseImport;
-use Maatwebsite\Excel\Facades\Excel;
 
 class Patient extends BaseImport{
+    use HasRequestData;
+
     public function handle(?array $attributes = []){
         $attributes ??= request()->all();
         try {
-            $support = app(config('app.contracts.Support'))->prepareStoreSupport(config('app.contracts.SupportData'),[
-                'name'           => $attributes['name'],
-                'reference_type' => $attributes['reference_type'],
-                'reference_id' => $attributes['reference_id'],
-                'paths' => [
-                    $attributes['file']
-                ]
-            ]);
+            $support = app(config('app.contracts.Support'))->prepareStoreSupport($this->requestDTO(config('app.contracts.SupportData'),$attributes));
             dd($support);
 
             dispatch(new PatientImportJob($attributes))->onQueue('import')->onConnection('rabbitmq');
