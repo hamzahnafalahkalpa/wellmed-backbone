@@ -12,15 +12,14 @@ class Patient extends BaseImport{
         $attributes ??= request()->all();
         try {
             $support = app(config('app.contracts.Support'))->prepareStoreSupport($this->requestDTO(config('app.contracts.SupportData'),$attributes));
-            dd($support);
-
-            dispatch(new PatientImportJob($attributes))->onQueue('import')->onConnection('rabbitmq');
+            // dd($support->toViewApi()->resolve());
+            // dispatch(new PatientImportJob($attributes))->onQueue('import')->onConnection('rabbitmq');
         } catch (\Throwable $th) {
-            dd($th->getMessage());
+            // dd($th->getMessage());
             throw $th;
         }
         return response()->json([
-            'message' => 'Seeder sedang dijalankan di background'
+            'message' => 'Import sedang berjalan di latar belakang.',
         ]);
 
 

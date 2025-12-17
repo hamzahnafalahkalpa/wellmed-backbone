@@ -207,7 +207,7 @@ class DocumentTypeSeeder extends Seeder{
                             [
                                 'label'          => 'Jenis Cacat',
                                 'key'            => 'disability_type',
-                                'type'           => 'INPUT',
+                                'type'           => 'InputText',
                                 'component_name' => null,
                                 'default_value'  => null,
                                 'attribute'      => null,
