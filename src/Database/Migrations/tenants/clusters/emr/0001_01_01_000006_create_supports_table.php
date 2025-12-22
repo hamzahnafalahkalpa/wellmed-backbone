@@ -27,8 +27,8 @@ return new class extends Migration
         $this->isNotTableExists(function() use ($table_name){
             Schema::create($table_name, function (Blueprint $table) {
                 $table->ulid('id')->primary();
-                $table->string('reference_type',50)->nullable(false);
-                $table->string('reference_id',36)->nullable(false);
+                $table->string('reference_type',50)->nullable();
+                $table->string('reference_id',36)->nullable();
                 $table->string('name', 200)->nullable(false);
                 $table->json('props')->nullable();
                 $table->timestamps();
