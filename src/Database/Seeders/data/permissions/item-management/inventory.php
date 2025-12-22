@@ -8,6 +8,7 @@ return [
     'icon'        => 'lsicon:inventory-outline',
     'type'        => Type::MENU->value,
     'show_in_acl' => true,
+    'ordering'    => 2,
     'guard_name'  => 'api',
     'childs'      => [
         [

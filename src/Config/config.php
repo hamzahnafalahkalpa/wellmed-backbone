@@ -74,6 +74,9 @@ return [
     "encodings" => [
     ],
     "provider" => "Projects\WellmedBackbone\\Providers\\WellmedBackboneServiceProvider",
+    "listener" => [
+        'url' => env('WELLMED_LISTENER_URL', 'http://host.docker.internal:9003/api/import/'),
+    ],
     "packages" => [
         'hanafalah/module-encoding'             => ['repository' => 'hamzahnafalahkalpa/module-encoding','provider' => 'Hanafalah\\ModuleEncoding\\ModuleEncodingServiceProvider'],
         'hanafalah/module-regional'             => ['repository' => 'hamzahnafalahkalpa/module-regional','provider' => 'Hanafalah\\ModuleRegional\\ModuleRegionalServiceProvider'],

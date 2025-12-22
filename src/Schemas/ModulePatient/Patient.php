@@ -67,22 +67,24 @@ class Patient extends SchemasPatient implements ModulePatientPatient
             }
         }
         $form_payload['address'] = array_merge($addresses,$new_address);
-        try {
-            $patient_satu_sehat = $this->schemaContract('patient_satu_sehat')->useAccessToSatuSehat()
-                ->prepareStorePatientSatuSehat(
-                $this->requestDTO(
-                    config('app.contracts.PatientSatuSehatData'),[
-                        'model' => $patient,
-                        'form'  => $form_payload
-                    ]
-                )
-            );
-            $prop_card_identity = $patient->prop_card_identity ?? [];
-            $prop_card_identity['ihs_number'] = $patient_satu_sehat->response['id'] ?? null;
-            $patient->setAttribute('prop_card_identity',$prop_card_identity);
-            $patient->save();
-        } catch (\Throwable $th) {
-            Log::channel('satu-sehat')->error($th->getMessage());
+        if (config('module-patient.satu-sehat.enable', true)){
+            try {
+                $patient_satu_sehat = $this->schemaContract('patient_satu_sehat')->useAccessToSatuSehat()
+                    ->prepareStorePatientSatuSehat(
+                    $this->requestDTO(
+                        config('app.contracts.PatientSatuSehatData'),[
+                            'model' => $patient,
+                            'form'  => $form_payload
+                        ]
+                    )
+                );
+                $prop_card_identity = $patient->prop_card_identity ?? [];
+                $prop_card_identity['ihs_number'] = $patient_satu_sehat->response['id'] ?? null;
+                $patient->setAttribute('prop_card_identity',$prop_card_identity);
+                $patient->save();
+            } catch (\Throwable $th) {
+                Log::channel('satu-sehat')->error($th->getMessage());
+            }
         }
 
         $this->fillingProps($patient, $patient_dto->props);

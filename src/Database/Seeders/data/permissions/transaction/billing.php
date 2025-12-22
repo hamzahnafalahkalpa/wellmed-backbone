@@ -3,11 +3,12 @@
 use Hanafalah\LaravelPermission\Enums\Permission\Type;
 
 return [
-    'name'        => 'Daftar Billing',
+    'name'        => 'Riwayat Billing',
     'alias'       => 'billing',
     'icon'        => 'streamline-ultimate:cash-payment-bills-bold',
     'type'        => Type::MENU->value,
     'show_in_acl' => true,
+    'ordering'    => 2,
     'guard_name'  => 'api',
     'childs'      => [
         [

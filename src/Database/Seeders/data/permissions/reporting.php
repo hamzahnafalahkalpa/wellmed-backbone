@@ -9,7 +9,7 @@ return [
     'type'        => Type::MENU->value,
     'show_in_acl' => true,
     'guard_name'  => 'api',
-    'ordering'    => 10,
+    'ordering'    => 4,
     'childs'      => [
         [
             'name'        => 'Rekap Data Pasien', 

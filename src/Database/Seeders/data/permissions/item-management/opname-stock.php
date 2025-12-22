@@ -8,6 +8,7 @@ return [
     'icon'       => 'lsicon:management-stockout-filled',
     'type'       => Type::MENU->value,
     'show_in_acl' => true,
+    'ordering'    => 4,
     'guard_name' => 'api',
     'childs'      => [
         [

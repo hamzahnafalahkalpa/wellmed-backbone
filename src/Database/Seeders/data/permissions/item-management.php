@@ -9,7 +9,7 @@ return [
     'type'        => Type::MENU->value,
     'show_in_acl' => true,
     'guard_name'  => 'api',
-    'ordering'    => 3,
+    'ordering'    => 5,
     'childs'      => [
         include __DIR__.'/item-management/item.php',
         include __DIR__.'/item-management/supply-chain.php',

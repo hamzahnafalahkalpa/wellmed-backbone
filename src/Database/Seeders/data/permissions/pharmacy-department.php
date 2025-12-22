@@ -9,7 +9,7 @@ return [
     'type'       => Type::MENU->value,
     'show_in_acl' => true,
     'guard_name' => 'api',
-    'ordering'   => 1,
+    'ordering'   => 3,
     'childs'     => [
         include(__DIR__.'/pharmacy-department/dispense.php'),
         include(__DIR__.'/pharmacy-department/frontline.php'),

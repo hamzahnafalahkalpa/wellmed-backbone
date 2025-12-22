@@ -27,7 +27,8 @@ class DatabaseSeeder extends Seeder
                 InstallerSeeder::class,
                 EmployeeSeeder::class,
                 RestrictionFeatureSeeder::class,
-                IcdSeeder::class
+                IcdSeeder::class,
+                PatientSeeder::class
             ]);
         } catch (\Throwable $th) {
             throw $th;

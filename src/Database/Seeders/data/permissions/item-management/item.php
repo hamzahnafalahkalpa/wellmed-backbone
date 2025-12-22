@@ -8,6 +8,7 @@ return [
     'icon'        => 'uil:medical',
     'type'        => Type::MENU->value,
     'show_in_acl' => true,
+    'ordering'    => 1,
     'guard_name'  => 'api',
     'childs'      => [
         [

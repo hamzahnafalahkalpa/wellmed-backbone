@@ -7,6 +7,7 @@ return [
     'alias'       => 'supply-chain',
     'icon'        => 'teenyicons:docker-outline',
     'type'        => Type::MENU->value,
+    'ordering'    => 3,
     'guard_name'  => 'api',
     'childs'      => [
         include __DIR__.'/supply-chain/purchase-request.php',

@@ -9,6 +9,7 @@ return [
     'type'        => Type::MENU->value,
     'show_in_acl' => true,
     'guard_name'  => 'api',
+    'ordering'    => 5,
     'childs'      => [
         [
             'name'        => 'Detail Data Invoice',

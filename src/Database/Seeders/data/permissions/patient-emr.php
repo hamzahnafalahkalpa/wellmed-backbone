@@ -3,7 +3,7 @@
 use Hanafalah\LaravelPermission\Enums\Permission\Type;
 
 return [
-    'name'       => 'Data Pasien dan EMR', 
+    'name'       => 'Data Pasien dan Kunjungan', 
     'alias'      => 'api.patient-emr',
     'icon'       => 'fluent:patient-20-regular',
     'type'       => Type::MENU->value,
