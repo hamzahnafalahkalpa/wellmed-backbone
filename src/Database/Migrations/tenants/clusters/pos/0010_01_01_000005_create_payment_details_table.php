@@ -50,8 +50,7 @@ return new class extends Migration
                 $table->foreignIdFor($payment_history::class)->nullable()->index()
                     ->constrained()->cascadeOnUpdate()->restrictOnDelete();
 
-                $table->foreignIdFor($transaction_item::class)->nullable()->index()
-                    ->constrained()->cascadeOnUpdate()->restrictOnDelete();   
+                $table->foreignIdFor($transaction_item::class)->nullable()->index();
                     
                 $table->foreignIdFor($transaction::class)->nullable()->index();   
 

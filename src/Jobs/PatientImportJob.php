@@ -11,8 +11,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Http;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\DB;
+use Projects\WellmedBackbone\Imports\PatientImport;
 
 class PatientImportJob implements ShouldQueue
 {
@@ -32,79 +31,15 @@ class PatientImportJob implements ShouldQueue
     {
         $support = $this->data['support'] ?? [];
         $paths = $support['paths'] ?? [];
+
         MicroTenant::tenantImpersonate($this->data['tenant_id']);
         foreach ($paths as $path) {
-            $filePath = $this->resolveFilePath($path);
-
-            $datas = Excel::toArray(
-                new class implements \Maatwebsite\Excel\Concerns\ToArray, 
-                    \Maatwebsite\Excel\Concerns\WithStartRow,
-                    \Maatwebsite\Excel\Concerns\WithHeadingRow {
-                    public function startRow(): int {
-                        return 2;
-                    }
-                    public function array(array $array) {}
-                },
-                $filePath
-            )[0];
-            // \Log::channel('import')->info('Patient import job processing', ['filePath' => $filePath, 'total_rows' => count($datas)]);
-
-            // Proses data sesuai kebutuhan
-            // foreach (array_chunk($datas, 100) as $data) {
-            foreach ($datas as $data) {
-                if (!isset($data['nama'])) continue;
-                $name_parts = explode(' ', $data['nama'] ?? '', 2);
-                $first_name = $name_parts[0] ?? '';
-                $last_name = $name_parts[1] ?? '';
-                // Konversi tanggal dari Excel serial number ke format Y-m-d
-                if (isset($data['tanggal_lahir']) && is_numeric($data['tanggal_lahir'])) {
-                    $data['tanggal_lahir'] = \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($data['tanggal_lahir'])->format('Y-m-d');
-                }
-                \Log::channel('import')->info('Storing patient', ['name' => $data['nama'] ?? null, 'dob' => $data['tanggal_lahir'] ?? null]);
-                app(config('app.contracts.Patient'))->prepareStorePatient(
-                    $this->requestDTO(config('app.contracts.PatientData'), [
-                        'id' => null,
-                        'card_identity' => [
-                            'old_mr' => $data['no_emr'] ?? null,
-                            'ihs_number' => $data['ihs_satu_sehat'] ?? null,
-                            'bpjs' => $data['no_bpjs'] ?? null
-                        ],
-                        'name' => $data['nama'],
-                        'reference_type' => "People",
-                        'reference' => [
-                            'first_name' => $first_name,
-                            'last_name' => $last_name,
-                            'phone_1' => $data['kontakhp'] ?? null,
-                            'phone_2' => null,
-                            'blood_type' => $data['golongan_darah'] ?? null,
-                            'pob' => $data['tempat_lahir'] ?? null,
-                            'dob' => $data['tanggal_lahir'] ?? null,
-                            'sex' => $data['jenis_kelamin'] ?? null,
-                            'address' => [
-                                'ktp' => [
-                                    'name' => $data['alamat_ktp'] ?? null,
-                                    'rt' => null,
-                                    'rw' => null,
-                                    'zip_code' => null
-                                ],
-                                'residence' => [
-                                    'name' => $data['alamat_domisili'] ?? null,
-                                    'rt' => null,
-                                    'rw' => null,
-                                    'zip_code' => null
-                                ]
-                            ],
-                            'card_identity' => [
-                                'nik' => $data['nik'] ?? null,
-                                'nik_ibu' => null,
-                                'sim' => null,
-                                'passport' => $data['passport'] ?? null,
-                                'kk' => null
-                            ]
-                        ]
-                    ])
-                );
+            try {
+                $filePath = $this->resolveFilePath($path);
+            } catch (\Throwable $th) {
+                throw $th;
             }
+            Excel::import(new PatientImport, $filePath);
         }
     }
 

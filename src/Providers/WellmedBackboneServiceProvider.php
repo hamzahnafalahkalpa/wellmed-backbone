@@ -13,6 +13,7 @@ use Projects\WellmedBackbone\{
 use Projects\WellmedBackbone\Contracts\Supports\ConnectionManager;
 use Projects\WellmedBackbone\Supports\ConnectionManager as SupportsConnectionManager;
 use PhpAmqpLib\Connection\AMQPStreamConnection;
+use Illuminate\Support\Facades\View;
 
 class WellmedBackboneServiceProvider extends WellmedBackboneEnvironment
 {
@@ -60,6 +61,8 @@ class WellmedBackboneServiceProvider extends WellmedBackboneEnvironment
                     
                     return $registry;
                 });
+
+                View::addNamespace('wellmed', base_path('vendor/projects/wellmed-backbone/src/Resources/Views'));
 
                 if (config('app.elasticsearch.enabled', false)) {
                     $hosts = config('app.elasticsearch.hosts','localhost:9200');

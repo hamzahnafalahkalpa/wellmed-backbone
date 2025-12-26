@@ -28,13 +28,13 @@ return [
         'middleware' => 'Middleware',
         'request' => 'Requests',
         'support' => 'Supports',
-        'view' => 'Views',
         'schema' => 'Schemas',
         'facade' => 'Facades',
         'config' => 'Config',
         'import' => 'Imports',
         'data' => 'Data',
         'resource' => 'Resources',
+        'view' => 'Resources/Views',
     ],
     "packages" => [
         /*--------------------------------------------------------------------------

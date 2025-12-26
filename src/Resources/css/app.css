@@ -1,0 +1,19 @@
+/* projects/wellmed-backbone/src/Resources/css/app.css */
+
+/* Import Tailwind base styles */
+@tailwind base;
+
+/* Import Tailwind components */
+@tailwind components;
+
+/* Import Tailwind utilities */
+@tailwind utilities;
+
+/* Bisa tambahkan custom CSS di bawah ini */
+body {
+  font-family: 'Inter', sans-serif;
+}
+
+.border-white{
+  border-color: #ffffff;
+}
