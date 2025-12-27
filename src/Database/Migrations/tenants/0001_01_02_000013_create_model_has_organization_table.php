@@ -31,7 +31,7 @@ return new class extends Migration
                 $table->string("organization_id", 36);
                 $table->string("model_type", 50);
                 $table->string("model_id", 36);
-                $table->unsignedTinyInteger('current')->default(1);
+                $table->timestamp('current')->nullable(true);
                 $table->json('props')->nullable();
                 $table->timestamps();
                 $table->softDeletes();

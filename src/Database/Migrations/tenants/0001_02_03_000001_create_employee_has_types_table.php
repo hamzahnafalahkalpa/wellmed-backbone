@@ -35,7 +35,7 @@ return new class extends Migration
                       ->constrained()->cascadeOnDelete()->cascadeOnUpdate();
                 $table->foreignIdFor($employee_type::class)->nullable(false)
                       ->constrained($employee_type->getTable(), 'id', 'eht_fk')->restrictOnDelete()->cascadeOnUpdate();
-                $table->unsignedTinyInteger('current')->default(1);
+                $table->timestamp('current')->nullable(true);
                 $table->timestamps();
                 $table->softDeletes();
             });

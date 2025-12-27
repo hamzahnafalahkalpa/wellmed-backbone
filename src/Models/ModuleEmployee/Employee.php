@@ -24,7 +24,7 @@ class Employee extends EmployeeEmployee{
             ->where('warehouse_id', $room->getKey())
             ->where('warehouse_type', 'Room')
             ->first();
-        $model_has_room->current = 1;
+        $model_has_room->current = now();
         $model_has_room->save();
         return $room;
     }
@@ -50,7 +50,7 @@ class Employee extends EmployeeEmployee{
         ->select($this->RoomModel()->getTable().'.*',$this->ModelHasRoomModel()->getTable().'.current')
         ->where('model_type',$this->getMorphClass())
         ->where('warehouse_type','Room')
-        ->where('current',1);
+        ->limit(1)->orderBy('current','desc');
     }
 
     public function modelHasRoom(){

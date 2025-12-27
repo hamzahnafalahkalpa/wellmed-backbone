@@ -37,7 +37,7 @@ return new class extends Migration
                 $table->string('master_feature_id', 36)->nullable(false);
                 $table->foreignIdFor($version::class)->nullable()
                     ->index()->constrained()->restrictOnDelete()->cascadeOnUpdate();
-                $table->unsignedTinyInteger('current')->default(1)->nullable(false);
+                $table->timestamp('current')->nullable(true);
                 $table->unsignedTinyInteger('batch')->nullable();
                 $table->json('props')->nullable();
                 $table->timestamps();

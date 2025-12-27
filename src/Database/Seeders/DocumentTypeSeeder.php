@@ -32,42 +32,42 @@ class DocumentTypeSeeder extends Seeder{
                 'name'  => 'Informed Consent',
                 'dynamic_forms' => [],
                 'childs' => [
-                    [
-                        'label' => 'GENERAL CONSENT',
-                        'name'  => 'General Consent',
-                        'dynamic_forms' => [
-                            [
-                                'label'          => 'Nama Wali/Penanggung Jawab',
-                                'key'            => 'guardian_name',
-                                'type'           => 'INPUT',
-                                'component_name' => null,
-                                'default_value'  => null,
-                                'attribute'      => null,
-                                'rule'           => null,
-                                'options'        => []
-                            ],
-                            [
-                                'label'          => 'Hubungan dengan Pasien',
-                                'key'            => 'relation_to_patient',
-                                'type'           => 'INPUT',
-                                'component_name' => null,
-                                'default_value'  => null,
-                                'attribute'      => null,
-                                'rule'           => null,
-                                'options'        => []
-                            ],
-                            [
-                                'label'          => 'Tanggal Persetujuan',
-                                'key'            => 'consent_date',
-                                'type'           => 'DATE',
-                                'component_name' => null,
-                                'default_value'  => null,
-                                'attribute'      => null,
-                                'rule'           => 'required',
-                                'options'        => []
-                            ]
-                        ]
-                    ],
+                    // [
+                    //     'label' => 'GENERAL CONSENT',
+                    //     'name'  => 'General Consent',
+                    //     'dynamic_forms' => [
+                    //         [
+                    //             'label'          => 'Nama Wali/Penanggung Jawab',
+                    //             'key'            => 'guardian_name',
+                    //             'type'           => 'INPUT',
+                    //             'component_name' => null,
+                    //             'default_value'  => null,
+                    //             'attribute'      => null,
+                    //             'rule'           => null,
+                    //             'options'        => []
+                    //         ],
+                    //         [
+                    //             'label'          => 'Hubungan dengan Pasien',
+                    //             'key'            => 'relation_to_patient',
+                    //             'type'           => 'INPUT',
+                    //             'component_name' => null,
+                    //             'default_value'  => null,
+                    //             'attribute'      => null,
+                    //             'rule'           => null,
+                    //             'options'        => []
+                    //         ],
+                    //         [
+                    //             'label'          => 'Tanggal Persetujuan',
+                    //             'key'            => 'consent_date',
+                    //             'type'           => 'DATE',
+                    //             'component_name' => null,
+                    //             'default_value'  => null,
+                    //             'attribute'      => null,
+                    //             'rule'           => 'required',
+                    //             'options'        => []
+                    //         ]
+                    //     ]
+                    // ],
                     [
                         'label' => 'ACCEPTANCE TREATMENT CONSENT',
                         'name'  => 'Persetujuan Tindakan Medis',
@@ -199,31 +199,31 @@ class DocumentTypeSeeder extends Seeder{
                                 'options'        => []
                             ]
                         ]
-                    ],
-                    [
-                        'label' => 'DISABILITY CERTIFICATE',
-                        'name'  => 'Surat Keterangan Cacat',
-                        'dynamic_forms' => [
-                            [
-                                'label'          => 'Jenis Cacat',
-                                'key'            => 'disability_type',
-                                'type'           => 'InputText',
-                                'component_name' => null,
-                                'default_value'  => null,
-                                'attribute'      => null,
-                                'rule'           => 'required',
-                                'options'        => []
-                            ]
-                        ]
-                    ],
-                    [
-                        'label' => 'PREGNANCY CERTIFICATE',
-                        'name'  => 'Surat Keterangan Hamil'
-                    ],
-                    [
-                        'label' => 'NON-PREGNANCY CERTIFICATE',
-                        'name'  => 'Surat Keterangan Tidak Hamil'
                     ]
+                    // [
+                    //     'label' => 'DISABILITY CERTIFICATE',
+                    //     'name'  => 'Surat Keterangan Cacat',
+                    //     'dynamic_forms' => [
+                    //         [
+                    //             'label'          => 'Jenis Cacat',
+                    //             'key'            => 'disability_type',
+                    //             'type'           => 'InputText',
+                    //             'component_name' => null,
+                    //             'default_value'  => null,
+                    //             'attribute'      => null,
+                    //             'rule'           => 'required',
+                    //             'options'        => []
+                    //         ]
+                    //     ]
+                    // ],
+                    // [
+                    //     'label' => 'PREGNANCY CERTIFICATE',
+                    //     'name'  => 'Surat Keterangan Hamil'
+                    // ],
+                    // [
+                    //     'label' => 'NON-PREGNANCY CERTIFICATE',
+                    //     'name'  => 'Surat Keterangan Tidak Hamil'
+                    // ]
                 ]
             ]
         ];
