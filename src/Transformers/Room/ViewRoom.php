@@ -15,6 +15,7 @@ class ViewRoom extends RoomViewRoom
   public function toArray(\Illuminate\Http\Request $request): array
   {
     $arr = [
+      'ihs_number'          => $this->ihs_number,
       'employee_ids'          => $this->employee_ids ?? [],
       'service_cluster_id'    => $this->service_cluster_id,
       'service_cluster'       => $this->prop_service_cluster,

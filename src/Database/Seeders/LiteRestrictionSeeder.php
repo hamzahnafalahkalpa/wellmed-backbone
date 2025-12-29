@@ -7,6 +7,7 @@ namespace Projects\WellmedBackbone\Database\Seeders;
 use Hanafalah\LaravelSupport\Concerns\Support\HasRequestData;
 use Illuminate\Database\Seeder;
 use Projects\WellmedBackbone\Jobs\JobRequest;
+use Illuminate\Support\Facades\Log;
 
 class LiteRestrictionSeeder extends Seeder
 {
@@ -59,7 +60,8 @@ class LiteRestrictionSeeder extends Seeder
             $medic_service->save();
         }
         foreach ($room_payloads as $room_payload) {
-            app(config('app.contracts.Room'))->prepareStoreRoom(
+            $room_payload['ihs_number'] = $workspace->integration['satu_sehat']['general']['ihs_number'] ?? null;
+            $room_model = app(config('app.contracts.Room'))->prepareStoreRoom(
                 $this->requestDTO(config('app.contracts.RoomData'),$room_payload)
             );
         }

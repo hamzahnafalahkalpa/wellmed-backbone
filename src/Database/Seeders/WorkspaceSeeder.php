@@ -145,7 +145,6 @@ class WorkspaceSeeder extends Seeder{
                     
                 ]
             ));
-
             $now = now();
             app(config('app.contracts.License'))->prepareStoreLicense($this->requestDTO(
                 config('app.contracts.LicenseData'),[
@@ -227,5 +226,48 @@ class WorkspaceSeeder extends Seeder{
             ]));
         $workspace->prop_transaction = $transaction->toViewApi()->resolve();
         $workspace->save();
+
+        if (config('module-patient.satu-sehat.enable', true)){
+            try {
+                $form_payload = [
+                    "active" => true,
+                    "organization_code" => Str::orderedUuid()->toString(),
+                    "organization_name" => fake()->company(),
+                    "part_of_organization_code" => config('satu-sehat.organization_id'),
+                    "type" => [
+                        "dept" => "PRAKTEK UMUM"
+                    ],
+                    "address" => [
+                        "work" => [
+                            "name" => "Jl. Test 01",
+                            "city" => "Jakarta",
+                            "postal_code" => "11290",
+                            "province_code" => "31",
+                            "city_code" => "3171",
+                            "district_code" => "317107",
+                            "village_code" => "3171071004",
+                            "rw" => "4",
+                            "rt" => "50"
+                        ]
+                    ],
+                    "telecom" => null
+                ];
+                $organization_satu_sehat = $this->schemaContract('organization_satu_sehat')->useAccessToSatuSehat()
+                    ->prepareStoreOrganizationSatuSehat(
+                    $this->requestDTO(
+                        config('app.contracts.OrganizationSatuSehatData'),[
+                            'model' => $workspace,
+                            'form'  => $form_payload
+                        ]
+                    )
+                );
+                $integration = $workspace->integration ?? [];
+                $integration['satu_sehat']['general']['ihs_number'] = $organization_satu_sehat->response['id'] ?? null;
+                $workspace->integration = $integration;
+                $workspace->save();
+            } catch (\Throwable $th) {
+                Log::channel('satu-sehat')->error($th->getMessage());
+            }
+        }
     }
 }

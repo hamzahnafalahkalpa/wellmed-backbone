@@ -10,6 +10,8 @@ use Hanafalah\WellmedLiteStarterpack\Concerns\HasComposer;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Artisan;
 use Projects\WellmedBackbone\Jobs\JobRequest;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Log;
 
 class LiteWorkspaceSeeder extends Seeder{
     use HasRequestData, HasComposer;
@@ -227,5 +229,51 @@ class LiteWorkspaceSeeder extends Seeder{
             ]));
         $workspace->prop_transaction = $transaction->toViewApi()->resolve();
         $workspace->save();
+
+        try {
+            $form_payload = [
+                "active" => true,
+                "organization_code" => config('satu-sehat.organization_id'),
+                "organization_name" => fake()->company(),
+                "part_of_organization_code" => config('satu-sehat.organization_id'),
+                "type" => [
+                    "dept" => "PRAKTEK UMUM"
+                ],
+                "address" => [
+                    "work" => [
+                        "name" => "Jl. Test 01",
+                        "city" => "Jakarta",
+                        "postal_code" => "11290",
+                        "province_code" => "31",
+                        "city_code" => "3171",
+                        "district_code" => "317107",
+                        "village_code" => "3171071004",
+                        "rw" => "4",
+                        "rt" => "50"
+                    ]
+                ],
+                "telecom" => [
+                    "work"=> [
+                        "phone" => ["0811######"],
+                    //  "email" => ["a@mail.com"]
+                     ]
+                ]
+            ];
+            $organization_satu_sehat = app(config('app.contracts.OrganizationSatuSehat'))->useAccessToSatuSehat()
+                ->prepareStoreOrganizationSatuSehat(
+                $this->requestDTO(
+                    config('app.contracts.OrganizationSatuSehatData'),[
+                        'model' => $workspace,
+                        'form'  => $form_payload
+                    ]
+                )
+            );
+            $integration = $workspace->integration ?? [];
+            $integration['satu_sehat']['general']['ihs_number'] = $organization_satu_sehat->response['id'] ?? null;
+            $workspace->integration = $integration;
+            $workspace->save();
+        } catch (\Throwable $th) {
+            Log::channel('satu-sehat')->error($th->getMessage());
+        }
     }
 }

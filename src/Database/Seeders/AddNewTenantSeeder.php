@@ -10,6 +10,7 @@ use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Str;
 use Projects\WellmedBackbone\Jobs\JobRequest;
+use Illuminate\Support\Facades\Log;
 
 class AddNewTenantSeeder extends Seeder{
     use HasRequestData, HasComposer;
@@ -24,6 +25,7 @@ class AddNewTenantSeeder extends Seeder{
         $data = JobRequest::all();
         $tenantName     = $data['tenant_name'] ?? 'default';
         $workspace_id   = $data['workspace_id'];
+        $workspace_model = app(config('database.models.Workspace'))->findOrFail($workspace_id);
         $workspace_name = $data['workspace_name'];
 
         $group_tenant_id  = $data['group_tenant_id'];
@@ -77,5 +79,51 @@ class AddNewTenantSeeder extends Seeder{
         ]);
 
         MicroTenant::tenantImpersonate($tenant);
+
+        try {
+            $form_payload = [
+                "active" => true,
+                "organization_code" => config('satu-sehat.organization_id'),
+                "organization_name" => $workspace_name,
+                "part_of_organization_code" => config('satu-sehat.organization_id'),
+                "type" => [
+                    "dept" => "KLINIK"
+                ],
+                "address" => [
+                    "work" => [
+                        "name" => $workspace_model->setting['address']['name'] ?? 'Unknown Address',
+                        "city" => "Jakarta",
+                        "postal_code" => "11290",
+                        "province_code" => "31",
+                        "city_code" => "3171",
+                        "district_code" => "317107",
+                        "village_code" => "3171071004",
+                        "rw" => "4",
+                        "rt" => "50"
+                    ]
+                ],
+                "telecom" => [
+                    "work"=> [
+                        "phone" => ["0811######"],
+                    //  "email" => ["a@mail.com"]
+                     ]
+                ]
+            ];
+            $organization_satu_sehat = app(config('app.contracts.OrganizationSatuSehat'))->useAccessToSatuSehat()
+                ->prepareStoreOrganizationSatuSehat(
+                $this->requestDTO(
+                    config('app.contracts.OrganizationSatuSehatData'),[
+                        'model' => $workspace_model,
+                        'form'  => $form_payload
+                    ]
+                )
+            );
+            $integration = $workspace_model->integration ?? [];
+            $integration['satu_sehat']['general']['ihs_number'] = $organization_satu_sehat->response['id'] ?? null;
+            $workspace_model->integration = $integration;
+            $workspace_model->save();
+        } catch (\Throwable $th) {
+            Log::channel('satu-sehat')->error($th->getMessage());
+        }
     }
 }

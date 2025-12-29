@@ -81,13 +81,13 @@ class RoomData extends DataRoomData implements DataModuleWarehouseRoomData{
             $medic_service = $new->MedicServiceModel();
             $medic_service = isset($data->medic_service_id) ? $medic_service->findOrFail($data->medic_service_id) : $medic_service;
         }
-        $props['prop_medic_service'] = $medic_service->toViewApi()->only(['id','name']);
+        $props['prop_medic_service'] = $medic_service->toViewApi()->only(['id','name','label']);
 
         $data->as_pharmacy = (isset($medic_service) && $medic_service->label == Label::PHARMACY_UNIT->value);
 
         $service_cluster = $new->ServiceClusterModel();
         $service_cluster = isset($data->service_cluster_id) ? $service_cluster->findOrFail($data->service_cluster_id) : $service_cluster;
-        $props['prop_service_cluster'] = $service_cluster->toViewApi()->only(['id','name']);
+        $props['prop_service_cluster'] = $service_cluster->toViewApi()->only(['id','name','label']);
 
         $data = parent::after($data);
         return $data;
