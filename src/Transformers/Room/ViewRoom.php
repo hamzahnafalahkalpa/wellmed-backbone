@@ -21,6 +21,7 @@ class ViewRoom extends RoomViewRoom
       'service_cluster'       => $this->prop_service_cluster,
       'medic_service_id'      => $this->medic_service_id,
       'medic_service'         => $this->prop_medic_service,
+      'ihs_number'            => $this->ihs_number,
     ];
     $arr = $this->mergeArray(parent::toArray($request),$arr);
     return $arr;

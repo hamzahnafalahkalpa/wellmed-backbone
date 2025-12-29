@@ -7,11 +7,12 @@ use Hanafalah\ModulePatient\Schemas\Patient as SchemasPatient;
 use Illuminate\Support\Str;
 use Projects\WellmedBackbone\Contracts\Schemas\ModulePatient\Patient as ModulePatientPatient;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Database\Eloquent\Model;
 
 class Patient extends SchemasPatient implements ModulePatientPatient
 {
-    protected function prepareStore(PatientData &$patient_dto){   
-        $patient = parent::prepareStore($patient_dto);
+    protected function afterPatientCreated(Model &$patient, PatientData &$patient_dto): self{
+        parent::afterPatientCreated($patient, $patient_dto);
         $patient_dto->props['integration'] = $patient->integration ?? $this->requestDTO(
             config('app.contracts.IntegrationData'),[
             ]
@@ -89,6 +90,6 @@ class Patient extends SchemasPatient implements ModulePatientPatient
 
         $this->fillingProps($patient, $patient_dto->props);
         $patient->save();
-        return $patient;
+        return $this;
     }
 }
