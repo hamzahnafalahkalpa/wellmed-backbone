@@ -60,7 +60,6 @@ class VisitRegistration extends SchemasVisitRegistration implements ModulePatien
                     );
                     $visit_registration_model->ihs_number = $encounter_satu_sehat->response['id'] ?? null;
                 } catch (\Throwable $th) {
-                    dd($th->getMessage());
                     Log::channel('satu-sehat')->error($th->getMessage());
                 }
             }
