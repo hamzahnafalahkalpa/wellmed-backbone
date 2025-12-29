@@ -109,5 +109,24 @@ class EmployeeSeeder extends Seeder
                 ]
             ));
         }
+
+        $medic_service = app(config('database.models.MedicService'))->withoutGlobalScopes()->where('label','UMUM')->first();
+        $medic_service->is_restricted = false;
+        $medic_service->save();
+
+        $workspace = app(config('database.models.Workspace'))->findOrFail($data['workspace_id']);
+        $building = app(config('database.models.Building'))->first();
+        $room_payload = [
+            "name" => "Ruang ".$medic_service->name,
+            "floor"=> 1,
+            "phone"=> null,
+            "medic_service_id"=> $medic_service->getKey(), //nullable, GET FROM SETTING > FASKES SERVICE > MEDICAL SERVICE
+            'medic_service_model' => $medic_service,
+            "building_id"=> $building->getKey(),
+            "ihs_number" => $workspace->integration['satu_sehat']['general']['ihs_number'] ?? null
+        ];
+        $room_model = app(config('app.contracts.Room'))->prepareStoreRoom(
+            $this->requestDTO(config('app.contracts.RoomData'), $room_payload)
+        );
     }
 }

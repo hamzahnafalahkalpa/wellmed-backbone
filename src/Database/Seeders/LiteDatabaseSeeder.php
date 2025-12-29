@@ -25,8 +25,8 @@ class LiteDatabaseSeeder extends Seeder
                 LiteWorkspaceSeeder::class,
                 ApiAccessSeeder::class,
                 InstallerSeeder::class,
-                LiteEmployeeSeeder::class,
                 RestrictionFeatureSeeder::class,
+                LiteEmployeeSeeder::class,
                 IcdSeeder::class,
                 PatientSeeder::class,
                 ElasticSeeder::class

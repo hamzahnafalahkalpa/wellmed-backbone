@@ -25,8 +25,8 @@ class DatabaseSeeder extends Seeder
                 WorkspaceSeeder::class,
                 ApiAccessSeeder::class,
                 InstallerSeeder::class,
-                EmployeeSeeder::class,
                 RestrictionFeatureSeeder::class,
+                EmployeeSeeder::class,
                 IcdSeeder::class,
                 PatientSeeder::class
             ]);

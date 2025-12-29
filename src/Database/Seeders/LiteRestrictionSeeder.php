@@ -30,7 +30,8 @@ class LiteRestrictionSeeder extends Seeder
         $building = app(config('database.models.Building'))->first();
         foreach ($workspace->installedFeatures as $installed_feature) {
             if ($installed_feature->master_feature_type == 'MedicService'){
-                $medic_service = app(config('database.models.WellmedUnicode'))->withoutGlobalScope('flag')->findOrFail($installed_feature->master_feature_id);
+                $wellmed_medic_service = app(config('database.models.WellmedUnicode'))->withoutGlobalScope('flag')->findOrFail($installed_feature->master_feature_id);
+                $medic_service = app(config('database.models.MedicService'))->withoutGlobalScopes()->where('label',$wellmed_medic_service->label)->first();
                 $skips[] = $medic_service->label;
                 $room_payloads[] = [
                     "name" => "Ruang ".$medic_service->name,
