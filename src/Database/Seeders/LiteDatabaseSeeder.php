@@ -27,8 +27,8 @@ class LiteDatabaseSeeder extends Seeder
                 InstallerSeeder::class,
                 RestrictionFeatureSeeder::class,
                 LiteEmployeeSeeder::class,
-                IcdSeeder::class,
-                PatientSeeder::class,
+                // IcdSeeder::class,
+                // PatientSeeder::class,
                 ElasticSeeder::class
             ]);
         } catch (\Throwable $th) {

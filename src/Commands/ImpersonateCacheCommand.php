@@ -11,5 +11,6 @@ class ImpersonateCacheCommand extends ImpersonateImpersonateCacheCommand
                                 {--app_id= : The id of the application}
                                 {--group_id= : The id of the group}
                                 {--tenant_id= : The id of the tenant}
+                                {--skip= : For skeip if other option not existed}
                             ';
 }
