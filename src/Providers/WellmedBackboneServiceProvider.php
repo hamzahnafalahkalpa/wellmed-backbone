@@ -7,6 +7,7 @@ use Hanafalah\LaravelSupport\{
     Concerns\NowYouSeeMe,
     Supports\PathRegistry
 };
+use Hanafalah\ModuleWorkspace\Facades\Workspace;
 use Projects\WellmedBackbone\{
     WellmedBackbone
 };
@@ -35,7 +36,6 @@ class WellmedBackboneServiceProvider extends WellmedBackboneEnvironment
 
     public function boot(){        
         $this->registerModel();
-        $databaseName = config('database.connections.central.database');
         $this->app->booted(function(){
             try {
                 $this->registers([
@@ -106,7 +106,7 @@ class WellmedBackboneServiceProvider extends WellmedBackboneEnvironment
                 }
 
                 $channel->close();
-                $connection->close();
+                $connection->close();                
             } catch (\Throwable $th) {
                 dd($th->getMessage());
             }

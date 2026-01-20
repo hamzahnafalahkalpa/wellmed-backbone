@@ -82,7 +82,7 @@ class Patient extends SchemasPatient implements ModulePatientPatient
                 $prop_card_identity = $patient->prop_card_identity ?? [];
                 $prop_card_identity['ihs_number'] = $patient_satu_sehat->response['id'] ?? null;
                 $patient->setAttribute('prop_card_identity',$prop_card_identity);
-                $patient->save();
+                $patient->save();                
             } catch (\Throwable $th) {
                 Log::channel('satu-sehat')->error($th->getMessage());
             }

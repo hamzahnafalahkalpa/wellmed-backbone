@@ -59,6 +59,26 @@ class VisitRegistration extends SchemasVisitRegistration implements ModulePatien
                         )
                     );
                     $visit_registration_model->ihs_number = $encounter_satu_sehat->response['id'] ?? null;
+                    
+                    $integration = $patient_model->integration;
+                    $satu_sehat = &$integration['satu_sehat'];
+                    if (isset($satu_sehat)){
+                        $to = &$satu_sehat['to'];
+                        $to ??= 0;
+                        $to += 1;
+                        $syncs = &$satu_sehat['syncs'];
+                        foreach ($syncs as &$sync) {
+                            if ($sync['flag'] == 'encounter'){
+                                break;
+                            }
+                        }
+                        $encounter_to = &$sync['to'];
+                        $encounter_to ??= 0;
+                        $encounter_to += 1;
+                        $sync['progress'] = ($sync['from']*100)/$sync['to'];
+                    }
+                    $patient_model->setAttribute('integration',$integration);
+                    $patient_model->save();
                 } catch (\Throwable $th) {
                     Log::channel('satu-sehat')->error($th->getMessage());
                 }
