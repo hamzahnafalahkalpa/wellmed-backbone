@@ -25,6 +25,7 @@ return [
         'policy' => 'Policies',
         'transformer' => 'Transformers',
         'seeder' => 'Database/Seeders',
+        'notification' => 'Notifications',
         'middleware' => 'Middleware',
         'request' => 'Requests',
         'support' => 'Supports',
