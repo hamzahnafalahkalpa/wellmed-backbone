@@ -17,7 +17,12 @@ class Patient extends SchemasPatient implements ModulePatientPatient
             config('app.contracts.IntegrationData'),[
             ]
         );
-        $patient->setAttribute('integration',$patient_dto->props['integration']->toArray());
+        if (!is_array($patient_dto->props['integration'])){
+            $integration = $patient_dto->props['integration']->toArray();
+        }else{
+            $integration = $patient_dto->props['integration'];
+        }
+        $patient->setAttribute('integration',$integration);
         $patient->load([
             'patientSatuSehat',
             'reference.addresses' => function($query){
