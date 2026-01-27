@@ -1,12 +1,13 @@
 <?php
 
-use Hanafalah\MicroTenant\Concerns\Tenant\NowYouSeeMe;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
-use Hanafalah\ModulePayment\Models\{
-    JournalBatch
+use Hanafalah\ModuleAppointment\Models\{
+    Kiosk,
+    QueueTransaction
 };
+use Hanafalah\MicroTenant\Concerns\Tenant\NowYouSeeMe;
 
 return new class extends Migration
 {
@@ -14,7 +15,7 @@ return new class extends Migration
 
     public function __construct()
     {
-        $this->__table = app(config('database.models.JournalBatch', JournalBatch::class));
+        $this->__table = app(config('database.models.QueueTransaction', QueueTransaction::class));
     }
 
     /**
@@ -27,14 +28,14 @@ return new class extends Migration
         $table_name = $this->__table->getTable();
         $this->isNotTableExists(function() use ($table_name){
             Schema::create($table_name, function (Blueprint $table) {
+                $kiosk = app(config('database.models.Kiosk',Kiosk::class));
+                
                 $table->ulid('id')->primary();
-                $table->string('reference_type')->nullable();
-                $table->ulid('reference_id')->nullable();
-                $table->timestamp('reported_at')->nullable();
-                $table->text('note')->nullable();
-                $table->string('status')->nullable();
-                $table->string('author_type')->nullable();
-                $table->ulid('author_id')->nullable();
+                $table->foreignIdFor($kiosk::class)->nullable()->index()
+                    ->constrained()->cascadeOnUpdate()->cascadeOnDelete();
+                $table->string('queue_number', 255)->nullable(false);
+                $table->string('reference_type', 50)->nullable();
+                $table->string('reference_id', 36)->nullable();
                 $table->json('props')->nullable();
                 $table->timestamps();
                 $table->softDeletes();

@@ -24,7 +24,7 @@ return [
     ],
     'filesystem' => [
         'asset_url'     => '/assets/',
-        'profile_photo' => 'profiles',
+        'profile_photo' => '',
     ],
     'imports' => [
         'Patient' => Patient::class

@@ -1,12 +1,11 @@
 <?php
 
-use Hanafalah\MicroTenant\Concerns\Tenant\NowYouSeeMe;
+use Hanafalah\ModuleAppointment\Models\Appointment;
+use Hanafalah\ModuleAppointment\Models\QueueTransaction;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
-use Hanafalah\ModulePayment\Models\{
-    JournalBatch
-};
+use Hanafalah\MicroTenant\Concerns\Tenant\NowYouSeeMe;
 
 return new class extends Migration
 {
@@ -14,7 +13,7 @@ return new class extends Migration
 
     public function __construct()
     {
-        $this->__table = app(config('database.models.JournalBatch', JournalBatch::class));
+        $this->__table = app(config('database.models.Appointment', Appointment::class));
     }
 
     /**
@@ -28,13 +27,12 @@ return new class extends Migration
         $this->isNotTableExists(function() use ($table_name){
             Schema::create($table_name, function (Blueprint $table) {
                 $table->ulid('id')->primary();
-                $table->string('reference_type')->nullable();
-                $table->ulid('reference_id')->nullable();
-                $table->timestamp('reported_at')->nullable();
-                $table->text('note')->nullable();
+                $table->string('name', 255)->nullable();
                 $table->string('status')->nullable();
-                $table->string('author_type')->nullable();
-                $table->ulid('author_id')->nullable();
+                $table->string('scheduled_at')->nullable();
+                $table->timestamp('checked_in_at')->nullable();
+                $table->string('reference_type', 50)->nullable();
+                $table->string('reference_id', 36)->nullable();
                 $table->json('props')->nullable();
                 $table->timestamps();
                 $table->softDeletes();
