@@ -9,6 +9,8 @@ class ViewReservation extends ReservationViewReservation
     public function toArray(\Illuminate\Http\Request $request): array
     {
         $arr = [
+            'nik' => $this->nik,
+            'phone' => $this->phone
         ];
         $arr = $this->mergeArray(parent::toArray($request), $arr);
         return $arr;
