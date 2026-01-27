@@ -5,6 +5,7 @@ namespace Projects\WellmedBackbone\Schemas\ModulePatient;
 use Hanafalah\ModulePatient\Contracts\Data\VisitExaminationData;
 use Hanafalah\ModulePatient\Schemas\VisitExamination as SchemasVisitExamination;
 use Projects\WellmedBackbone\Contracts\Schemas\ModulePatient\VisitExamination as ModulePatientVisitExamination;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Database\Eloquent\{
     Model
 };
