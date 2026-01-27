@@ -3,22 +3,28 @@
 use Hanafalah\LaravelPermission\Enums\Permission\Type;
 
 return [
-    'name'            => 'Cetak Surat Pasien', 
-    'alias'           => 'letter-queue',
-    'icon'            => 'uil:envelopes',
-    'type'            => Type::MENU->value,
+    'name'            => 'Reservasi', 
+    'alias'           => 'reservation',
+    'icon'            => 'healthicons:outpatient-department',
     'show_in_acl'     => true,
+    'type'            => Type::MENU->value,
     'guard_name'      => 'api',
     'childs'          => [        
         [
-            'name'        => 'Ubah Antrian Cetak Surat Pasien', 
+            'name'        => 'Kelola Reservasi ', 
             'alias'       => 'store',
             'type'        => Type::PERMISSION->value,
             'guard_name'  => 'api',
             'show_in_acl' => true
         ],
         [
-            'name'         => 'Detail Antrian Cetak Surat Pasien', 
+            'name'        => 'Ubah Reservasi ', 
+            'alias'       => 'update',
+            'type'        => Type::PERMISSION->value,
+            'guard_name'  => 'api'
+        ],
+        [
+            'name'         => 'Detail Reservasi ', 
             'alias'        => 'show',
             'type'         => Type::PERMISSION->value,
             'guard_name'   => 'api',
@@ -26,7 +32,7 @@ return [
             'show_in_acl'  => true
         ],
         [
-            'name'       => 'Hapus Antrian Cetak Surat Pasien', 
+            'name'       => 'Hapus Reservasi', 
             'alias'      => 'destroy',
             'type'       => Type::PERMISSION->value,
             'guard_name' => 'api'

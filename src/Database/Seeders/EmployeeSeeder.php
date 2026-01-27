@@ -23,6 +23,8 @@ class EmployeeSeeder extends Seeder
         $data = JobRequest::all();
         $user = app(config('database.models.User'))->where('username','admin_plus')->first();
         if (!isset($user)){
+            $faker = \Faker\Factory::create('id_ID');
+
             $role_ids   = app(config('database.models.Role'))->where('name','Admin')->get()->pluck('id')->toArray();
             $user       = app(config('database.models.User'))->where('username','admin_plus')->first();
             $profession = app(config('database.models.Profession'))->whereLike('name','Dokter Umum')->firstOrFail();

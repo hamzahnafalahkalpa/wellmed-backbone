@@ -3,7 +3,7 @@
 use Hanafalah\LaravelPermission\Enums\Permission\Type;
 
 return [
-    'name'       => 'Data Pasien dan Kunjungan', 
+    'name'       => 'Pelayanan Pasien', 
     'alias'      => 'api.patient-emr',
     'icon'       => 'fluent:patient-20-regular',
     'type'       => Type::MENU->value,
@@ -14,7 +14,8 @@ return [
         include(__DIR__.'/patient-emr/patient.php'),
         // include(__DIR__.'/patient-emr/visit-patient.php'),
         include(__DIR__.'/patient-emr/visit-registration.php'),
-        include(__DIR__.'/patient-emr/letter-queue.php')
+        include(__DIR__.'/patient-emr/letter-queue.php'),
+        include(__DIR__.'/patient-emr/reservation.php'),
     ]
 ];
 
