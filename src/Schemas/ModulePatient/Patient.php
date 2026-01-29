@@ -53,8 +53,8 @@ class Patient extends SchemasPatient implements ModulePatientPatient
             if (isset($addresses[$type])){
                 continue;
             }else{
-                // if (isset($address->province) && isset($address->district) 
-                //     && isset($address->subdistrict) && isset($address->village)){
+                if (isset($address->province) && isset($address->district) 
+                    && isset($address->subdistrict) && isset($address->village)){
                     if (isset($new_address[$type])){
                         continue;
                     }
@@ -77,11 +77,7 @@ class Patient extends SchemasPatient implements ModulePatientPatient
                         'rw'            => $address->rw,
                         'rt'            => $address->rt,
                     ];
-                // }else{
-                //     $new_address[$type] = [
-                //         'name'          => $address->name,
-                //     ];
-                // }
+                }
             }
         }
         $form_payload['address'] = array_merge($addresses,$new_address);
@@ -96,13 +92,11 @@ class Patient extends SchemasPatient implements ModulePatientPatient
                         ]
                     )
                 );
-                dd($patient_satu_sehat);
                 $prop_card_identity = $patient->prop_card_identity ?? [];
                 $prop_card_identity['ihs_number'] = $patient_satu_sehat->response['id'] ?? null;
                 $patient->setAttribute('prop_card_identity',$prop_card_identity);
                 $patient->save();                
             } catch (\Throwable $th) {
-                dd($th->getMessage());
                 Log::channel('satu-sehat')->error($th->getMessage());
             }
         }
