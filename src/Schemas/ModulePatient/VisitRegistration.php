@@ -34,8 +34,8 @@ class VisitRegistration extends SchemasVisitRegistration implements ModulePatien
                         'participant' => [
                             'attenders' => [
                                 [
-                                    "participant_code" => "10006926841",
-                                    "participant_name" => "dr. Yoga Yandika, Sp.A"
+                                    "participant_code" => "12778338166",
+                                    "participant_name" => "MULJADIE SETIAWAN"
                                 ]
                             ]
                         ],
@@ -46,8 +46,11 @@ class VisitRegistration extends SchemasVisitRegistration implements ModulePatien
                         'status_history' => [
                             'arrived' => $period
                         ],
-                        'location_code' => $room->ihs_number ?? null,
-                        'location_name' => $room->ihs_name ?? $room->name." - ".$room->getKey()
+                        'location_code' => $room->ihs_number ?? null, //3d44d9ed-618f-45e6-b605-b36bc21ef3a5
+                        'location_code' => '3d44d9ed-618f-45e6-b605-b36bc21ef3a5',
+                        // 'location_name' => $room->ihs_name ?? $room->name." - ".$room->getKey()
+                        // 'location_name' => $room->ihs_name ?? $room->name." - ".$room->getKey()
+                        'location_name' => 'Poli Umum'
                     ];
                     $encounter_satu_sehat = $this->schemaContract('encounter_satu_sehat')->useAccessToSatuSehat()
                         ->prepareStoreEncounterSatuSehat(
