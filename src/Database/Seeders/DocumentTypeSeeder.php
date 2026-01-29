@@ -4,7 +4,7 @@ namespace Projects\WellmedBackbone\Database\Seeders;
 
 use Hanafalah\LaravelSupport\Concerns\Support\HasRequestData;
 use Illuminate\Database\Seeder;
-use Projects\WellmedBackbone\Jobs\JobRequest;
+use Hanafalah\LaravelSupport\Jobs\JobRequest;
 
 class DocumentTypeSeeder extends Seeder{
     use HasRequestData;

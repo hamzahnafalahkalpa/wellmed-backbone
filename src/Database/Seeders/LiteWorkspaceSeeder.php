@@ -9,7 +9,7 @@ use Hanafalah\ModuleWorkspace\Enums\Workspace\Status;
 use Hanafalah\WellmedLiteStarterpack\Concerns\HasComposer;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Artisan;
-use Projects\WellmedBackbone\Jobs\JobRequest;
+use Hanafalah\LaravelSupport\Jobs\JobRequest;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
 

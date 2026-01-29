@@ -3,7 +3,7 @@
 namespace Projects\WellmedBackbone\Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use Projects\WellmedBackbone\Jobs\JobRequest;
+use Hanafalah\LaravelSupport\Jobs\JobRequest;
 
 class AddDatabaseSeeder extends Seeder
 {

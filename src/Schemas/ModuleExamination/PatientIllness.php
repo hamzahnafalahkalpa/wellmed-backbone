@@ -6,7 +6,7 @@ use Hanafalah\ModuleExamination\Contracts\Data\Examination\PatientIllnessData;
 use Hanafalah\ModuleExamination\Schemas\Examination\PatientIllness as ExaminationPatientIllness;
 use Illuminate\Database\Eloquent\Model;
 use Projects\WellmedBackbone\Contracts\Schemas\ModuleExamination\PatientIllness as ModuleExaminationPatientIllness;
-use Projects\WellmedGateway\Jobs\ElasticJob;
+use Hanafalah\LaravelSupport\Jobs\ElasticJob;
 
 class PatientIllness extends ExaminationPatientIllness implements ModuleExaminationPatientIllness
 {
@@ -14,7 +14,7 @@ class PatientIllness extends ExaminationPatientIllness implements ModuleExaminat
     {
         $patient_illness = parent::prepareStorePatientIllness($patient_illness_dto);
         $visit_examination_model = $patient_illness_dto->visit_examination_model;
-        if (isset($visit_examination_model->sign_off_at) && config('app.elasticsearch.enabled', false)) {
+        if (isset($visit_examination_model->sign_off_at) && config('elasticsearch.enabled', false)) {
             dispatch(new ElasticJob([
                 'type'  => 'BULK',
                 'datas' => [

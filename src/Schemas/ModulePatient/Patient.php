@@ -53,23 +53,35 @@ class Patient extends SchemasPatient implements ModulePatientPatient
             if (isset($addresses[$type])){
                 continue;
             }else{
-                if (isset($address->province) && isset($address->district) 
-                    && isset($address->subdistrict) && isset($address->village)){
+                // if (isset($address->province) && isset($address->district) 
+                //     && isset($address->subdistrict) && isset($address->village)){
                     if (isset($new_address[$type])){
                         continue;
                     }
+                    if (isset($address->province)) $province_code = Str::replace('.','',$address->province->code);
+                    if (isset($address->district)) {
+                        // $district_code = Str::replace('.','',Str::afterLast($address->district->code,'.'));
+                        $district_code = Str::replace('.','',$address->district->code);
+                        $district_name = $address->district->name;
+                    }
+                    if (isset($address->subdistrict)) $subdistrict_code = Str::replace('.','',$address->subdistrict->code);
+                    if (isset($address->village)) $village_code = Str::replace('.','',$address->village->code);
                     $new_address[$type] = [
                         'name'          => $address->name,
-                        'city'          => $address->district->name,
+                        'city'          => $district_name ?? null,
                         'postal_code'   => $address->zip_code,
-                        'province_code' => Str::replace('.','',$address->province->code),
-                        'city_code'     => Str::replace('.','',$address->district->code),
-                        'district_code' => Str::replace('.','',$address->subdistrict->code),
-                        'village_code'  => Str::replace('.','',$address->village->code),
+                        'province_code' => $province_code ?? null,
+                        'city_code'     => $district_code ?? null,
+                        'district_code' => $subdistrict_code ?? null,
+                        'village_code'  => $village_code ?? null,
                         'rw'            => $address->rw,
                         'rt'            => $address->rt,
                     ];
-                }
+                // }else{
+                //     $new_address[$type] = [
+                //         'name'          => $address->name,
+                //     ];
+                // }
             }
         }
         $form_payload['address'] = array_merge($addresses,$new_address);
@@ -84,11 +96,13 @@ class Patient extends SchemasPatient implements ModulePatientPatient
                         ]
                     )
                 );
+                dd($patient_satu_sehat);
                 $prop_card_identity = $patient->prop_card_identity ?? [];
                 $prop_card_identity['ihs_number'] = $patient_satu_sehat->response['id'] ?? null;
                 $patient->setAttribute('prop_card_identity',$prop_card_identity);
                 $patient->save();                
             } catch (\Throwable $th) {
+                dd($th->getMessage());
                 Log::channel('satu-sehat')->error($th->getMessage());
             }
         }

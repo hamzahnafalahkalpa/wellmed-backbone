@@ -9,7 +9,7 @@ use Hanafalah\WellmedPlusStarterpack\Concerns\HasComposer;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Str;
-use Projects\WellmedBackbone\Jobs\JobRequest;
+use Hanafalah\LaravelSupport\Jobs\JobRequest;
 use Illuminate\Support\Facades\Log;
 
 class AddNewTenantSeeder extends Seeder{

@@ -9,7 +9,7 @@ use Hanafalah\ModuleWorkspace\Enums\Workspace\Status;
 use Hanafalah\WellmedPlusStarterpack\Concerns\HasComposer;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Artisan;
-use Projects\WellmedBackbone\Jobs\JobRequest;
+use Hanafalah\LaravelSupport\Jobs\JobRequest;
 
 class WorkspaceSeeder extends Seeder{
     use HasRequestData, HasComposer;

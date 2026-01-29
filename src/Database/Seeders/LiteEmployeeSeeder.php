@@ -7,7 +7,7 @@ namespace Projects\WellmedBackbone\Database\Seeders;
 use Hanafalah\LaravelSupport\Concerns\Support\HasRequest;
 use Hanafalah\ModuleEmployee\Data\EmployeeData;
 use Illuminate\Database\Seeder;
-use Projects\WellmedBackbone\Jobs\JobRequest;
+use Hanafalah\LaravelSupport\Jobs\JobRequest;
 use Illuminate\Support\Str;
 
 class LiteEmployeeSeeder extends Seeder

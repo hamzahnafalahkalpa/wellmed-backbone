@@ -64,7 +64,17 @@ class WellmedBackboneServiceProvider extends WellmedBackboneEnvironment
 
                 View::addNamespace('wellmed', base_path('vendor/projects/wellmed-backbone/src/Resources/Views'));
 
-                if (config('app.elasticsearch.enabled', false)) {
+                // Set dynamic Elasticsearch prefix based on tenant
+                // if (isset(tenancy()->tenant) && config('elasticsearch.enabled', false)) {
+                //     // Extract tenant ID from session, request header, or env
+                //     $tenantId = tenancy()->tenant->id;
+
+                //     if ($tenantId) {
+                //         config(['elasticsearch.prefix' => $tenantId]);
+                //     }
+                // }
+
+                if (config('elasticsearch.enabled', false)) {
                     $hosts = config('app.elasticsearch.hosts','localhost:9200');
                     if (isset($hosts)){
                         $client = ClientBuilder::create()->setHosts($hosts)
@@ -72,13 +82,16 @@ class WellmedBackboneServiceProvider extends WellmedBackboneEnvironment
                                 config('app.elasticsearch.username','elastic'),
                                 config('app.elasticsearch.password','password')
                             )
-                            ->setSSLVerification(env('ELASTICSEARCH_SSL_VERIFY') === 'true')
+                            ->setSSLVerification(env('ELASTICSEARCH_SSL_VERIFY',false) === 'true')
                             ->build();
                         config(['app.elasticsearch.client' => $client]);
+                        $this->app->singleton('elasticsearch', function () use ($client) {
+                            return $client;
+                        });
                         foreach (config('app.elasticsearch.indexes',[]) as $index_key => $index_config){
-                            $full_index_name = 
-                                config('app.elasticsearch.index_prefix', 'development')
-                                .config('app.elasticsearch.index_separator', '.')
+                            $full_index_name =
+                                config('elasticsearch.prefix', 'development')
+                                .config('elasticsearch.separator', '.')
                                 .$index_config['name'];
                             config(['app.elasticsearch.indexes.'.$index_key.'.full_name' => $full_index_name]);
                             if ($client->indices()->exists(['index' => $full_index_name])->asBool()) {
