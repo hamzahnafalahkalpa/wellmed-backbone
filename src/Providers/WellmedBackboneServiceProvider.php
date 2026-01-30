@@ -64,16 +64,6 @@ class WellmedBackboneServiceProvider extends WellmedBackboneEnvironment
 
                 View::addNamespace('wellmed', base_path('vendor/projects/wellmed-backbone/src/Resources/Views'));
 
-                // Set dynamic Elasticsearch prefix based on tenant
-                // if (isset(tenancy()->tenant) && config('elasticsearch.enabled', false)) {
-                //     // Extract tenant ID from session, request header, or env
-                //     $tenantId = tenancy()->tenant->id;
-
-                //     if ($tenantId) {
-                //         config(['elasticsearch.prefix' => $tenantId]);
-                //     }
-                // }
-
                 if (config('elasticsearch.enabled', false)) {
                     $hosts = config('app.elasticsearch.hosts','localhost:9200');
                     if (isset($hosts)){

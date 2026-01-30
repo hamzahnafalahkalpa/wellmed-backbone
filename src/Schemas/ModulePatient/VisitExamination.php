@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Database\Eloquent\{
     Model
 };
+use Projects\WellmedBackbone\Jobs\SendObservationToSatuSehatJob;
+use Hanafalah\MicroTenant\Facades\MicroTenant;
 
 class VisitExamination extends SchemasVisitExamination implements ModulePatientVisitExamination
 {
@@ -46,19 +48,25 @@ class VisitExamination extends SchemasVisitExamination implements ModulePatientV
                 ]
             ];
             try {
-                $observation_satu_sehat = $this->schemaContract('observation_satu_sehat')->useAccessToSatuSehat()
-                    ->prepareStoreObservationSatuSehat(
-                    $this->requestDTO(
-                        config('app.contracts.ObservationSatuSehatData'),[
-                            'model' => $visit_examination_model,
-                            'form'  => $form_payload
-                        ]
-                    )
+                // Dispatch job to send observation data to Satu Sehat asynchronously via RabbitMQ
+                SendObservationToSatuSehatJob::dispatch(
+                    tenancy()->tenant->getKey(),
+                    $visit_examination_model->getKey(),
+                    $patient_model->getKey(),
+                    $form_payload
                 );
-                // $visit_examination_model->ihs_number = $observation_satu_sehat->response['id'] ?? null;
+
+                Log::channel('satu-sehat')->info("Observation queued for Satu Sehat sync", [
+                    'visit_examination_id' => $visit_examination_model->getKey(),
+                    'patient_id' => $patient_model->getKey(),
+                    'tenant_id' => tenancy()->tenant->getKey()
+                ]);
             } catch (\Throwable $th) {
-                dd($th->getMessage());
-                Log::channel('satu-sehat')->error($th->getMessage());
+                Log::channel('satu-sehat')->error("Failed to queue observation for Satu Sehat", [
+                    'visit_examination_id' => $visit_examination_model->getKey(),
+                    'patient_id' => $patient_model->getKey(),
+                    'error' => $th->getMessage()
+                ]);
             }
         }
         return $visit_examination;

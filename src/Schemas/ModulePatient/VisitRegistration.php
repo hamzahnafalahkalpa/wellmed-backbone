@@ -10,6 +10,8 @@ use Illuminate\Database\Eloquent\{
     Model
 };
 use Illuminate\Support\Facades\Log;
+use Projects\WellmedBackbone\Jobs\SendEncounterToSatuSehatJob;
+use Hanafalah\MicroTenant\Facades\MicroTenant;
 
 class VisitRegistration extends SchemasVisitRegistration implements ModulePatientVisitRegistration
 {
@@ -52,38 +54,26 @@ class VisitRegistration extends SchemasVisitRegistration implements ModulePatien
                         // 'location_name' => $room->ihs_name ?? $room->name." - ".$room->getKey()
                         'location_name' => 'Poli Umum'
                     ];
-                    $encounter_satu_sehat = $this->schemaContract('encounter_satu_sehat')->useAccessToSatuSehat()
-                        ->prepareStoreEncounterSatuSehat(
-                        $this->requestDTO(
-                            config('app.contracts.EncounterSatuSehatData'),[
-                                'model' => $visit_registration_model,
-                                'form'  => $form_payload
-                            ]
-                        )
+
+                    // Dispatch job to send encounter data to Satu Sehat asynchronously via RabbitMQ
+                    SendEncounterToSatuSehatJob::dispatch(
+                        tenancy()->tenant->getKey(),
+                        $visit_registration_model->getKey(),
+                        $patient_model->getKey(),
+                        $form_payload
                     );
-                    $visit_registration_model->ihs_number = $encounter_satu_sehat->response['id'] ?? null;
-                    
-                    $integration = $patient_model->integration;
-                    $satu_sehat = &$integration['satu_sehat'];
-                    if (isset($satu_sehat)){
-                        $to = &$satu_sehat['to'];
-                        $to ??= 0;
-                        $to += 1;
-                        $syncs = &$satu_sehat['syncs'];
-                        foreach ($syncs as &$sync) {
-                            if ($sync['flag'] == 'encounter'){
-                                break;
-                            }
-                        }
-                        $encounter_to = &$sync['to'];
-                        $encounter_to ??= 0;
-                        $encounter_to += 1;
-                        $sync['progress'] = ($sync['from']*100)/$sync['to'];
-                    }
-                    $patient_model->setAttribute('integration',$integration);
-                    $patient_model->save();
+
+                    Log::channel('satu-sehat')->info("Encounter queued for Satu Sehat sync", [
+                        'visit_registration_id' => $visit_registration_model->getKey(),
+                        'patient_id' => $patient_model->getKey(),
+                        'tenant_id' => tenancy()->tenant->getKey()
+                    ]);
                 } catch (\Throwable $th) {
-                    Log::channel('satu-sehat')->error($th->getMessage());
+                    Log::channel('satu-sehat')->error("Failed to queue encounter for Satu Sehat", [
+                        'visit_registration_id' => $visit_registration_model->getKey() ?? null,
+                        'patient_id' => $patient_model->getKey() ?? null,
+                        'error' => $th->getMessage()
+                    ]);
                 }
             }
         }
