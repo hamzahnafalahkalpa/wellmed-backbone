@@ -13,37 +13,22 @@ use Hanafalah\MicroTenant\Facades\MicroTenant;
 
 class Patient extends SchemasPatient implements ModulePatientPatient
 {
-    public function afterTransaction(Model $current_model, mixed $dto, ?array $response = null): self{
-        $patient = $current_model;
-        $patient_dto = $dto;
-        parent::afterPatientCreated($patient, $patient_dto);
-
-        $this->handleIntegrationData($patient, $patient_dto);
-        $this->loadPatientRelationships($patient);
-
-        $payload = $this->prepareSatuSehatPayload($patient);
-
-        //MUST BE LAST OKAY, IF YOU WANNA UPDATE PATIENT MODEL AGAIN, PLEASE DO REFRSH FIRST
-        $this->dispatchSatuSehatSync($patient, $payload);
-        return $this;
-    }
     /**
      * Hook executed after a patient is created.
      * Handles integration data, Satu Sehat payload preparation, and async sync dispatch.
      */
     protected function afterPatientCreated(Model &$patient, PatientData &$patient_dto): self
     {
-        // parent::afterPatientCreated($patient, $patient_dto);
+        parent::afterPatientCreated($patient, $patient_dto);
 
-        // $this->handleIntegrationData($patient, $patient_dto);
-        // $this->loadPatientRelationships($patient);
+        $this->handleIntegrationData($patient, $patient_dto);
+        $this->loadPatientRelationships($patient);
 
-        // $payload = $this->prepareSatuSehatPayload($patient);
-        // $this->dispatchSatuSehatSync($patient, $payload);
+        $payload = $this->prepareSatuSehatPayload($patient);
+        $this->dispatchSatuSehatSync($patient, $payload);
 
-        // $this->fillingProps($patient, $patient_dto->props);
-        // $patient->save();
-
+        $this->fillingProps($patient, $patient_dto->props);
+        $patient->save();
         return $this;
     }
 

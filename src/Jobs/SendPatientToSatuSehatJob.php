@@ -14,9 +14,9 @@ class SendPatientToSatuSehatJob implements ShouldQueue
 {
     use Queueable, SerializesModels, InteractsWithQueue, HasRequestData;
 
-    // public $tries = 3;
+    public $tries = 3;
     public $timeout = 120;
-    // public $backoff = [10, 30, 60];
+    public $backoff = [10, 30, 60];
 
     protected mixed $tenantId;
     protected mixed $patientId;
@@ -34,7 +34,6 @@ class SendPatientToSatuSehatJob implements ShouldQueue
         try {
             // Set tenant context for multi-tenant isolation
             MicroTenant::tenantImpersonate($this->tenantId);
-            // tenancy()->initialize($this->tenantId);
             // Get patient model
             $patientModel = app(config('database.models.Patient'))->find($this->patientId);
             if (!$patientModel) {
