@@ -8,6 +8,8 @@ use Hanafalah\ModuleWarehouse\Contracts\Data\RoomData;
 use Illuminate\Database\Eloquent\Model;
 use Projects\WellmedBackbone\Contracts\Schemas\ModuleWarehouse\Room as ModuleWarehouseRoom;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
+use Projects\WellmedBackbone\Jobs\SendLocationToSatuSehatJob;
 
 class Room extends SchemasRoom implements ModuleWarehouseRoom{
 
@@ -44,60 +46,97 @@ class Room extends SchemasRoom implements ModuleWarehouseRoom{
 
     public function prepareStoreRoom(RoomData $room_dto): Model{
         $this->room_model = $room_model = parent::prepareStoreRoom($room_dto);
-        $workspace = tenancy()->tenant->reference;
-        if (isset($room_model->ihs_number)){
-            try {
-                $room_model->ihs_name = $room_model->name." - ".$room_model->getKey();
-                $form_payload = [
-                    "name" => $room_model->ihs_name,
-                    "description" => "-",
-                    "location_code" => "RU-".$room_model->getKey(),
-                    "organization_code" => config('satu-sehat.organization_id'),
-                    "address" => [
-                        "use" => "work",
-                        "name" => $workspace->setting['address']['name'] ?? 'Unknown Address',
-                        // "city" => "Bandung",
-                        // "postal_code" => "11290",
-                        // "province_code" => "32",
-                        // "city_code" => "3212",
-                        // "district_code" => "321212",
-                        // "village_code" => "3212122013",
-                        // "rw" => "4",
-                        // "rt" => "50"
-                    ],
-                    "telecom" => [
-                        "work" => [
-                            "phone" => ["0812######"],
-                            // "email" => ["a@mail.com"]
-                        ]
-                    ],
-                    "physical_type" => [
-                        "site" => "Ruang ".$room_model->prop_medic_service['label'] ?? 'Umum',
-                    ],
-                    "longitude" => 0,
-                    "latitude" => 0,
-                    "altitude" => 0,
-                    "managing_organization_code" => $room_dto->props['ihs_number'] ?? $workspace->integration['satu_sehat']['general']['ihs_number'] ?? null
-                ];
-                $location_satu_sehat = app(config('app.contracts.LocationSatuSehat'))->useAccessToSatuSehat()
-                    ->prepareStoreLocationSatuSehat(
-                    $this->requestDTO(
-                        config('app.contracts.LocationSatuSehatData'),[
-                            'model' => $room_model,
-                            'form'  => $form_payload
-                        ]
-                    )
-                );
-                $room_model->ihs_number = $location_satu_sehat->response['id'] ?? null;
-            } catch (\Throwable $th) {
-                Log::channel('satu-sehat')->error($th->getMessage());
-            }
-        }else{
-            $room_model->ihs_number = null;
-            $room_model->ihs_name = null;
-        }
-        $room_model->save();
+        $this->prepareStoreSatuSehatLocation($room_dto,$room_model);
         return $this->room_model;
     }
+
+    public function prepareStoreSatuSehatLocation(mixed $dto,Model $room_model){
+        $payload = $this->prepareSatuSehatPayload($dto,$room_model);
+        $this->dispatchSatuSehatSync($room_model, $payload);
+    }
+
+    /**
+     * Prepare the payload for Satu Sehat integration.
+     */
+    private function prepareSatuSehatPayload(mixed $dto,Model &$room_model): array
+    {
+        $existingPayload = $room_model->locationSatuSehat?->payload ?? [];
+        $basePayload = $this->buildBaseLocationPayload($dto,$room_model);
+        $payload = array_merge($existingPayload, $basePayload);
+        return $payload;
+    }
     
+    /**
+     * Build base location payload with essential location information.
+     */
+    private function buildBaseLocationPayload(mixed &$dto, Model &$room_model): array
+    {
+        $workspace = tenancy()->tenant->reference;
+        $location_code = $room_model->getKey().' - '.Str::orderedUuid()->toString();
+        $room_model->ihs_name = $room_model->name." - ".$location_code;
+        return [
+            'name'       => $room_model->ihs_name,
+            "description" => "-",
+            "location_code" => "RU-".$location_code,
+            'organization_code' => config('satu-sehat.organization_id'),
+            "address" => [
+                "use" => "work",
+                "name" => $workspace->setting['address']['name'] ?? 'Unknown Address',
+                // "city" => "Bandung",
+                // "postal_code" => "11290",
+                // "province_code" => "32",
+                // "city_code" => "3212",
+                // "district_code" => "321212",
+                // "village_code" => "3212122013",
+                // "rw" => "4",
+                // "rt" => "50"
+            ],
+            "telecom" => [
+                "work" => [
+                    "phone" => [$room_model->phone ?? "0812######"],
+                    // "email" => ["a@mail.com"]
+                ]
+            ],
+            "physical_type" => [
+                "site" => "Ruang ".$room_model->prop_medic_service['label'] ?? 'Umum',
+            ],
+            "longitude" => 0,
+            "latitude" => 0,
+            "altitude" => 0,
+            "managing_organization_code" => config('satu-sehat.organization_id') ?? null
+            // "managing_organization_code" => $dto->props['ihs_number'] ?? $workspace->integration['satu_sehat']['general']['ihs_number'] ?? config('satu-sehat.organization_id') ?? null
+        ];
+    }
+
+    /**
+     * Dispatch location data to Satu Sehat via async job if enabled.
+     */
+    private function dispatchSatuSehatSync(Model $room_model, array $payload): void
+    {
+        if (!config('module-warehouse.satu-sehat.enable', true)) {
+            return;
+        }
+
+        $tenant_id = tenancy()->tenant->getKey();
+        $room_id = $room_model->getKey();
+        try {
+            dispatch(new SendLocationToSatuSehatJob(
+                $tenant_id,
+                $room_id,
+                $payload
+            ))->onQueue('satusehat')->onConnection('sync');
+            // ->onQueue('satusehat')->onConnection(config('queue.default','rabbitmq'));
+
+            Log::channel('satu-sehat')->info('Patient queued for Satu Sehat sync', [
+                'room_id' => $room_id,
+                'tenant_id' => $tenant_id
+            ]);
+        } catch (\Throwable $exception) {
+            dd($exception->getMessage());
+            Log::channel('satu-sehat')->error('Failed to queue location for Satu Sehat', [
+                'room_id' => $room_id,
+                'error' => $exception->getMessage()
+            ]);
+        }
+    }
 }

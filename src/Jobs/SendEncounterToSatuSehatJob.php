@@ -2,6 +2,7 @@
 
 namespace Projects\WellmedBackbone\Jobs;
 
+use Hanafalah\LaravelSupport\Concerns\Support\HasRequestData;
 use Hanafalah\MicroTenant\Facades\MicroTenant;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
@@ -11,18 +12,18 @@ use Illuminate\Support\Facades\Log;
 
 class SendEncounterToSatuSehatJob implements ShouldQueue
 {
-    use Queueable, SerializesModels, InteractsWithQueue;
+    use Queueable, SerializesModels, InteractsWithQueue, HasRequestData;
 
     public $tries = 3;
     public $timeout = 120;
     public $backoff = [10, 30, 60];
 
-    protected int $tenantId;
-    protected int $visitRegistrationId;
-    protected int $patientId;
+    protected mixed $tenantId;
+    protected string $visitRegistrationId;
+    protected string $patientId;
     protected array $formPayload;
 
-    public function __construct(int $tenantId, int $visitRegistrationId, int $patientId, array $formPayload)
+    public function __construct(mixed $tenantId, string $visitRegistrationId, string $patientId, array $formPayload)
     {
         $this->tenantId = $tenantId;
         $this->visitRegistrationId = $visitRegistrationId;
@@ -37,7 +38,7 @@ class SendEncounterToSatuSehatJob implements ShouldQueue
             MicroTenant::tenantImpersonate($this->tenantId);
 
             // Get visit registration model
-            $visitRegistrationModel = app(config('app.models.VisitRegistration'))->find($this->visitRegistrationId);
+            $visitRegistrationModel = app(config('database.models.VisitRegistration'))->find($this->visitRegistrationId);
 
             if (!$visitRegistrationModel) {
                 Log::channel('satu-sehat')->warning("Visit registration not found: {$this->visitRegistrationId}");
@@ -45,7 +46,7 @@ class SendEncounterToSatuSehatJob implements ShouldQueue
             }
 
             // Get patient model
-            $patientModel = app(config('app.models.Patient'))->find($this->patientId);
+            $patientModel = app(config('database.models.Patient'))->find($this->patientId);
 
             if (!$patientModel) {
                 Log::channel('satu-sehat')->warning("Patient not found: {$this->patientId}");
@@ -53,10 +54,10 @@ class SendEncounterToSatuSehatJob implements ShouldQueue
             }
 
             // Send encounter to Satu Sehat
-            $encounter_satu_sehat = app(config('app.schemas.encounter_satu_sehat'))
+            $encounter_satu_sehat = app(config('app.contracts.EncounterSatuSehat'))
                 ->useAccessToSatuSehat()
                 ->prepareStoreEncounterSatuSehat(
-                    app()->make(config('app.contracts.EncounterSatuSehatData'), [
+                    $this->requestDTO(config('app.contracts.EncounterSatuSehatData'), [
                         'model' => $visitRegistrationModel,
                         'form'  => $this->formPayload
                     ])

@@ -79,5 +79,7 @@ class Room extends BuildingRoom
         )->where('model_type',$this->getMorphClass())
          ->where('warehouse_type','Room');
     }
+
+    public function locationSatuSehat(){return $this->morphOneModel('LocationSatuSehat','reference');}
     //END EIGER SECTION
 }

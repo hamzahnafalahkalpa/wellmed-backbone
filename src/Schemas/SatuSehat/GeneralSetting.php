@@ -42,7 +42,13 @@ class GeneralSetting extends SatuSehatLog implements SatuSehatGeneralSetting{
     public function generalPrepareStoreMultiple(array $datas): Collection{
         $collection = new Collection();
         foreach ($datas as $data) {
-            $collection->push($this->generalPrepareStore($this->requestDTO(config("app.contracts.SatuSehatLogData"),$data)));
+            if (is_array($data)){
+                foreach($data as $single_data){
+                    $collection->push($this->generalPrepareStore($this->requestDTO(config("app.contracts.SatuSehatLogData"),$single_data)));
+                }
+            }else{
+                $collection->push($this->generalPrepareStore($this->requestDTO(config("app.contracts.SatuSehatLogData"),$single_data)));
+            }
         }
         return $collection;
     }

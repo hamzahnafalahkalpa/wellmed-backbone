@@ -22,6 +22,7 @@ class VisitRegistration extends SchemasVisitRegistration implements ModulePatien
         $visit_patient_model = $visit_registration_model->visitPatient;
         $visit_registration_model->encounter_code ??= Str::orderedUuid()->toString();
         $visit_registration_model->ihs_number ??= null;
+        $visit_registration_model->save();
 
         if (!isset($visit_registration_model->ihs_number)) {
             $patient_model = $visit_registration_dto->patient_model ?? $visit_patient_model->patient ?? null;
@@ -31,8 +32,6 @@ class VisitRegistration extends SchemasVisitRegistration implements ModulePatien
                 $this->dispatchSatuSehatSync($visit_registration_model, $patient_model, $payload);
             }
         }
-
-        $visit_registration_model->save();
         return $this;
     }
 
@@ -59,13 +58,15 @@ class VisitRegistration extends SchemasVisitRegistration implements ModulePatien
                     ]
                 ]
             ],
+            // 'organization_code' => config('satu-sehat.client_organization_id') ?? config('satu-sehat.organization_id'),
             'organization_code' => config('satu-sehat.organization_id'),
             'visit_code' => $visit_patient_model->visit_code ?? Str::orderedUuid()->toString(),
             'period' => $period,
             'status_history' => [
                 'arrived' => $period
             ],
-            'location_code' => '3d44d9ed-618f-45e6-b605-b36bc21ef3a5',
+            // 'location_code' => '3d44d9ed-618f-45e6-b605-b36bc21ef3a5',
+            'location_code' => $room->ihs_number,
             'location_name' => 'Poli Umum'
         ];
     }

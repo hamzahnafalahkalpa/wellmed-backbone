@@ -227,27 +227,28 @@ class WorkspaceSeeder extends Seeder{
         $workspace->prop_transaction = $transaction->toViewApi()->resolve();
         $workspace->save();
 
-        if (config('module-patient.satu-sehat.enable', true)){
+        if (config('module-workspace.satu-sehat.enable', true)){
             try {
                 $form_payload = [
                     "active" => true,
-                    "organization_code" => Str::orderedUuid()->toString(),
-                    "organization_name" => fake()->company(),
+                    // "organization_code" => Str::orderedUuid()->toString(),
+                    "organization_code" => $workspace->uuid,
+                    "organization_name" => $workspace->name.' - '.$workspace->uuid,
                     "part_of_organization_code" => config('satu-sehat.organization_id'),
                     "type" => [
                         "dept" => "PRAKTEK UMUM"
                     ],
                     "address" => [
                         "work" => [
-                            "name" => "Jl. Test 01",
-                            "city" => "Jakarta",
-                            "postal_code" => "11290",
+                            "name" => "-",
+                            "city" => "Bandung",
+                            // "postal_code" => "11290",
                             "province_code" => "31",
                             "city_code" => "3171",
                             "district_code" => "317107",
                             "village_code" => "3171071004",
-                            "rw" => "4",
-                            "rt" => "50"
+                            // "rw" => "4",
+                            // "rt" => "50"
                         ]
                     ],
                     "telecom" => null
