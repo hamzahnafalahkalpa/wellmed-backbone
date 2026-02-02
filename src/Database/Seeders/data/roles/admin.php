@@ -5,7 +5,9 @@ return [
     'api.employee-management.*',
     'api.setting.*',
     'api.patient-emr.*',
-    'api.transaction.*',
+    'api.transaction.index',
+    'api.transaction.point-of-sale.*',
+    'api.transaction.billing.*',
     'api.pharmacy-department.*',
     'api.reporting.*'
 ];
