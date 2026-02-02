@@ -14,6 +14,22 @@ class LiteEncodingSeeder extends Seeder
 {
     use HasRequest;
 
+    protected $dummy_encodings = [
+        'BILLING'=> '{"separator":{"distance":1,"separator":"\/"},"structure":[{"type":"alphanumeric","value":"BILL","length":4,"resetable":null,"format":null},{"type":"date","value":null,"length":null,"resetable":true,"format":"YYYYMMDD"},{"type":"incrementing","value":null,"length":4,"resetable":null,"format":null}]}', 
+        'TRANSACTION'=> '{"separator":{"distance":1,"separator":"-"},"structure":[{"type":"alphanumeric","value":"TRX","length":3,"resetable":null,"format":null},{"type":"date","value":null,"length":null,"resetable":true,"format":"YYMMDD"},{"type":"incrementing","value":null,"length":4,"resetable":null,"format":null}]}', 
+        'TREATMENT'=> '{"separator":{"distance":1,"separator":"-"},"structure":[{"type":"alphanumeric","value":"TR","length":2,"resetable":null,"format":null},{"type":"incrementing","value":null,"length":5,"resetable":null,"format":null}]}', 
+        'MEDICAL_TREATMENT'=> '{"separator":{"distance":1,"separator":null},"structure":[{"type":"alphanumeric","value":"TP","length":2,"resetable":null,"format":null},{"type":"incrementing","value":null,"length":5,"resetable":null,"format":null}]}', 
+        'VISIT_PATIENT'=> '{"separator":{"distance":1,"separator":"\/"},"structure":[{"type":"alphanumeric","value":"POL","length":3,"resetable":null,"format":null},{"type":"date","value":null,"length":null,"resetable":true,"format":"YYMMDD"},{"type":"incrementing","value":null,"length":3,"resetable":null,"format":null}]}', 
+        'VISIT_REGISTRATION'=> '{"separator":{"distance":1,"separator":null},"structure":[{"type":"alphanumeric","value":"REG","length":3,"resetable":null,"format":null},{"type":"date","value":null,"length":null,"resetable":true,"format":"YYMMDD"},{"type":"incrementing","value":null,"length":4,"resetable":null,"format":null}]}', 
+        'VISIT_EXAMINATION'=> '{"separator":{"distance":1,"separator":"-"},"structure":[{"type":"alphanumeric","value":"VIX","length":3,"resetable":null,"format":null},{"type":"date","value":null,"length":null,"resetable":true,"format":"YYMMDD"},{"type":"incrementing","value":null,"length":4,"resetable":null,"format":null}]}', 
+        'REFERRAL'=> '{"separator":{"distance":1,"separator":"-"},"structure":[{"type":"alphanumeric","value":"REFF","length":4,"resetable":null,"format":null},{"type":"date","value":null,"length":null,"resetable":true,"format":"YYMMDD"},{"type":"incrementing","value":null,"length":3,"resetable":null,"format":null}]}', 
+        'INVOICE'=> '{"separator":{"distance":1,"separator":"-"},"structure":[{"type":"alphanumeric","value":"INV","length":3,"resetable":null,"format":null},{"type":"date","value":null,"length":null,"resetable":true,"format":"YYMMDD"},{"type":"incrementing","value":null,"length":4,"resetable":null,"format":null}]}', 
+        'PRESCRIPTION'=> '{"separator":{"distance":1,"separator":"-"},"structure":[{"type":"alphanumeric","value":"REC","length":3,"resetable":null,"format":null},{"type":"date","value":null,"length":null,"resetable":true,"format":"YYYYMMDD"},{"type":"incrementing","value":null,"length":3,"resetable":null,"format":null}]}', 
+        'MEDICAL_RECORD'=> '{"separator":{"distance":1,"separator":null},"structure":[{"type":"alphanumeric","value":"RM","length":2,"resetable":null,"format":null},{"type":"date","value":null,"length":null,"resetable":null,"format":"YYMMDD"},{"type":"incrementing","value":null,"length":4,"resetable":null,"format":null}]}', 
+        'ITEM'=> '{"separator":{"distance":1,"separator":null},"structure":[{"type":"alphanumeric","value":"ITEM","length":4,"resetable":null,"format":null},{"type":"incrementing","value":null,"length":5,"resetable":null,"format":null}]}', 
+        'MEDICAL_ITEM'=> '{"separator":{"distance":1,"separator":null},"structure":[{"type":"alphanumeric","value":"MED","length":3,"resetable":null,"format":null},{"type":"incrementing","value":null,"length":5,"resetable":null,"format":null}]}'
+    ];
+
     /**
      * Seed the application's database.
      */
@@ -23,5 +39,6 @@ class LiteEncodingSeeder extends Seeder
 
         $data = JobRequest::all();
         $encodings = app(config('database.models.Encoding'))->get();
+
     }
 }
