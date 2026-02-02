@@ -16,7 +16,7 @@ class Patient extends PatientPatient
      * @var array
      */
     protected array $elastic_config = [
-        'enabled' => true,
+        'enabled' => false,
         'index_name' => 'patient',
         'variables' => [
             'id',

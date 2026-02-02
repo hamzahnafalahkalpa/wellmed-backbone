@@ -11,7 +11,7 @@ use Projects\WellmedGateway\Contracts\Schemas\Dashboard as DashboardSchema;
 class FlushDashboardMetricsCommand extends Command
 {
     protected $signature = 'dashboard:flush
-                            {--period=daily : Period type: daily, monthly, yearly}
+                            {--period=daily : Period type: daily, weekly, monthly, yearly}
                             {--date= : Specific date (YYYY-MM-DD), defaults to today}
                             {--tenant_id= : Tenant ID for multi-tenant context}
                             {--workspace_id= : Workspace ID}
