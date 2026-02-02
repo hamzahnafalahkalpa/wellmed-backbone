@@ -163,10 +163,10 @@ tfoot { display: table-footer-group; }
         <tr style="color: #000">
             <!-- Kiri -->
             <td style="width: 50%; vertical-align: top;">
-                {{-- <div>{{ strtoupper($workspace->name) }}</div>
+                <div style="font-weight:bold">{{ strtoupper($workspace->name) }}</div>
                 <div>Alamat: {{$workspace->setting?->address?->name}}</div>
                 <div>Telp: {{$workspace->phone}}</div>
-                <div>Email: {{$workspace->setting?->email}}</div> --}}
+                <div>Email: {{$workspace->setting?->email}}</div>
             </td>
             <!-- Kanan -->
             <td style="width: 50%; vertical-align: top; text-align: right;padding:0px">

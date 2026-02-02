@@ -9,6 +9,7 @@ class CommandServiceProvider extends ServiceProvider
 {
     protected $__commands = [
         Commands\AddTenantCommand::class,
+        Commands\FlushDashboardMetricsCommand::class,
         Commands\GenerateCommand::class,
         Commands\ImpersonateCacheCommand::class,
         Commands\ImpersonateMigrateCommand::class,

@@ -94,25 +94,152 @@ class WellmedBackboneServiceProvider extends WellmedBackboneEnvironment
                     }
                 }
 
+                $this->initializeRabbitMQQueues();
+            } catch (\Throwable $th) {
+                \Log::error('WellmedBackbone boot error: ' . $th->getMessage(), [
+                    'exception' => $th,
+                    'trace' => $th->getTraceAsString()
+                ]);
+            }
+        });
+    }
+
+    /**
+     * Initialize RabbitMQ queues with proper connection handling
+     *
+     * @return void
+     */
+    protected function initializeRabbitMQQueues(): void
+    {
+        $maxRetries = 3;
+        $retryDelay = 1; // seconds
+
+        for ($attempt = 1; $attempt <= $maxRetries; $attempt++) {
+            $connection = null;
+            $channel = null;
+
+            try {
+                // Create connection with heartbeat and timeout configuration
                 $connection = new AMQPStreamConnection(
                     env('RABBITMQ_HOST'),
                     env('RABBITMQ_PORT'),
                     env('RABBITMQ_USER'),
                     env('RABBITMQ_PASSWORD'),
-                    '/'
+                    '/',
+                    false, // insist
+                    'AMQPLAIN', // login method
+                    null, // login response
+                    'en_US', // locale
+                    env('RABBITMQ_CONNECTION_TIMEOUT', 3.0), // connection timeout
+                    env('RABBITMQ_READ_WRITE_TIMEOUT', 3.0), // read/write timeout
+                    null, // context
+                    env('RABBITMQ_KEEPALIVE', false), // keepalive
+                    env('RABBITMQ_HEARTBEAT', 60) // heartbeat interval in seconds
                 );
 
                 $channel = $connection->channel();
 
+                // Declare queues
                 foreach (['default', 'installation', 'elasticsearch', 'import', 'export'] as $queue) {
                     $channel->queue_declare($queue, false, true, false, false);
                 }
 
-                $channel->close();
-                $connection->close();                
-            } catch (\Throwable $th) {
-                dd($th->getMessage());
+                // Success - close connections and return
+                if ($channel) {
+                    $channel->close();
+                }
+                if ($connection) {
+                    $connection->close();
+                }
+
+                // Log success if this was a retry
+                if ($attempt > 1) {
+                    \Log::info("RabbitMQ queue initialization succeeded on attempt {$attempt}");
+                }
+
+                return;
+
+            } catch (\PhpAmqpLib\Exception\AMQPHeartbeatMissedException $e) {
+                \Log::warning("RabbitMQ heartbeat missed on attempt {$attempt}/{$maxRetries}: {$e->getMessage()}");
+
+                // Cleanup on error
+                $this->cleanupRabbitMQConnection($channel, $connection);
+
+                if ($attempt < $maxRetries) {
+                    sleep($retryDelay * $attempt); // Exponential backoff
+                    continue;
+                }
+
+                throw $e;
+
+            } catch (\PhpAmqpLib\Exception\AMQPChannelClosedException $e) {
+                \Log::warning("RabbitMQ channel closed on attempt {$attempt}/{$maxRetries}: {$e->getMessage()}");
+
+                // Cleanup on error
+                $this->cleanupRabbitMQConnection($channel, $connection);
+
+                if ($attempt < $maxRetries) {
+                    sleep($retryDelay * $attempt);
+                    continue;
+                }
+
+                throw $e;
+
+            } catch (\PhpAmqpLib\Exception\AMQPConnectionClosedException $e) {
+                \Log::warning("RabbitMQ connection closed on attempt {$attempt}/{$maxRetries}: {$e->getMessage()}");
+
+                // Cleanup on error
+                $this->cleanupRabbitMQConnection($channel, $connection);
+
+                if ($attempt < $maxRetries) {
+                    sleep($retryDelay * $attempt);
+                    continue;
+                }
+
+                throw $e;
+
+            } catch (\Throwable $e) {
+                \Log::error("RabbitMQ initialization error on attempt {$attempt}/{$maxRetries}: {$e->getMessage()}", [
+                    'exception' => get_class($e),
+                    'trace' => $e->getTraceAsString()
+                ]);
+
+                // Cleanup on error
+                $this->cleanupRabbitMQConnection($channel, $connection);
+
+                if ($attempt < $maxRetries) {
+                    sleep($retryDelay * $attempt);
+                    continue;
+                }
+
+                throw $e;
             }
-        });
-    }    
+        }
+    }
+
+    /**
+     * Safely cleanup RabbitMQ channel and connection
+     *
+     * @param mixed $channel
+     * @param mixed $connection
+     * @return void
+     */
+    protected function cleanupRabbitMQConnection($channel, $connection): void
+    {
+        try {
+            if ($channel && $channel->is_open()) {
+                $channel->close();
+            }
+        } catch (\Throwable $e) {
+            \Log::debug("Error closing RabbitMQ channel: {$e->getMessage()}");
+        }
+
+        try {
+            if ($connection && $connection->isConnected()) {
+                $connection->close();
+            }
+        } catch (\Throwable $e) {
+            \Log::debug("Error closing RabbitMQ connection: {$e->getMessage()}");
+        }
+    }
 }
