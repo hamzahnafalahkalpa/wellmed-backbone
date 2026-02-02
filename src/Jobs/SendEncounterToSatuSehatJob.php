@@ -28,7 +28,6 @@ class SendEncounterToSatuSehatJob implements ShouldQueue
         $this->visitRegistrationId = $visitRegistrationId;
         $this->patientId = $patientId;
         $this->formPayload = $formPayload;
-        $this->onQueue('satusehat');
     }
 
     public function handle(): void
