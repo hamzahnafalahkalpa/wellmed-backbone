@@ -8,131 +8,132 @@
         /* Reset & Base */
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
-            font-family: Arial, Helvetica, sans-serif;
-            font-size: 11px;
+            font-family: 'DejaVu Sans', Arial, sans-serif;
+            font-size: 9px;
             color: #333;
-            line-height: 1.5;
+            line-height: 1.4;
             background: #fff;
-            -webkit-print-color-adjust: exact;
-            print-color-adjust: exact;
+            margin: 0;
+            padding: 0;
         }
-        @page { size: A4; margin: 15mm 18mm; }
+        @page {
+            size: A4;
+            margin: 12mm 15mm 12mm 15mm;
+        }
 
         /* Container */
-        .rpt-wrap { max-width: 760px; margin: 0 auto; padding: 10px; }
+        .rpt-wrap { width: 100%; padding: 0; }
 
         /* Header */
-        .rpt-header { text-align: center; margin-bottom: 20px; padding-bottom: 14px; border-bottom: 3px double #003049; }
-        .rpt-header h1 { font-size: 18px; color: #003049; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2px; }
-        .rpt-header .rpt-subtitle { font-size: 12px; color: #555; margin-bottom: 8px; }
-        .rpt-header .rpt-meta { font-size: 10px; color: #777; }
-        .rpt-header .rpt-meta span { margin: 0 10px; }
+        .rpt-header { text-align: center; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 2px double #003049; }
+        .rpt-header h1 { font-size: 14px; color: #003049; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; }
+        .rpt-header .rpt-subtitle { font-size: 10px; color: #555; margin-bottom: 4px; }
+        .rpt-header .rpt-meta { font-size: 8px; color: #666; }
+        .rpt-header .rpt-meta span { margin: 0 6px; }
 
         /* Info box */
-        .rpt-info-box { background: #f0f7ff; border: 1px solid #c7dff0; border-radius: 6px; padding: 12px 16px; margin-bottom: 16px; }
-        .rpt-info-box h3 { font-size: 11px; color: #003049; margin-bottom: 8px; padding-left: 10px; border-left: 3px solid #003049; }
+        .rpt-info-box { background: #f5f9ff; border: 1px solid #d0e0f0; padding: 6px 8px; margin-bottom: 8px; }
+        .rpt-info-box h3 { font-size: 9px; color: #003049; margin-bottom: 4px; padding-left: 6px; border-left: 2px solid #003049; }
         .rpt-info-table { width: 100%; border-collapse: collapse; }
-        .rpt-info-table td { padding: 2px 5px; font-size: 10.5px; vertical-align: top; }
-        .rpt-info-table .lbl { font-weight: 600; color: #556070; width: 100px; }
+        .rpt-info-table td { padding: 1px 4px; font-size: 8px; vertical-align: top; }
+        .rpt-info-table .lbl { font-weight: bold; color: #555; width: 70px; }
         .rpt-info-table .val { color: #333; }
 
         /* Section */
-        .rpt-section { margin-bottom: 16px; page-break-inside: avoid; }
-        .rpt-sec-title { background: #003049; color: #fff; padding: 5px 10px; font-size: 10.5px; font-weight: 600; border-radius: 4px 4px 0 0; }
-        .rpt-sec-body { border: 1px solid #d0d5dd; border-top: none; padding: 10px; border-radius: 0 0 4px 4px; }
+        .rpt-section { margin-bottom: 8px; page-break-inside: avoid; }
+        .rpt-sec-title { background: #003049; color: #fff; padding: 3px 6px; font-size: 9px; font-weight: bold; }
+        .rpt-sec-body { border: 1px solid #ccc; border-top: none; padding: 6px; }
 
         /* SOAP Grid */
-        .rpt-soap-table { width: 100%; border-collapse: separate; border-spacing: 4px; }
-        .rpt-soap-table td { width: 50%; vertical-align: top; }
-        .rpt-soap-card { background: #fff; border: 1px solid #e4e7ec; border-radius: 4px; padding: 8px; }
-        .rpt-soap-lbl { font-weight: 700; font-size: 12px; margin-bottom: 3px; }
+        .rpt-soap-table { width: 100%; border-collapse: collapse; }
+        .rpt-soap-table td { width: 50%; vertical-align: top; padding: 2px; }
+        .rpt-soap-card { background: #fafafa; border: 1px solid #ddd; padding: 4px 6px; }
+        .rpt-soap-lbl { font-weight: bold; font-size: 9px; margin-bottom: 2px; }
         .rpt-soap-S .rpt-soap-lbl { color: #2563eb; }
         .rpt-soap-O .rpt-soap-lbl { color: #7c3aed; }
         .rpt-soap-A .rpt-soap-lbl { color: #db2777; }
         .rpt-soap-P .rpt-soap-lbl { color: #16a34a; }
-        .rpt-soap-txt { font-size: 10.5px; color: #444; font-style: italic; }
+        .rpt-soap-txt { font-size: 8px; color: #444; }
 
         /* Pain Scale */
-        .rpt-pain-bar { margin-top: 8px; padding: 6px 10px; background: #fff; border: 1px solid #e5e7eb; border-radius: 4px; }
-        .rpt-pain-bar .pain-lbl { font-weight: 600; color: #555; font-size: 10.5px; }
-        .rpt-pain-bar .pain-val { font-size: 18px; font-weight: 700; color: #db2777; margin: 0 8px; }
-        .rpt-pain-bar .pain-desc { font-size: 10.5px; color: #666; }
+        .rpt-pain-bar { margin-top: 4px; padding: 3px 6px; background: #fff5f5; border: 1px solid #fcc; }
+        .rpt-pain-bar .pain-lbl { font-weight: bold; color: #555; font-size: 8px; }
+        .rpt-pain-bar .pain-val { font-size: 12px; font-weight: bold; color: #dc2626; margin: 0 6px; }
+        .rpt-pain-bar .pain-desc { font-size: 8px; color: #666; }
 
         /* Vitals Grid */
-        .rpt-vitals-table { width: 100%; border-collapse: separate; border-spacing: 4px; }
-        .rpt-vitals-table td { width: 33.33%; vertical-align: top; }
-        .rpt-vital { background: #fff; border: 1px solid #e4e7ec; border-radius: 6px; padding: 8px; text-align: center; }
-        .rpt-vital-lbl { font-size: 9px; color: #666; text-transform: uppercase; letter-spacing: 0.3px; margin-bottom: 3px; }
-        .rpt-vital-val { font-size: 15px; font-weight: 700; color: #1e293b; }
-        .rpt-vital-unit { font-size: 9px; color: #94a3b8; }
-        .rpt-vital-status { font-size: 9px; font-weight: 600; margin-top: 3px; padding: 1px 6px; border-radius: 8px; display: inline-block; }
-        .status-normal { background: #dcfce7; color: #166534; }
+        .rpt-vitals-table { width: 100%; border-collapse: collapse; }
+        .rpt-vitals-table td { width: 33.33%; vertical-align: top; padding: 2px; }
+        .rpt-vital { background: #fafafa; border: 1px solid #ddd; padding: 4px; text-align: center; }
+        .rpt-vital-lbl { font-size: 7px; color: #666; text-transform: uppercase; }
+        .rpt-vital-val { font-size: 11px; font-weight: bold; color: #1e293b; }
+        .rpt-vital-unit { font-size: 7px; color: #888; }
+        .rpt-vital-status { font-size: 7px; font-weight: bold; margin-top: 2px; padding: 1px 4px; display: inline-block; }
+        .status-normal { background: #d1fae5; color: #065f46; }
         .status-warning { background: #fef3c7; color: #92400e; }
         .status-critical { background: #fee2e2; color: #991b1b; }
 
         /* Anthropometry Grid */
-        .rpt-anthro-table { width: 100%; border-collapse: separate; border-spacing: 3px; }
-        .rpt-anthro-table td { width: 33.33%; vertical-align: top; }
-        .rpt-anthro-item { background: #fff; border: 1px solid #eee; border-radius: 3px; padding: 4px 8px; font-size: 10.5px; }
+        .rpt-anthro-table { width: 100%; border-collapse: collapse; }
+        .rpt-anthro-table td { width: 33.33%; vertical-align: top; padding: 2px; }
+        .rpt-anthro-item { background: #fafafa; border: 1px solid #ddd; padding: 3px 5px; font-size: 8px; }
         .rpt-anthro-item .a-lbl { color: #666; }
-        .rpt-anthro-item .a-val { font-weight: 600; color: #333; float: right; }
+        .rpt-anthro-item .a-val { font-weight: bold; color: #333; float: right; }
 
         /* Tags */
-        .rpt-tag { display: inline-block; padding: 2px 7px; border-radius: 10px; font-size: 9.5px; font-weight: 600; margin: 1px; }
-        .rpt-tag-blue { background: #dbeafe; color: #1e40af; }
-        .rpt-tag-red { background: #fee2e2; color: #991b1b; }
-        .rpt-tag-yellow { background: #fef3c7; color: #92400e; }
-        .rpt-tag-green { background: #dcfce7; color: #166534; }
-        .rpt-tag-purple { background: #ede9fe; color: #6d28d9; }
+        .rpt-tag { display: inline-block; padding: 1px 5px; font-size: 7px; font-weight: bold; margin: 1px; border: 1px solid; }
+        .rpt-tag-blue { background: #dbeafe; color: #1e40af; border-color: #93c5fd; }
+        .rpt-tag-red { background: #fee2e2; color: #991b1b; border-color: #fca5a5; }
+        .rpt-tag-yellow { background: #fef3c7; color: #92400e; border-color: #fcd34d; }
+        .rpt-tag-green { background: #d1fae5; color: #065f46; border-color: #6ee7b7; }
+        .rpt-tag-purple { background: #ede9fe; color: #5b21b6; border-color: #c4b5fd; }
 
         /* Allergy */
-        .rpt-allergy-row { padding: 5px 0; border-bottom: 1px solid #f3f4f6; }
+        .rpt-allergy-row { padding: 2px 0; border-bottom: 1px solid #eee; font-size: 8px; }
         .rpt-allergy-row:last-child { border-bottom: none; }
-        .rpt-allergy-row .a-name { font-weight: 600; font-size: 11px; margin: 0 5px; }
-        .rpt-allergy-sub { font-size: 10px; color: #666; margin-top: 2px; }
+        .rpt-allergy-row .a-name { font-weight: bold; margin: 0 4px; }
+        .rpt-allergy-sub { font-size: 7px; color: #666; margin-top: 1px; }
 
         /* History */
-        .rpt-hist-label { font-weight: 600; font-size: 10.5px; color: #555; margin-bottom: 4px; }
-        .rpt-hist-row { padding: 3px 0; font-size: 10.5px; }
-        .rpt-hist-sub { font-size: 10px; color: #777; }
+        .rpt-hist-label { font-weight: bold; font-size: 8px; color: #555; margin-bottom: 2px; }
+        .rpt-hist-row { padding: 1px 0; font-size: 8px; }
+        .rpt-hist-sub { font-size: 7px; color: #777; }
 
         /* Diagnose */
-        .rpt-dg-row { padding: 5px 0; border-bottom: 1px solid #f3f4f6; }
+        .rpt-dg-row { padding: 2px 0; border-bottom: 1px solid #eee; font-size: 8px; }
         .rpt-dg-row:last-child { border-bottom: none; }
-        .rpt-dg-badge { display: inline-block; min-width: 50px; text-align: center; padding: 2px 5px; border-radius: 3px; font-size: 9.5px; font-weight: 700; margin-right: 8px; }
+        .rpt-dg-badge { display: inline-block; min-width: 40px; text-align: center; padding: 1px 4px; font-size: 7px; font-weight: bold; margin-right: 6px; }
         .badge-initial { background: #dbeafe; color: #1e40af; }
-        .badge-primary { background: #dcfce7; color: #166534; }
+        .badge-primary { background: #d1fae5; color: #065f46; }
         .badge-secondary { background: #fef3c7; color: #92400e; }
-        .rpt-dg-code { font-weight: 700; color: #333; font-size: 11px; display: inline; }
-        .rpt-dg-name { font-size: 10px; color: #666; margin-top: 1px; margin-left: 58px; }
+        .rpt-dg-code { font-weight: bold; color: #333; }
 
         /* Prescription */
-        .rpt-rx-card { background: #faf5ff; border: 1px solid #ddd6fe; border-radius: 6px; padding: 10px; margin-bottom: 8px; page-break-inside: avoid; }
-        .rpt-rx-header { margin-bottom: 6px; }
-        .rpt-rx-badge { font-size: 11px; font-weight: 700; background: #7c3aed; color: #fff; padding: 1px 6px; border-radius: 3px; margin-right: 8px; }
-        .rpt-rx-name { font-size: 13px; font-weight: 700; color: #5b21b6; }
-        .rpt-rx-details { font-size: 10.5px; }
+        .rpt-rx-card { background: #faf5ff; border: 1px solid #e9d5ff; padding: 5px 6px; margin-bottom: 4px; page-break-inside: avoid; }
+        .rpt-rx-header { margin-bottom: 3px; }
+        .rpt-rx-badge { font-size: 8px; font-weight: bold; background: #7c3aed; color: #fff; padding: 1px 4px; margin-right: 6px; }
+        .rpt-rx-name { font-size: 10px; font-weight: bold; color: #5b21b6; }
+        .rpt-rx-details { font-size: 8px; }
         .rpt-rx-details table { width: 100%; }
-        .rpt-rx-details td { padding: 1px 5px; vertical-align: top; }
-        .rpt-rx-details .d-lbl { color: #7c3aed; font-weight: 600; width: 80px; }
+        .rpt-rx-details td { padding: 1px 3px; vertical-align: top; }
+        .rpt-rx-details .d-lbl { color: #7c3aed; font-weight: bold; width: 60px; }
         .rpt-rx-details .d-val { color: #444; }
-        .rpt-rx-indication { margin-top: 6px; padding: 4px 8px; background: #f3e8ff; border-radius: 3px; font-size: 10.5px; color: #5b21b6; }
 
         /* Treatment */
-        .rpt-treatment-row { padding: 5px 0; border-bottom: 1px solid #f3f4f6; font-size: 11px; }
+        .rpt-treatment-row { padding: 2px 0; border-bottom: 1px solid #eee; font-size: 8px; }
         .rpt-treatment-row:last-child { border-bottom: none; }
-        .rpt-treatment-name { font-weight: 600; color: #333; }
-        .rpt-treatment-qty { font-size: 10px; color: #999; margin-left: 5px; }
-        .rpt-treatment-result { color: #16a34a; font-weight: 600; font-size: 10.5px; float: right; }
+        .rpt-treatment-name { font-weight: bold; color: #333; }
+        .rpt-treatment-qty { font-size: 7px; color: #888; margin-left: 4px; }
+        .rpt-treatment-result { color: #059669; font-weight: bold; float: right; }
 
         /* Footer */
-        .rpt-footer { margin-top: 30px; padding-top: 16px; border-top: 1px dashed #ccc; }
+        .rpt-footer { margin-top: 15px; padding-top: 8px; border-top: 1px dashed #999; }
         .rpt-footer table { width: 100%; }
-        .rpt-sig-block { text-align: center; width: 170px; }
-        .rpt-sig-line { border-bottom: 1px solid #333; height: 40px; margin-bottom: 4px; }
-        .rpt-sig-name { font-size: 10.5px; font-weight: 600; color: #333; }
-        .rpt-sig-title { font-size: 9.5px; color: #777; }
-        .rpt-footer-note { font-size: 9px; color: #aaa; text-align: right; }
+        .rpt-sig-block { text-align: center; width: 140px; }
+        .rpt-sig-line { border-bottom: 1px solid #333; height: 30px; margin-bottom: 2px; }
+        .rpt-sig-name { font-size: 8px; font-weight: bold; color: #333; }
+        .rpt-sig-title { font-size: 7px; color: #666; }
+        .rpt-footer-note { font-size: 7px; color: #999; text-align: right; }
 
         /* Clearfix */
         .clearfix::after { content: ""; display: table; clear: both; }
@@ -173,15 +174,15 @@
                 <td class="val">{{ $patient['ihs_number'] ?? '-' }}</td>
             </tr>
             <tr>
-                <td class="lbl">Tanggal Lahir</td>
+                <td class="lbl">Tgl Lahir</td>
                 <td class="val">{{ $patient['date_of_birth'] ?? '-' }} @if(!empty($patient['age']))({{ $patient['age'] }} Thn)@endif</td>
-                <td class="lbl">Jenis Kelamin</td>
+                <td class="lbl">Kelamin</td>
                 <td class="val">{{ $patient['gender'] ?? '-' }}</td>
             </tr>
             <tr>
-                <td class="lbl">Golongan Darah</td>
+                <td class="lbl">Gol. Darah</td>
                 <td class="val">{{ $patient['blood_type'] ?? '-' }}</td>
-                <td class="lbl">Tipe Pasien</td>
+                <td class="lbl">Tipe</td>
                 <td class="val">{{ $patient['patient_type'] ?? '-' }}</td>
             </tr>
         </table>
@@ -222,7 +223,6 @@
                 </tr>
             </table>
 
-            {{-- Pain Scale bar --}}
             @if(!empty($pain_scale))
                 <div class="rpt-pain-bar">
                     <span class="pain-lbl">Skala Nyeri:</span>
@@ -277,12 +277,7 @@
                                 <td>
                                     <div class="rpt-anthro-item clearfix">
                                         <span class="a-lbl">{{ $anthro['label'] ?? '-' }}</span>
-                                        <span class="a-val">
-                                            {{ $anthro['value'] ?? '-' }} {{ $anthro['unit'] ?? '' }}
-                                            @if(!empty($anthro['interpretation']))
-                                                ({{ $anthro['interpretation'] }})
-                                            @endif
-                                        </span>
+                                        <span class="a-val">{{ $anthro['value'] ?? '-' }} {{ $anthro['unit'] ?? '' }}</span>
                                     </div>
                                 </td>
                             @endforeach
@@ -315,17 +310,15 @@
             <div class="rpt-sec-body">
                 @foreach($allergies as $allergy)
                     <div class="rpt-allergy-row">
-                        <div>
-                            @if(!empty($allergy['allergy_type']))
-                                <span class="rpt-tag rpt-tag-red">{{ $allergy['allergy_type'] }}</span>
-                            @endif
-                            <span class="a-name">{{ $allergy['name'] ?? '-' }}</span>
-                            @if(!empty($allergy['severity']))
-                                <span class="rpt-tag rpt-tag-yellow">{{ $allergy['severity'] }}</span>
-                            @endif
-                        </div>
+                        @if(!empty($allergy['allergy_type']))
+                            <span class="rpt-tag rpt-tag-red">{{ $allergy['allergy_type'] }}</span>
+                        @endif
+                        <span class="a-name">{{ $allergy['name'] ?? '-' }}</span>
+                        @if(!empty($allergy['severity']))
+                            <span class="rpt-tag rpt-tag-yellow">{{ $allergy['severity'] }}</span>
+                        @endif
                         @if(!empty($allergy['allergen']))
-                            <div class="rpt-allergy-sub">Allergen: {{ $allergy['allergen'] }}</div>
+                            <span class="rpt-allergy-sub">- Allergen: {{ $allergy['allergen'] }}</span>
                         @endif
                     </div>
                 @endforeach
@@ -339,27 +332,23 @@
             <div class="rpt-sec-title">Riwayat Penyakit</div>
             <div class="rpt-sec-body">
                 @if(!empty($history_illnesses) && count($history_illnesses) > 0)
-                    <div>
-                        <div class="rpt-hist-label">Pribadi:</div>
-                        @foreach($history_illnesses as $illness)
-                            <div class="rpt-hist-row">
-                                <span class="rpt-tag rpt-tag-blue">{{ $illness['code'] ?? '-' }}</span>
-                                <span>{{ $illness['name'] ?? '-' }}</span>
-                            </div>
-                        @endforeach
-                    </div>
+                    <div class="rpt-hist-label">Pribadi:</div>
+                    @foreach($history_illnesses as $illness)
+                        <div class="rpt-hist-row">
+                            <span class="rpt-tag rpt-tag-blue">{{ $illness['code'] ?? '-' }}</span>
+                            {{ $illness['name'] ?? '-' }}
+                        </div>
+                    @endforeach
                 @endif
                 @if(!empty($family_illnesses) && count($family_illnesses) > 0)
-                    <div style="margin-top: 8px;">
-                        <div class="rpt-hist-label">Keluarga:</div>
-                        @foreach($family_illnesses as $illness)
-                            <div class="rpt-hist-row">
-                                <span class="rpt-tag rpt-tag-purple">{{ $illness['code'] ?? '-' }}</span>
-                                <span>{{ $illness['name'] ?? '-' }}</span>
-                                <span class="rpt-hist-sub">({{ $illness['family_name'] ?? '-' }})</span>
-                            </div>
-                        @endforeach
-                    </div>
+                    <div class="rpt-hist-label" style="margin-top: 4px;">Keluarga:</div>
+                    @foreach($family_illnesses as $illness)
+                        <div class="rpt-hist-row">
+                            <span class="rpt-tag rpt-tag-purple">{{ $illness['code'] ?? '-' }}</span>
+                            {{ $illness['name'] ?? '-' }}
+                            <span class="rpt-hist-sub">({{ $illness['family_name'] ?? '-' }})</span>
+                        </div>
+                    @endforeach
                 @endif
             </div>
         </div>
@@ -377,8 +366,8 @@
                         elseif (($diagnosis['type'] ?? '') === 'Primary') $badgeClass = 'badge-primary';
                     @endphp
                     <div class="rpt-dg-row">
-                        <span class="rpt-dg-badge {{ $badgeClass }}">{{ $diagnosis['type_label'] ?? 'Diagnosis' }}</span>
-                        <span class="rpt-dg-code">{{ $diagnosis['code'] ?? '-' }} – {{ $diagnosis['name'] ?? '-' }}</span>
+                        <span class="rpt-dg-badge {{ $badgeClass }}">{{ $diagnosis['type_label'] ?? 'Dx' }}</span>
+                        <span class="rpt-dg-code">{{ $diagnosis['code'] ?? '-' }}</span> – {{ $diagnosis['name'] ?? '-' }}
                     </div>
                 @endforeach
             </div>
@@ -404,17 +393,12 @@
                                     <td class="d-lbl">Frekuensi:</td>
                                     <td class="d-val">{{ $rx['frequency'] ?? '-' }}</td>
                                 </tr>
+                                @if(!empty($rx['timing']) && $rx['timing'] !== '-')
                                 <tr>
                                     <td class="d-lbl">Waktu:</td>
-                                    <td class="d-val">{{ $rx['timing'] ?? '-' }}</td>
-                                    @if(!empty($rx['indication']) && $rx['indication'] !== '-')
-                                        <td class="d-lbl">Indikasi:</td>
-                                        <td class="d-val">{{ $rx['indication'] }}</td>
-                                    @else
-                                        <td></td>
-                                        <td></td>
-                                    @endif
+                                    <td class="d-val" colspan="3">{{ $rx['timing'] }}</td>
                                 </tr>
+                                @endif
                             </table>
                         </div>
                     </div>
@@ -457,8 +441,8 @@
                 </td>
                 <td style="width: 50%; vertical-align: bottom;">
                     <div class="rpt-footer-note">
-                        Laporan dicetak pada {{ \Carbon\Carbon::now()->locale('id')->isoFormat('D MMMM Y, HH:mm') }}<br>
-                        Dokumen resmi dari sistem WELLMED
+                        Dicetak: {{ \Carbon\Carbon::now()->format('d/m/Y H:i') }}<br>
+                        Dokumen resmi WELLMED
                     </div>
                 </td>
             </tr>
