@@ -76,6 +76,62 @@ class VisitRegistrationEmrExport
     }
 
     /**
+     * Generate the PDF export synchronously and return as response.
+     * This method does not store the file to S3 or create export records.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function generateSync(): \Illuminate\Http\Response
+    {
+        // Get the visit registration model from schema
+        $visitRegistration = $this->schema->entityData();
+        if (!$visitRegistration) {
+            throw new \Exception('Visit registration not found');
+        }
+
+        // Load all necessary data directly from visit registration
+        $data = $this->loadDataFromVisitRegistration($visitRegistration);
+
+        // Generate PDF using DomPDF
+        $pdf = Pdf::loadView('wellmed::exports.emr.visit-registration', $data)
+            ->setOptions([
+                'enable_php' => true,
+                'enable_remote' => true,
+            ]);
+
+        $dompdf = $pdf->getDomPDF();
+        $pdf->render();
+
+        // Add page footer with page numbers
+        $canvas = $dompdf->getCanvas();
+        $font = $dompdf->getFontMetrics()->get_font('Helvetica', 'normal');
+
+        $canvas->page_text(
+            40,
+            820,
+            "Halaman {PAGE_NUM} dari {PAGE_COUNT} | Dicetak pada " . date('d/m/Y H:i'),
+            $font,
+            9,
+            [0, 0, 0]
+        );
+
+        // Build filename
+        $timestamp = now()->format('YmdHis');
+        $visitCode = $visitRegistration->visit_registration_code ?? 'unknown';
+        $fileName = "emr_{$visitCode}_{$timestamp}.pdf";
+
+        // Get PDF content after manual rendering (preserves page footer)
+        $pdfContent = $dompdf->output();
+
+        // Return as response with proper headers
+        return response($pdfContent, 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="' . $fileName . '"',
+            'Content-Length' => strlen($pdfContent),
+        ]);
+    }
+
+    /**
      * Generate the PDF export.
      * Called by the ProcessExportJob.
      *
@@ -145,6 +201,17 @@ class VisitRegistrationEmrExport
             throw new \Exception('Visit registration reference not found');
         }
 
+        return $this->loadDataFromVisitRegistration($visitRegistration);
+    }
+
+    /**
+     * Load all data needed for the export directly from visit registration model.
+     *
+     * @param mixed $visitRegistration
+     * @return array
+     */
+    protected function loadDataFromVisitRegistration($visitRegistration): array
+    {
         // Load workspace (tenant clinic data)
         $workspace = tenancy()->tenant->reference;
         $workspace = $workspace->load($workspace->showUsingRelation());
