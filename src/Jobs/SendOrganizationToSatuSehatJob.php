@@ -51,12 +51,7 @@ class SendOrganizationToSatuSehatJob implements ShouldQueue
             // Send to Satu Sehat
             $organization_satu_sehat = app(config('app.contracts.OrganizationSatuSehat'))
                 ->useAccessToSatuSehat()
-                ->prepareStoreOrganizationSatuSehat(
-                    $this->requestDTO(config('app.contracts.OrganizationSatuSehatData'), [
-                        'model' => $organizationModel,
-                        'form'  => $this->formPayload
-                    ])
-                );
+                ->prepareStoreOrganizationSatuSehat($dto);
             // Update room with IHS number
             $integration = $organizationModel->integration;
             if (!isset($integration)){

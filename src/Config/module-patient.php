@@ -3,6 +3,7 @@
 use Hanafalah\ModulePatient\{
     Commands as ModulePatientCommands,
 };
+use Projects\WellmedBackbone\Exports\VisitRegistrationEmrExport;
 use Projects\WellmedBackbone\Imports\Patient;
 
 return [
@@ -28,5 +29,8 @@ return [
     ],
     'imports' => [
         'Patient' => Patient::class
-    ]
+    ],
+    'exports' => [
+        'VisitRegistrationEmr' => VisitRegistrationEmrExport::class,
+    ],
 ];

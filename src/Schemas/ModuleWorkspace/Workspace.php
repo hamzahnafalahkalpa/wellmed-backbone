@@ -29,9 +29,9 @@ class Workspace extends SchemasWorkspace implements ContractWorkspace
         return $this->workspace_model = $model;
     }
 
-    public function prepareStoreSatuSehatOrganization(Model $model){
+    public function prepareStoreSatuSehatOrganization(Model $model,?string $connection = 'rabbitmq'){
         $payload = $this->prepareSatuSehatPayload($model);
-        $this->dispatchSatuSehatSync($model, $payload);
+        $this->dispatchSatuSehatSync($model, $payload, $connection);
     }
 
     /**
@@ -82,7 +82,7 @@ class Workspace extends SchemasWorkspace implements ContractWorkspace
         ];
     }
 
-    private function dispatchSatuSehatSync(Model $workspace, array $payload): void
+    private function dispatchSatuSehatSync(Model $workspace, array $payload, ?string $connection = 'rabbitmq'): void
     {
         if (!config('module-workspace.satu-sehat.enable', true)) {
             return;
@@ -95,8 +95,7 @@ class Workspace extends SchemasWorkspace implements ContractWorkspace
                 $tenant_id,
                 $workspace_id,
                 $payload
-            // ))->onQueue('satusehat')->onConnection(config('queue.default','rabbitmq'));
-            ))->onQueue('satusehat')->onConnection('sync');
+            ))->onQueue('satusehat')->onConnection($connection);
 
             Log::channel('satu-sehat')->info('Organization queued for Satu Sehat sync', [
                 'workspace_id' => $workspace_id,

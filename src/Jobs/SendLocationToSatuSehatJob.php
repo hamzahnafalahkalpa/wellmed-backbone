@@ -51,12 +51,7 @@ class SendLocationToSatuSehatJob implements ShouldQueue
             // Send to Satu Sehat
             $location_satu_sehat = app(config('app.contracts.LocationSatuSehat'))
                 ->useAccessToSatuSehat()
-                ->prepareStoreLocationSatuSehat(
-                    $this->requestDTO(config('app.contracts.LocationSatuSehatData'), [
-                        'model' => $roomModel,
-                        'form'  => $this->formPayload
-                    ])
-                );
+                ->prepareStoreLocationSatuSehat($dto);
             // Update room with IHS number
             $roomModel->ihs_number = $location_satu_sehat->response['id'] ?? null;
             $roomModel->save();

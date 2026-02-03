@@ -50,9 +50,9 @@ class Room extends SchemasRoom implements ModuleWarehouseRoom{
         return $this->room_model;
     }
 
-    public function prepareStoreSatuSehatLocation(mixed $dto,Model $room_model){
+    public function prepareStoreSatuSehatLocation(mixed $dto,Model $room_model,?string $connection = 'rabbitmq'){
         $payload = $this->prepareSatuSehatPayload($dto,$room_model);
-        $this->dispatchSatuSehatSync($room_model, $payload);
+        $this->dispatchSatuSehatSync($room_model, $payload, $connection);
     }
 
     /**
@@ -111,7 +111,7 @@ class Room extends SchemasRoom implements ModuleWarehouseRoom{
     /**
      * Dispatch location data to Satu Sehat via async job if enabled.
      */
-    private function dispatchSatuSehatSync(Model $room_model, array $payload): void
+    private function dispatchSatuSehatSync(Model $room_model, array $payload, ?string $connection = 'rabbitmq'): void
     {
         if (!config('module-warehouse.satu-sehat.enable', true)) {
             return;
@@ -124,8 +124,7 @@ class Room extends SchemasRoom implements ModuleWarehouseRoom{
                 $tenant_id,
                 $room_id,
                 $payload
-            ))->onQueue('satusehat')->onConnection('sync');
-            // ->onQueue('satusehat')->onConnection(config('queue.default','rabbitmq'));
+            ))->onQueue('satusehat')->onConnection($connection);
 
             Log::channel('satu-sehat')->info('Patient queued for Satu Sehat sync', [
                 'room_id' => $room_id,

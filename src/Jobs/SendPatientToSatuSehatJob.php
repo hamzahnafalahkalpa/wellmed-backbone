@@ -51,12 +51,7 @@ class SendPatientToSatuSehatJob implements ShouldQueue
             // Send to Satu Sehat
             $patient_satu_sehat = app(config('app.contracts.PatientSatuSehat'))
                 ->useAccessToSatuSehat()
-                ->prepareStorePatientSatuSehat(
-                    $this->requestDTO(config('app.contracts.PatientSatuSehatData'), [
-                        'model' => $patientModel,
-                        'form'  => $this->formPayload
-                    ])
-                );
+                ->prepareStorePatientSatuSehat($dto);
             // Update patient with IHS number
             $prop_card_identity = $patientModel->prop_card_identity ?? [];
             $prop_card_identity['ihs_number'] = $patient_satu_sehat->response['id'] ?? null;

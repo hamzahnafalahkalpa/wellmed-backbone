@@ -60,4 +60,8 @@ class Employee extends EmployeeEmployee{
     public function consultationService(){
         return $this->morphOneModel('EmployeeService','model')->where('props->flag','CONSULTATION_FEE');
     }
+
+    public function employeeSatuSehat(){
+        return $this->morphOneModel('Employee','reference');
+    }
 }
