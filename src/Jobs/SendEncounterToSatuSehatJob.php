@@ -9,6 +9,8 @@ use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Database\Eloquent\Model;
+use Projects\WellmedBackbone\Services\DashboardMetricsService;
 
 class SendEncounterToSatuSehatJob implements ShouldQueue
 {
@@ -196,5 +198,5 @@ class SendEncounterToSatuSehatJob implements ShouldQueue
             'workspace_id' => $workspace->getKey(),
             'progress' => $satu_sehat['progress']
         ]);
-    }
+    }     
 }

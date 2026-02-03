@@ -73,7 +73,8 @@ return [
         Commands\SeedCommand::class,
         Commands\ElasticsearchIndexCommand::class,
         Commands\GetElasticsearchIndexCommand::class,
-        Commands\DeleteElasticsearchIndexCommand::class
+        Commands\DeleteElasticsearchIndexCommand::class,
+        Commands\FlushDashboardMetricsCommand::class
     ],
     "encodings" => [
     ],

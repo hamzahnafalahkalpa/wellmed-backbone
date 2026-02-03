@@ -9,6 +9,7 @@ use Projects\WellmedBackbone\Contracts\Schemas\ModulePatient\Patient as ModulePa
 use Illuminate\Support\Facades\Log;
 use Illuminate\Database\Eloquent\Model;
 use Projects\WellmedBackbone\Jobs\SendPatientToSatuSehatJob;
+use Projects\WellmedBackbone\Services\DashboardMetricsService;
 use Hanafalah\MicroTenant\Facades\MicroTenant;
 
 class Patient extends SchemasPatient implements ModulePatientPatient
@@ -20,16 +21,60 @@ class Patient extends SchemasPatient implements ModulePatientPatient
     protected function afterPatientCreated(Model &$patient, PatientData &$patient_dto): self
     {
         parent::afterPatientCreated($patient, $patient_dto);
+        if (!isset($patient->prop_card_identity['ihs_number'])){
+            $this->handleIntegrationData($patient, $patient_dto);
+            $this->loadPatientRelationships($patient);
 
-        $this->handleIntegrationData($patient, $patient_dto);
-        $this->loadPatientRelationships($patient);
-
-        $payload = $this->prepareSatuSehatPayload($patient);
-        $this->dispatchSatuSehatSync($patient, $payload);
+            $payload = $this->prepareSatuSehatPayload($patient);
+            $this->dispatchSatuSehatSync($patient, $payload);
+        }
 
         $this->fillingProps($patient, $patient_dto->props);
         $patient->save();
+
+        // Update dashboard statistics for new patient
+        if ($this->is_recently_created) {
+            $this->updateDashboardStatistics($patient);
+        }
+
         return $this;
+    }
+
+    /**
+     * Update dashboard statistics when a new patient is created.
+     * Updates both total patients count and new patients count.
+     *
+     * @param Model $patient
+     * @return void
+     */
+    private function updateDashboardStatistics(Model $patient): void
+    {
+        try {
+            if (!config('elasticsearch.enabled', false)) {
+                return;
+            }
+
+            $dashboardService = app(DashboardMetricsService::class);
+
+            // Increment new patients counter for all period types
+            $dashboardService->incrementNewPatient();
+
+            // Update total patients count
+            $totalPatients = $this->PatientModel()->count();
+            $dashboardService->updateTotalPatients($totalPatients);
+
+            Log::channel('elasticsearch')->info('Dashboard statistics updated for new patient', [
+                'patient_id' => $patient->getKey(),
+                'total_patients' => $totalPatients
+            ]);
+
+        } catch (\Throwable $e) {
+            // Don't fail patient creation if dashboard update fails
+            Log::channel('elasticsearch')->error('Failed to update dashboard statistics', [
+                'patient_id' => $patient->getKey(),
+                'error' => $e->getMessage()
+            ]);
+        }
     }
 
     /**
@@ -196,6 +241,7 @@ class Patient extends SchemasPatient implements ModulePatientPatient
                 $patient_id,
                 $payload
             ))->onQueue('satusehat')->onConnection(config('queue.default','rabbitmq'));
+            // ))->onQueue('satusehat')->onConnection('sync');
 
             Log::channel('satu-sehat')->info('Patient queued for Satu Sehat sync', [
                 'patient_id' => $patient_id,

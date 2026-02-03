@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\{
     Model
 };
 use Projects\WellmedBackbone\Jobs\SendObservationToSatuSehatJob;
+use Projects\WellmedBackbone\Services\DashboardMetricsService;
 
 class VisitExamination extends SchemasVisitExamination implements ModulePatientVisitExamination
 {
@@ -23,8 +24,53 @@ class VisitExamination extends SchemasVisitExamination implements ModulePatientV
             $payload = $this->prepareSatuSehatObservationPayload($visit_examination, $visit_registration_model, $patient_model);
             $this->dispatchSatuSehatSync($visit_examination_model, $patient_model, $payload);
         }
+        if ($this->is_recently_created){
+            $this->updateDashboardStatistics($visit_examination,'unsigned');
+        }
+
+        if ($this->is_sign_off){
+            if ($visit_examination->treatments()->count() > 0){
+                $this->updateDashboardStatistics($visit_examination,'treatment');
+            }
+            $this->updateDashboardStatistics($visit_examination,'unsigned-decrement');
+        }
 
         return $visit_examination;
+    }
+
+    /**
+     * Update dashboard statistics when a new patient is created.
+     * Updates both total patients count and new patients count.
+     *
+     * @param Model $patient
+     * @return void
+     */
+    private function updateDashboardStatistics(Model $visit_examination,string $type): void
+    {
+        try {
+            if (!config('elasticsearch.enabled', false)) {
+                return;
+            }
+
+            $dashboardService = app(DashboardMetricsService::class);
+
+            switch ($type) {
+                case 'treatment': $dashboardService->incrementNewTreatment();break;
+                case 'unsigned': $dashboardService->incrementNewUnsignedVisit();break;
+                case 'unsigned-decrement': $dashboardService->decrementNewUnsignedVisit();break;
+            }
+
+            Log::channel('elasticsearch')->info('Dashboard statistics updated for new visit_examination', [
+                'visit_examination_id' => $visit_examination->getKey()
+            ]);
+
+        } catch (\Throwable $e) {
+            // Don't fail visit_examination creation if dashboard update fails
+            Log::channel('elasticsearch')->error('Failed to update dashboard statistics', [
+                'visit_examination_id' => $visit_examination->getKey(),
+                'error' => $e->getMessage()
+            ]);
+        }
     }
 
     /**

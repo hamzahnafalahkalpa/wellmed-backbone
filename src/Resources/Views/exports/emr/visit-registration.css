@@ -1,0 +1,155 @@
+const PRINT_CSS = `
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 11px;
+    color: #333;
+    line-height: 1.5;
+    background: #fff;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  @page { size: A4; margin: 20mm 22mm; }
+  @media print { body { padding: 0; } }
+
+  /* Container */
+  .rpt-wrap { max-width: 760px; margin: 0 auto; padding: 24px; }
+
+  /* Header */
+  .rpt-header { text-align: center; margin-bottom: 20px; padding-bottom: 14px; border-bottom: 3px double #003049; }
+  .rpt-header h1 { font-size: 18px; color: #003049; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2px; }
+  .rpt-header .rpt-subtitle { font-size: 12px; color: #555; }
+  .rpt-header .rpt-meta { margin-top: 8px; font-size: 10px; color: #777; display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; }
+
+  /* Info box */
+  .rpt-info-box { background: #f0f7ff; border: 1px solid #c7dff0; border-radius: 6px; padding: 12px 16px; margin-bottom: 16px; }
+  .rpt-info-box h3 { font-size: 11px; color: #003049; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+  .rpt-info-box h3::before { content: ''; display: inline-block; width: 3px; height: 12px; background: #003049; border-radius: 2px; }
+  .rpt-info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 20px; }
+  .rpt-info-row { display: flex; gap: 6px; font-size: 10.5px; }
+  .rpt-info-lbl { font-weight: 600; color: #556070; min-width: 95px; flex-shrink: 0; }
+  .rpt-info-val { color: #333; }
+
+  /* Section */
+  .rpt-section { margin-bottom: 16px; page-break-inside: avoid; }
+  .rpt-sec-title { background: #003049; color: #fff; padding: 5px 10px; font-size: 10.5px; font-weight: 600; border-radius: 4px 4px 0 0; }
+  .rpt-sec-body { border: 1px solid #d0d5dd; border-top: none; padding: 10px; border-radius: 0 0 4px 4px; }
+
+  /* SOAP */
+  .rpt-soap-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .rpt-soap-card { background: #fff; border: 1px solid #e4e7ec; border-radius: 4px; padding: 8px; }
+  .rpt-soap-lbl { font-weight: 700; font-size: 12px; margin-bottom: 3px; }
+  .rpt-soap-S .rpt-soap-lbl { color: #2563eb; }
+  .rpt-soap-O .rpt-soap-lbl { color: #7c3aed; }
+  .rpt-soap-A .rpt-soap-lbl { color: #db2777; }
+  .rpt-soap-P .rpt-soap-lbl { color: #16a34a; }
+  .rpt-soap-txt { font-size: 10.5px; color: #444; font-style: italic; }
+  .rpt-pain-bar { margin-top: 8px; padding: 6px 10px; background: #fff; border: 1px solid #e5e7eb; border-radius: 4px; display: flex; align-items: center; gap: 10px; }
+  .rpt-pain-bar .pain-lbl { font-weight: 600; color: #555; font-size: 10.5px; }
+  .rpt-pain-bar .pain-val { font-size: 18px; font-weight: 700; color: #db2777; }
+  .rpt-pain-bar .pain-desc { font-size: 10.5px; color: #666; }
+
+  /* Vitals */
+  .rpt-vitals-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .rpt-vital { background: #fff; border: 1px solid #e4e7ec; border-radius: 6px; padding: 8px; text-align: center; }
+  .rpt-vital-lbl { font-size: 9px; color: #666; text-transform: uppercase; letter-spacing: 0.3px; margin-bottom: 3px; }
+  .rpt-vital-val { font-size: 15px; font-weight: 700; color: #1e293b; }
+  .rpt-vital-unit { font-size: 9px; color: #94a3b8; }
+  .rpt-vital-status { font-size: 9px; font-weight: 600; margin-top: 3px; padding: 1px 6px; border-radius: 8px; display: inline-block; }
+  .status-normal { background: #dcfce7; color: #166534; }
+  .status-warning { background: #fef3c7; color: #92400e; }
+  .status-critical { background: #fee2e2; color: #991b1b; }
+
+  /* Anthropometry */
+  .rpt-anthro-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .rpt-anthro-item { display: flex; justify-content: space-between; padding: 4px 8px; background: #fff; border: 1px solid #eee; border-radius: 3px; font-size: 10.5px; }
+  .rpt-anthro-item .a-lbl { color: #666; }
+  .rpt-anthro-item .a-val { font-weight: 600; color: #333; }
+
+  /* Tags */
+  .rpt-tag { display: inline-block; padding: 2px 7px; border-radius: 10px; font-size: 9.5px; font-weight: 600; margin: 1px; }
+  .rpt-tag-blue { background: #dbeafe; color: #1e40af; }
+  .rpt-tag-red { background: #fee2e2; color: #991b1b; }
+  .rpt-tag-yellow { background: #fef3c7; color: #92400e; }
+  .rpt-tag-green { background: #dcfce7; color: #166534; }
+  .rpt-tag-purple { background: #ede9fe; color: #6d28d9; }
+
+  /* Allergy */
+  .rpt-allergy-row { padding: 5px 0; border-bottom: 1px solid #f3f4f6; }
+  .rpt-allergy-row:last-child { border-bottom: none; }
+  .rpt-allergy-row .a-tags { display: flex; align-items: center; flex-wrap: wrap; gap: 4px; }
+  .rpt-allergy-row .a-name { font-weight: 600; font-size: 11px; }
+  .rpt-allergy-sub { font-size: 10px; color: #666; margin-top: 2px; }
+
+  /* History */
+  .rpt-hist-label { font-weight: 600; font-size: 10.5px; color: #555; margin-bottom: 4px; }
+  .rpt-hist-row { padding: 3px 0; font-size: 10.5px; display: flex; align-items: center; flex-wrap: wrap; gap: 4px; }
+  .rpt-hist-sub { font-size: 10px; color: #777; }
+
+  /* Diagnose */
+  .rpt-dg-row { display: flex; align-items: flex-start; gap: 8px; padding: 5px 0; border-bottom: 1px solid #f3f4f6; }
+  .rpt-dg-row:last-child { border-bottom: none; }
+  .rpt-dg-badge { display: inline-block; min-width: 60px; text-align: center; padding: 2px 5px; border-radius: 3px; font-size: 9.5px; font-weight: 700; white-space: nowrap; }
+  .badge-initial { background: #dbeafe; color: #1e40af; }
+  .badge-primary { background: #dcfce7; color: #166534; }
+  .badge-secondary { background: #fef3c7; color: #92400e; }
+  .rpt-dg-code { font-weight: 700; color: #333; font-size: 11px; }
+  .rpt-dg-name { font-size: 10px; color: #666; margin-top: 1px; }
+
+  /* Prescription */
+  .rpt-rx-card { background: #faf5ff; border: 1px solid #ddd6fe; border-radius: 6px; padding: 10px; margin-bottom: 8px; page-break-inside: avoid; }
+  .rpt-rx-header { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+  .rpt-rx-badge { font-size: 11px; font-weight: 700; background: #7c3aed; color: #fff; padding: 1px 6px; border-radius: 3px; }
+  .rpt-rx-name { font-size: 13px; font-weight: 700; color: #5b21b6; }
+  .rpt-rx-details { display: grid; grid-template-columns: 1fr 1fr; gap: 3px 14px; font-size: 10.5px; }
+  .rpt-rx-details .d-lbl { color: #7c3aed; font-weight: 600; }
+  .rpt-rx-details .d-val { color: #444; }
+  .rpt-rx-indication { margin-top: 6px; padding: 4px 8px; background: #f3e8ff; border-radius: 3px; font-size: 10.5px; color: #5b21b6; }
+
+  /* Treatment */
+  .rpt-treatment-row { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 1px solid #f3f4f6; font-size: 11px; }
+  .rpt-treatment-row:last-child { border-bottom: none; }
+  .rpt-treatment-name { font-weight: 600; color: #333; }
+  .rpt-treatment-qty { font-size: 10px; color: #999; margin-left: 5px; }
+  .rpt-treatment-result { color: #16a34a; font-weight: 600; font-size: 10.5px; }
+  .rpt-treatment-right { display: flex; align-items: center; gap: 6px; }
+
+  /* Footer */
+  .rpt-footer { margin-top: 30px; padding-top: 16px; border-top: 1px dashed #ccc; display: flex; justify-content: space-between; align-items: flex-end; }
+  .rpt-sig-block { text-align: center; width: 170px; }
+  .rpt-sig-line { border-bottom: 1px solid #333; height: 40px; margin-bottom: 4px; }
+  .rpt-sig-name { font-size: 10.5px; font-weight: 600; color: #333; }
+  .rpt-sig-title { font-size: 9.5px; color: #777; }
+  .rpt-footer-note { font-size: 9px; color: #aaa; text-align: center; line-height: 1.6; }
+`
+
+export function usePrintReport() {
+  const printEl = (el: HTMLElement, title: string = 'Hasil Pemeriksaan') => {
+    if (!el) return
+
+    const win = window.open('', '_blank')
+    if (!win) return
+
+    win.document.write(
+      `<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>${title}</title>
+  <style>${PRINT_CSS}</style>
+</head>
+<body>${el.innerHTML}</body>
+</html>`
+    )
+    win.document.close()
+
+    win.onload = () => {
+      setTimeout(() => {
+        win.print()
+        win.close()
+      }, 300)
+    }
+  }
+
+  return { printEl }
+}

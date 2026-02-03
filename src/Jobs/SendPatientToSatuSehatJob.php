@@ -2,6 +2,7 @@
 
 namespace Projects\WellmedBackbone\Jobs;
 
+use Exception;
 use Hanafalah\LaravelSupport\Concerns\Support\HasRequestData;
 use Hanafalah\MicroTenant\Facades\MicroTenant;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -9,6 +10,8 @@ use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Support\Facades\Log;
+use Projects\WellmedBackbone\Services\DashboardMetricsService;
+use Illuminate\Database\Eloquent\Model;
 
 class SendPatientToSatuSehatJob implements ShouldQueue
 {
@@ -34,11 +37,12 @@ class SendPatientToSatuSehatJob implements ShouldQueue
         try {
             // Set tenant context for multi-tenant isolation
             MicroTenant::tenantImpersonate($this->tenantId);
+            
             // Get patient model
             $patientModel = app(config('database.models.Patient'))->find($this->patientId);
             if (!$patientModel) {
                 Log::channel('satu-sehat')->warning("Patient not found: {$this->patientId}");
-                return;
+                throw new Exception('Patient not found: '.$this->patientId);
             }
 
             $dto = $this->requestDTO(config('app.contracts.PatientSatuSehatData'), [
@@ -49,6 +53,7 @@ class SendPatientToSatuSehatJob implements ShouldQueue
                 'dto' => $dto->toArray()
             ]);
             // Send to Satu Sehat
+
             $patient_satu_sehat = app(config('app.contracts.PatientSatuSehat'))
                 ->useAccessToSatuSehat()
                 ->prepareStorePatientSatuSehat($dto);
@@ -74,12 +79,14 @@ class SendPatientToSatuSehatJob implements ShouldQueue
             }
 
             $patientModel->save();
+            
             Log::channel('satu-sehat')->info("Patient sent to Satu Sehat successfully", [
                 'patient_id' => $this->patientId,
                 'ihs_number' => $patient_satu_sehat->response['id'] ?? null
             ]);
-
         } catch (\Throwable $th) {
+            $this->updateDashboardStatistics($this->patientId,'unsynced-patients');
+
             Log::channel('satu-sehat')->error("Failed to send patient to Satu Sehat", [
                 'patient_id' => $this->patientId,
                 'error' => $th->getMessage(),
@@ -98,5 +105,38 @@ class SendPatientToSatuSehatJob implements ShouldQueue
             'tenant_id' => $this->tenantId,
             'error' => $exception->getMessage()
         ]);
+    }
+
+    /**
+     * Update dashboard statistics when a new visit_registration is created.
+     * Updates both total patient count and new patient count.
+     *
+     * @param Model $patient
+     * @return void
+     */
+    private function updateDashboardStatistics(mixed $patientId,string $type): void
+    {
+        try {
+            if (!config('elasticsearch.enabled', false)) {
+                return;
+            }
+
+            $dashboardService = app(DashboardMetricsService::class);
+
+            switch ($type) {
+                case 'unsynced-patients': $dashboardService->incrementNewUnsycedVisit();break;
+            }
+
+            Log::channel('elasticsearch')->info('Dashboard statistics updated for new patient', [
+                'patient_id' => $patientId
+            ]);
+
+        } catch (\Throwable $e) {
+            // Don't fail patient creation if dashboard update fails
+            Log::channel('elasticsearch')->error('Failed to update dashboard statistics', [
+                'patient_id' => $patientId,
+                'error' => $e->getMessage()
+            ]);
+        }
     }
 }

@@ -1,0 +1,382 @@
+{
+    "daily": {
+        "tenant_id": 4,
+        "workspace_id": 1,
+        "period_type": "daily",
+        "timestamp": "2025-01-28T10:30:00+07:00",
+        "date": "2025-01-28",
+        "year": 2025,
+        "month": 1,
+        "week": 5,
+        "day": 28,
+        "statistics": [
+            {
+                "id": "patients",
+                "label": "Jumlah Pasien",
+                "count": 1547,
+                "change": 12,
+                "change_type": "increase",
+                "percentage_change": 0.8,
+                "change_label": "Dari kemarin",
+                "icon": "mdi:account-group",
+                "color": "blue",
+                "gradient": "from-blue-500 to-cyan-400",
+                "bg_light": "bg-blue-50",
+                "text_color": "text-blue-600",
+                "border_color": "border-blue-200"
+            },
+            {
+                "id": "new_patients",
+                "label": "Pasien Baru",
+                "count": 12,
+                "change": 3,
+                "change_type": "increase",
+                "percentage_change": 33.3,
+                "change_label": "Dari kemarin",
+                "icon": "mdi:account-plus",
+                "color": "green",
+                "gradient": "from-green-500 to-emerald-400",
+                "bg_light": "bg-green-50",
+                "text_color": "text-green-600",
+                "border_color": "border-green-200"
+            },
+            {
+                "id": "revenue",
+                "label": "Total Pendapatan",
+                "count": 15750000,
+                "change": 2100000,
+                "change_type": "increase",
+                "percentage_change": 15.4,
+                "change_label": "Dari kemarin",
+                "icon": "mdi:cash-multiple",
+                "color": "purple",
+                "gradient": "from-purple-500 to-pink-400",
+                "bg_light": "bg-purple-50",
+                "text_color": "text-purple-600",
+                "border_color": "border-purple-200"
+            },
+            {
+                "id": "treatment",
+                "label": "Belum Selesai",
+                "count": 31,
+                "change": 8,
+                "change_type": "increase",
+                "percentage_change": 34.8,
+                "change_label": "Dari kemarin",
+                "icon": "mdi:clipboard-alert",
+                "color": "orange",
+                "gradient": "from-orange-500 to-amber-400",
+                "bg_light": "bg-orange-50",
+                "text_color": "text-orange-600",
+                "border_color": "border-orange-200"
+            }
+        ],
+        "motivational_stats": {
+            "today": 245,
+            "yesterday": 227,
+            "target": 227,
+            "percentage": 107.9
+        },
+        "pending_items": {
+            "unsigned_visits": 12,
+            "unsynced_patients": 5,
+            "incomplete_diagnosis": 3
+        },
+        "aggregation_period": {
+            "start_date": "2025-01-28",
+            "end_date": "2025-01-28",
+            "label": "28 Jan 2025"
+        },
+        "metadata": {
+            "created_at": "2025-01-28T08:00:00+07:00",
+            "updated_at": "2025-01-28T10:30:00+07:00",
+            "created_by": "system",
+            "version": "1.0"
+        }
+    },
+    "weekly": {
+        "tenant_id": 4,
+        "workspace_id": 1,
+        "period_type": "weekly",
+        "timestamp": "2025-01-28T10:30:00+07:00",
+        "date": "2025-01-28",
+        "year": 2025,
+        "month": 1,
+        "week": 5,
+        "day": 28,
+        "statistics": [
+            {
+                "id": "patients",
+                "label": "Jumlah Pasien",
+                "count": 1547,
+                "change": 58,
+                "change_type": "increase",
+                "percentage_change": 3.9,
+                "change_label": "Dari minggu lalu",
+                "icon": "mdi:account-group",
+                "color": "blue",
+                "gradient": "from-blue-500 to-cyan-400",
+                "bg_light": "bg-blue-50",
+                "text_color": "text-blue-600",
+                "border_color": "border-blue-200"
+            },
+            {
+                "id": "new_patients",
+                "label": "Pasien Baru",
+                "count": 58,
+                "change": 12,
+                "change_type": "increase",
+                "percentage_change": 26.1,
+                "change_label": "Dari minggu lalu",
+                "icon": "mdi:account-plus",
+                "color": "green",
+                "gradient": "from-green-500 to-emerald-400",
+                "bg_light": "bg-green-50",
+                "text_color": "text-green-600",
+                "border_color": "border-green-200"
+            },
+            {
+                "id": "revenue",
+                "label": "Total Pendapatan",
+                "count": 98500000,
+                "change": 12500000,
+                "change_type": "increase",
+                "percentage_change": 14.5,
+                "change_label": "Dari minggu lalu",
+                "icon": "mdi:cash-multiple",
+                "color": "purple",
+                "gradient": "from-purple-500 to-pink-400",
+                "bg_light": "bg-purple-50",
+                "text_color": "text-purple-600",
+                "border_color": "border-purple-200"
+            },
+            {
+                "id": "treatment",
+                "label": "Belum Selesai",
+                "count": 156,
+                "change": 23,
+                "change_type": "increase",
+                "percentage_change": 17.3,
+                "change_label": "Dari minggu lalu",
+                "icon": "mdi:clipboard-alert",
+                "color": "orange",
+                "gradient": "from-orange-500 to-amber-400",
+                "bg_light": "bg-orange-50",
+                "text_color": "text-orange-600",
+                "border_color": "border-orange-200"
+            }
+        ],
+        "motivational_stats": {
+            "today": 1245,
+            "yesterday": 1187,
+            "target": 1187,
+            "percentage": 104.9
+        },
+        "pending_items": {
+            "unsigned_visits": 45,
+            "unsynced_patients": 18,
+            "incomplete_diagnosis": 12
+        },
+        "aggregation_period": {
+            "start_date": "2025-01-20",
+            "end_date": "2025-01-26",
+            "label": "Week 4, 2025"
+        },
+        "metadata": {
+            "created_at": "2025-01-20T08:00:00+07:00",
+            "updated_at": "2025-01-28T10:30:00+07:00",
+            "created_by": "system",
+            "version": "1.0"
+        }
+    },
+    "monthly": {
+        "tenant_id": 4,
+        "workspace_id": 1,
+        "period_type": "monthly",
+        "timestamp": "2025-01-28T10:30:00+07:00",
+        "date": "2025-01-28",
+        "year": 2025,
+        "month": 1,
+        "week": 5,
+        "day": 28,
+        "statistics": [
+            {
+                "id": "patients",
+                "label": "Jumlah Pasien",
+                "count": 1547,
+                "change": 187,
+                "change_type": "increase",
+                "percentage_change": 13.8,
+                "change_label": "Dari bulan lalu",
+                "icon": "mdi:account-group",
+                "color": "blue",
+                "gradient": "from-blue-500 to-cyan-400",
+                "bg_light": "bg-blue-50",
+                "text_color": "text-blue-600",
+                "border_color": "border-blue-200"
+            },
+            {
+                "id": "new_patients",
+                "label": "Pasien Baru",
+                "count": 187,
+                "change": 32,
+                "change_type": "increase",
+                "percentage_change": 20.6,
+                "change_label": "Dari bulan lalu",
+                "icon": "mdi:account-plus",
+                "color": "green",
+                "gradient": "from-green-500 to-emerald-400",
+                "bg_light": "bg-green-50",
+                "text_color": "text-green-600",
+                "border_color": "border-green-200"
+            },
+            {
+                "id": "revenue",
+                "label": "Total Pendapatan",
+                "count": 425000000,
+                "change": 58000000,
+                "change_type": "increase",
+                "percentage_change": 15.8,
+                "change_label": "Dari bulan lalu",
+                "icon": "mdi:cash-multiple",
+                "color": "purple",
+                "gradient": "from-purple-500 to-pink-400",
+                "bg_light": "bg-purple-50",
+                "text_color": "text-purple-600",
+                "border_color": "border-purple-200"
+            },
+            {
+                "id": "treatment",
+                "label": "Belum Selesai",
+                "count": 623,
+                "change": 78,
+                "change_type": "increase",
+                "percentage_change": 14.3,
+                "change_label": "Dari bulan lalu",
+                "icon": "mdi:clipboard-alert",
+                "color": "orange",
+                "gradient": "from-orange-500 to-amber-400",
+                "bg_light": "bg-orange-50",
+                "text_color": "text-orange-600",
+                "border_color": "border-orange-200"
+            }
+        ],
+        "motivational_stats": {
+            "today": 5420,
+            "yesterday": 5012,
+            "target": 5012,
+            "percentage": 108.1
+        },
+        "pending_items": {
+            "unsigned_visits": 156,
+            "unsynced_patients": 58,
+            "incomplete_diagnosis": 42
+        },
+        "aggregation_period": {
+            "start_date": "2025-01-01",
+            "end_date": "2025-01-31",
+            "label": "January 2025"
+        },
+        "metadata": {
+            "created_at": "2025-01-01T08:00:00+07:00",
+            "updated_at": "2025-01-28T10:30:00+07:00",
+            "created_by": "system",
+            "version": "1.0"
+        }
+    },
+    "yearly": {
+        "tenant_id": 4,
+        "workspace_id": 1,
+        "period_type": "yearly",
+        "timestamp": "2025-01-28T10:30:00+07:00",
+        "date": "2025-01-28",
+        "year": 2025,
+        "month": 1,
+        "week": 5,
+        "day": 28,
+        "statistics": [
+            {
+                "id": "patients",
+                "label": "Jumlah Pasien",
+                "count": 1547,
+                "change": 547,
+                "change_type": "increase",
+                "percentage_change": 54.7,
+                "change_label": "Dari tahun lalu",
+                "icon": "mdi:account-group",
+                "color": "blue",
+                "gradient": "from-blue-500 to-cyan-400",
+                "bg_light": "bg-blue-50",
+                "text_color": "text-blue-600",
+                "border_color": "border-blue-200"
+            },
+            {
+                "id": "new_patients",
+                "label": "Pasien Baru",
+                "count": 547,
+                "change": 187,
+                "change_type": "increase",
+                "percentage_change": 52.0,
+                "change_label": "Dari tahun lalu",
+                "icon": "mdi:account-plus",
+                "color": "green",
+                "gradient": "from-green-500 to-emerald-400",
+                "bg_light": "bg-green-50",
+                "text_color": "text-green-600",
+                "border_color": "border-green-200"
+            },
+            {
+                "id": "revenue",
+                "label": "Total Pendapatan",
+                "count": 425000000,
+                "change": 125000000,
+                "change_type": "increase",
+                "percentage_change": 41.7,
+                "change_label": "Dari tahun lalu",
+                "icon": "mdi:cash-multiple",
+                "color": "purple",
+                "gradient": "from-purple-500 to-pink-400",
+                "bg_light": "bg-purple-50",
+                "text_color": "text-purple-600",
+                "border_color": "border-purple-200"
+            },
+            {
+                "id": "treatment",
+                "label": "Belum Selesai",
+                "count": 623,
+                "change": 123,
+                "change_type": "increase",
+                "percentage_change": 24.6,
+                "change_label": "Dari tahun lalu",
+                "icon": "mdi:clipboard-alert",
+                "color": "orange",
+                "gradient": "from-orange-500 to-amber-400",
+                "bg_light": "bg-orange-50",
+                "text_color": "text-orange-600",
+                "border_color": "border-orange-200"
+            }
+        ],
+        "motivational_stats": {
+            "today": 5420,
+            "yesterday": 4012,
+            "target": 4012,
+            "percentage": 135.1
+        },
+        "pending_items": {
+            "unsigned_visits": 156,
+            "unsynced_patients": 58,
+            "incomplete_diagnosis": 42
+        },
+        "aggregation_period": {
+            "start_date": "2025-01-01",
+            "end_date": "2025-12-31",
+            "label": "2025"
+        },
+        "metadata": {
+            "created_at": "2025-01-01T08:00:00+07:00",
+            "updated_at": "2025-01-28T10:30:00+07:00",
+            "created_by": "system",
+            "version": "1.0"
+        }
+    }
+}

@@ -130,7 +130,7 @@ class TestDashboardMetricsCommand extends Command
                         ['Patients', $data['statistics']['patients']['count'], $data['statistics']['patients']['change'], $data['statistics']['patients']['change_type']],
                         ['New Patients', $data['statistics']['new_patients']['count'], $data['statistics']['new_patients']['change'], $data['statistics']['new_patients']['change_type']],
                         ['Revenue', number_format($data['statistics']['revenue']['count']), number_format($data['statistics']['revenue']['change']), $data['statistics']['revenue']['change_type']],
-                        ['Unfinished', $data['statistics']['unfinished']['count'], $data['statistics']['unfinished']['change'], $data['statistics']['unfinished']['change_type']],
+                        ['Unfinished', $data['statistics']['treatment']['count'], $data['statistics']['treatment']['change'], $data['statistics']['treatment']['change_type']],
                     ]
                 );
 
