@@ -64,35 +64,7 @@ class WellmedBackboneServiceProvider extends WellmedBackboneEnvironment
 
                 View::addNamespace('wellmed', base_path('vendor/projects/wellmed-backbone/src/Resources/Views'));
 
-                if (config('elasticsearch.enabled', false)) {
-                    $hosts = config('app.elasticsearch.hosts','localhost:9200');
-                    if (isset($hosts)){
-                        $client = ClientBuilder::create()->setHosts($hosts)
-                            ->setApiKey(
-                                config('app.elasticsearch.username','elastic'),
-                                config('app.elasticsearch.password','password')
-                            )
-                            ->setSSLVerification(env('ELASTICSEARCH_SSL_VERIFY',false) === 'true')
-                            ->build();
-                        config(['app.elasticsearch.client' => $client]);
-                        $this->app->singleton('elasticsearch', function () use ($client) {
-                            return $client;
-                        });
-                        foreach (config('app.elasticsearch.indexes',[]) as $index_key => $index_config){
-                            $full_index_name =
-                                config('elasticsearch.prefix', 'development')
-                                .config('elasticsearch.separator', '.')
-                                .$index_config['name'];
-                            config(['app.elasticsearch.indexes.'.$index_key.'.full_name' => $full_index_name]);
-                            if ($client->indices()->exists(['index' => $full_index_name])->asBool()) {
-                                continue;
-                            }
-                            $client->indices()->create([
-                                'index' => $full_index_name
-                            ]);
-                        }
-                    }
-                }
+                $this->initializeElasticsearch();
 
                 $this->initializeRabbitMQQueues();
             } catch (\Throwable $th) {
@@ -102,6 +74,71 @@ class WellmedBackboneServiceProvider extends WellmedBackboneEnvironment
                 ]);
             }
         });
+    }
+
+    /**
+     * Initialize Elasticsearch client
+     *
+     * NOTE: This is a singleton - only created once per worker, not per request.
+     * The client is reused across requests in Octane context.
+     *
+     * @return void
+     */
+    protected function initializeElasticsearch(): void
+    {
+        if (!config('elasticsearch.enabled', false)) {
+            return;
+        }
+
+        // Skip if already initialized (Octane worker context)
+        if ($this->app->bound('elasticsearch')) {
+            return;
+        }
+
+        $hosts = config('app.elasticsearch.hosts', 'localhost:9200');
+        if (!isset($hosts)) {
+            return;
+        }
+
+        try {
+            // Create client as singleton - reused across requests
+            $this->app->singleton('elasticsearch', function () use ($hosts) {
+                return ClientBuilder::create()
+                    ->setHosts(is_array($hosts) ? $hosts : [$hosts])
+                    ->setApiKey(
+                        config('app.elasticsearch.username', 'elastic'),
+                        config('app.elasticsearch.password', 'password')
+                    )
+                    ->setSSLVerification(env('ELASTICSEARCH_SSL_VERIFY', false) === 'true')
+                    ->setRetries(2)
+                    ->build();
+            });
+
+            $client = $this->app->make('elasticsearch');
+            config(['app.elasticsearch.client' => $client]);
+
+            // Index creation - only run once during initial boot (not in Octane worker)
+            if (!app()->bound('octane.cacheTable')) {
+                foreach (config('app.elasticsearch.indexes', []) as $index_key => $index_config) {
+                    $full_index_name =
+                        config('elasticsearch.prefix', 'development')
+                        . config('elasticsearch.separator', '.')
+                        . $index_config['name'];
+
+                    config(['app.elasticsearch.indexes.' . $index_key . '.full_name' => $full_index_name]);
+
+                    try {
+                        if (!$client->indices()->exists(['index' => $full_index_name])->asBool()) {
+                            $client->indices()->create(['index' => $full_index_name]);
+                        }
+                    } catch (\Throwable $e) {
+                        \Log::warning("Failed to create ES index {$full_index_name}: {$e->getMessage()}");
+                    }
+                }
+            }
+        } catch (\Throwable $e) {
+            \Log::error('Elasticsearch initialization error: ' . $e->getMessage());
+        }
     }
 
     /**
