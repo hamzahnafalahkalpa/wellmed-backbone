@@ -24,11 +24,11 @@ class UserReference extends UserUserReference{
         static::creating(function($query){
             $query->flag = 'WELLMED';
         });
-        static::addGlobalScope('license',function($query){
-            if (config('app.use_license_validation', true)){
-                $query->whereHas('modelHasLicense');
-            }
-        });
+        // static::addGlobalScope('license',function($query){
+        //     if (config('app.use_license_validation', true)){
+        //         $query->whereHas('modelHasLicense');
+        //     }
+        // });
     }
 
     public function tenant(){return $this->morphTo(__FUNCTION__, "workspace_type", "workspace_id");}
