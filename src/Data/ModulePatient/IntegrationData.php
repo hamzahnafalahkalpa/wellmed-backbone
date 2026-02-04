@@ -18,22 +18,28 @@ class IntegrationData extends Data implements ContractsIntegrationData{
 
     public static function before(array &$attributes){
         $attributes['satu_sehat'] ??= [
+            'flag' => 'satu-sehat',
+            'label' => 'Satu Sehat',
             'progress' => 0,
             'pending' => 0,
             'syncs' => [
                 ['label' => 'Kunjungan','flag' => 'encounter','progress' => 0],
                 ['label' => 'Resep','flag' => 'dispense','progress' => 0],
                 ['label' => 'Diagnosa','flag' => 'condition','progress' => 0]
-            ]
+            ],
+            'logs' => []
         ];
         $attributes['bpjs'] ??= [
+            'flag' => 'bpjs',
+            'label' => 'Bpjs',
             'progress' => 0,
             'pending' => 0,
             'syncs' => [
                 ['label' => 'Kunjungan','flag' => 'encounter','progress' => 0],
                 ['label' => 'Resep','flag' => 'dispense','progress' => 0],
                 ['label' => 'Diagnosa','flag' => 'condition','progress' => 0]
-            ]
+            ],
+            'logs' => []
         ];
     }
 }

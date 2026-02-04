@@ -9,12 +9,11 @@ use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Database\Eloquent\Model;
-use Projects\WellmedBackbone\Services\DashboardMetricsService;
+use Projects\WellmedBackbone\Jobs\Concerns\HasSatuSehatIntegration;
 
 class SendEncounterToSatuSehatJob implements ShouldQueue
 {
-    use Queueable, SerializesModels, InteractsWithQueue, HasRequestData;
+    use Queueable, SerializesModels, InteractsWithQueue, HasRequestData, HasSatuSehatIntegration;
 
     public $tries = 3;
     public $timeout = 120;
@@ -54,6 +53,7 @@ class SendEncounterToSatuSehatJob implements ShouldQueue
                 Log::channel('satu-sehat')->warning("Patient not found: {$this->patientId}");
                 return;
             }
+
             // Send encounter to Satu Sehat
             $encounter_satu_sehat = app(config('app.contracts.EncounterSatuSehat'))
                 ->useAccessToSatuSehat()
@@ -63,65 +63,36 @@ class SendEncounterToSatuSehatJob implements ShouldQueue
                         'form'  => $this->formPayload
                     ])
                 );
+
+            $ihsNumber = $encounter_satu_sehat->response['id'] ?? null;
+
             // Update visit registration with IHS number
-            $visitRegistrationModel->ihs_number = $encounter_satu_sehat->response['id'] ?? null;
+            $visitRegistrationModel->ihs_number = $ihsNumber;
             $visitRegistrationModel->save();
-            dd($visitRegistrationModel);
+
             // Update patient integration sync tracking
-            $integration = $patientModel->integration ?? [];
+            $this->updatePatientSyncCounter($patientModel, 'encounter');
 
-            if (!isset($integration['satu_sehat'])) {
-                $integration['satu_sehat'] = [
-                    'progress' => 0,
-                    'to' => 0,
-                    'from' => 0,
-                    'syncs' => [
-                        ['label' => 'Kunjungan', 'flag' => 'encounter', 'progress' => 0, 'to' => 0, 'from' => 0],
-                        ['label' => 'Resep', 'flag' => 'dispense', 'progress' => 0, 'to' => 0, 'from' => 0],
-                        ['label' => 'Diagnosa', 'flag' => 'condition', 'progress' => 0, 'to' => 0, 'from' => 0]
-                    ]
-                ];
-            }
-
-            $satu_sehat = &$integration['satu_sehat'];
-
-            // Update overall counter
-            $satu_sehat['to'] = ($satu_sehat['to'] ?? 0) + 1;
-            $satu_sehat['from'] = ($satu_sehat['from'] ?? 0) + 1;
-
-            // Update encounter-specific counter
-            $syncs = &$satu_sehat['syncs'];
-            foreach ($syncs as &$sync) {
-                if ($sync['flag'] == 'encounter') {
-                    $sync['to'] = ($sync['to'] ?? 0) + 1;
-                    $sync['from'] = ($sync['from'] ?? 0) + 1;
-                    $sync['progress'] = $sync['to'] > 0 ? round(($sync['from'] * 100) / $sync['to'], 2) : 0;
-                    break;
-                }
-            }
-
-            // Calculate overall progress
-            $totalSyncs = count($satu_sehat['syncs']);
-            $completedProgress = 0;
-            foreach ($satu_sehat['syncs'] as $sync) {
-                $completedProgress += ($sync['progress'] ?? 0);
-            }
-            $satu_sehat['progress'] = $totalSyncs > 0 ? round($completedProgress / $totalSyncs, 2) : 0;
-
-            $patientModel->setAttribute('integration', $integration);
-            $patientModel->save();
+            // Update patient log for encounter
+            $this->updatePatientLog($patientModel, 'encounter', 'Kunjungan Pasien');
 
             // Update workspace integration tracking
-            // $this->updateWorkspaceIntegration();
+            $workspaceModel = $this->getWorkspaceModel();
+            if ($workspaceModel) {
+                $this->updateWorkspaceSyncCounter($workspaceModel, 'encounter');
+            }
+
+            // Update Elasticsearch dashboard metrics
+            $this->updateDashboardWorkspaceIntegration('encounter');
+            $this->updateDashboardPatientIntegration((string) $this->patientId, 'encounter');
 
             Log::channel('satu-sehat')->info("Encounter sent to Satu Sehat successfully", [
                 'visit_registration_id' => $this->visitRegistrationId,
                 'patient_id' => $this->patientId,
-                'ihs_number' => $encounter_satu_sehat->response['id'] ?? null
+                'ihs_number' => $ihsNumber
             ]);
 
         } catch (\Throwable $th) {
-            dd($th->getmessage());
             Log::channel('satu-sehat')->error("Failed to send encounter to Satu Sehat", [
                 'visit_registration_id' => $this->visitRegistrationId,
                 'patient_id' => $this->patientId,
@@ -143,59 +114,4 @@ class SendEncounterToSatuSehatJob implements ShouldQueue
             'error' => $exception->getMessage()
         ]);
     }
-
-    protected function updateWorkspaceIntegration(): void
-    {
-        $workspace = config('app.workspace_model');
-
-        if (!$workspace) {
-            Log::channel('satu-sehat')->warning("Workspace model not found in config");
-            return;
-        }
-
-        $integration = $workspace->integration ?? [];
-
-        if (!isset($integration['satu_sehat'])) {
-            $integration['satu_sehat'] = [
-                'progress' => 0,
-                'general' => [
-                    'ihs_number' => null
-                ],
-                'syncs' => [
-                    ['flag' => 'encounter', 'label' => 'Kunjungan', 'progress' => 0, 'to' => 0, 'from' => 0],
-                    ['flag' => 'condition', 'label' => 'Diagnosa', 'progress' => 0, 'to' => 0, 'from' => 0],
-                    ['flag' => 'dispense', 'label' => 'Resep', 'progress' => 0, 'to' => 0, 'from' => 0]
-                ]
-            ];
-        }
-
-        $satu_sehat = &$integration['satu_sehat'];
-        $syncs = &$satu_sehat['syncs'];
-
-        // Update encounter-specific counter in workspace
-        foreach ($syncs as &$sync) {
-            if ($sync['flag'] == 'encounter') {
-                $sync['to'] = ($sync['to'] ?? 0) + 1;
-                $sync['from'] = ($sync['from'] ?? 0) + 1;
-                $sync['progress'] = $sync['to'] > 0 ? round(($sync['from'] * 100) / $sync['to'], 2) : 0;
-                break;
-            }
-        }
-
-        // Calculate overall workspace progress
-        $totalSyncs = count($satu_sehat['syncs']);
-        $completedProgress = 0;
-        foreach ($satu_sehat['syncs'] as $sync) {
-            $completedProgress += ($sync['progress'] ?? 0);
-        }
-        $satu_sehat['progress'] = $totalSyncs > 0 ? round($completedProgress / $totalSyncs, 2) : 0;
-
-        $workspace->integration = $integration;
-        $workspace->save();
-
-        Log::channel('satu-sehat')->info("Workspace integration updated for encounter", [
-            'workspace_id' => $workspace->getKey(),
-            'progress' => $satu_sehat['progress']
-        ]);
-    }     
 }

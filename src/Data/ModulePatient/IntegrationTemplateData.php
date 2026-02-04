@@ -42,6 +42,11 @@ class IntegrationTemplateData extends Data implements ContractsIntegrationTempla
     #[DataCollectionOf(IntegrationTemplateData::class)]
     public ?array $syncs = [];
 
+    #[MapInputName('logs')]
+    #[MapName('logs')]
+    #[DataCollectionOf(IntegrationTemplateData::class)]
+    public ?array $logs = [];
+
     public static function before(array &$attributes){
         $attributes['progress'] ??= 0;
         $attributes['pending'] ??= 0;

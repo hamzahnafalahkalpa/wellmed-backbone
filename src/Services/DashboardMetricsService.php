@@ -12,6 +12,7 @@ use Projects\WellmedBackbone\Services\Concerns\HasStatistic;
 use Projects\WellmedBackbone\Services\Concerns\HasTreatmentDiagnose;
 use Projects\WellmedBackbone\Services\Concerns\HasQueueService;
 use Projects\WellmedBackbone\Services\Concerns\HasTrend;
+use Projects\WellmedBackbone\Services\Concerns\HasWorkspaceIntegration;
 
 /**
  * Dashboard Metrics Service
@@ -22,7 +23,7 @@ use Projects\WellmedBackbone\Services\Concerns\HasTrend;
 class DashboardMetricsService
 {
     use HasStatistic, HasPendingItem, HasCashier, HasBilling, HasMotivationalStats,
-        HasTreatmentDiagnose, HasQueueService, HasTrend;
+        HasTreatmentDiagnose, HasQueueService, HasTrend, HasWorkspaceIntegration;
 
     protected $client;
     protected string $indexPrefix = 'dashboard-metrics';
@@ -134,6 +135,11 @@ class DashboardMetricsService
             $merged['trends'] = $existing['trends'];
         }
 
+        // Merge workspace_integrations - preserve existing sync status
+        if (isset($existing['workspace_integrations']) && is_array($existing['workspace_integrations'])) {
+            $merged['workspace_integrations'] = $this->mergeArrayByType($defaults['workspace_integrations'] ?? [], $existing['workspace_integrations']);
+        }
+
         if (isset($existing['aggregation_period'])) {
             $merged['aggregation_period'] = array_merge($defaults['aggregation_period'], $existing['aggregation_period']);
         }
@@ -183,6 +189,49 @@ class DashboardMetricsService
 
         // Add any remaining existing items that aren't in defaults
         foreach ($existingById as $item) {
+            $merged[] = $item;
+        }
+
+        return $merged;
+    }
+
+    /**
+     * Merge arrays by type field, preserving existing values while ensuring all default items exist.
+     *
+     * @param array $defaults
+     * @param array $existing
+     * @return array
+     */
+    protected function mergeArrayByType(array $defaults, array $existing): array
+    {
+        $merged = [];
+        $existingByType = [];
+
+        // Index existing items by type
+        foreach ($existing as $item) {
+            if (isset($item['type'])) {
+                $existingByType[$item['type']] = $item;
+            }
+        }
+
+        // Merge defaults with existing
+        foreach ($defaults as $defaultItem) {
+            $type = $defaultItem['type'] ?? null;
+            if ($type && isset($existingByType[$type])) {
+                // Merge existing item with default (existing values take precedence for data fields)
+                $mergedItem = $defaultItem;
+                foreach ($existingByType[$type] as $key => $value) {
+                    $mergedItem[$key] = $value;
+                }
+                $merged[] = $mergedItem;
+                unset($existingByType[$type]);
+            } else {
+                $merged[] = $defaultItem;
+            }
+        }
+
+        // Add any remaining existing items that aren't in defaults
+        foreach ($existingByType as $item) {
             $merged[] = $item;
         }
 
@@ -332,6 +381,7 @@ class DashboardMetricsService
             'billing' => $this->getDefaultBilling($periodType),
             'queue_services' => [],
             'diagnosis_treatment' => [],
+            'workspace_integrations' => $this->getDefaultWorkspaceIntegrations($periodType),
             'trends' => $this->getDefaultTrends($periodType, $timestamp),
             'aggregation_period' => [
                 'start_date' => $timestamp->toDateString(),
@@ -400,6 +450,7 @@ class DashboardMetricsService
                                 'cashier' => ['type' => 'nested'],
                                 'queue_services' => ['type' => 'nested'],
                                 'diagnosis_treatment' => ['type' => 'nested'],
+                                'workspace_integrations' => ['type' => 'nested'],
                                 'trends' => ['type' => 'object'],
                                 'aggregation_period' => ['type' => 'object'],
                                 'metadata' => ['type' => 'object']

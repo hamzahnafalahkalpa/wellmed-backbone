@@ -9,10 +9,11 @@ use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Support\Facades\Log;
+use Projects\WellmedBackbone\Jobs\Concerns\HasSatuSehatIntegration;
 
 class SendOrganizationToSatuSehatJob implements ShouldQueue
 {
-    use Queueable, SerializesModels, InteractsWithQueue, HasRequestData;
+    use Queueable, SerializesModels, InteractsWithQueue, HasRequestData, HasSatuSehatIntegration;
 
     public $tries = 3;
     public $timeout = 120;
@@ -26,7 +27,7 @@ class SendOrganizationToSatuSehatJob implements ShouldQueue
     {
         $this->tenantId = $tenantId;
         $this->ogranizationId = $ogranizationId;
-        $this->formPayload = $formPayload;   
+        $this->formPayload = $formPayload;
     }
 
     public function handle(): void
@@ -34,7 +35,8 @@ class SendOrganizationToSatuSehatJob implements ShouldQueue
         try {
             // Set tenant context for multi-tenant isolation
             MicroTenant::tenantImpersonate($this->tenantId);
-            // Get patient model
+
+            // Get workspace/organization model
             $organizationModel = app(config('database.models.Workspace'))->find($this->ogranizationId);
             if (!$organizationModel) {
                 Log::channel('satu-sehat')->warning("Organization not found: {$this->ogranizationId}");
@@ -45,30 +47,35 @@ class SendOrganizationToSatuSehatJob implements ShouldQueue
                 'model' => $organizationModel,
                 'form'  => $this->formPayload
             ]);
+
             Log::channel('satu-sehat')->info("DTO", [
                 'dto' => $dto->toArray()
             ]);
+
             // Send to Satu Sehat
             $organization_satu_sehat = app(config('app.contracts.OrganizationSatuSehat'))
                 ->useAccessToSatuSehat()
                 ->prepareStoreOrganizationSatuSehat($dto);
-            // Update room with IHS number
-            $integration = $organizationModel->integration;
-            if (!isset($integration)){
-                $integration = $organizationModel->getIntegrationPayload();
+
+            $ihsNumber = $organization_satu_sehat->response[0]['resource']['id'] ?? null;
+
+            // Update workspace with IHS number using new integration structure
+            if ($ihsNumber) {
+                $this->updateWorkspaceIhsNumber($organizationModel, $ihsNumber);
+                config(['satu-sehat.client_organization_id' => $ihsNumber]);
             }
-            $integration['satu_sehat']['general']['ihs_number'] = $organization_satu_sehat->response[0]['resource']['id'] ?? null;
-            config(['satu-sehat.client_organization_id' => $organization_satu_sehat->response[0]['resource']['id'] ?? null]);
-            $organizationModel->setAttribute('integration',$integration);
-            $organizationModel->save();
+
+            // Update Elasticsearch dashboard metrics
+            $this->updateDashboardWorkspaceIntegration('location');
+
             Log::channel('satu-sehat')->info("Organization sent to Satu Sehat successfully", [
-                'room_id' => $this->ogranizationId,
-                'ihs_number' => $organization_satu_sehat->response['id'] ?? null
+                'organization_id' => $this->ogranizationId,
+                'ihs_number' => $ihsNumber
             ]);
 
         } catch (\Throwable $th) {
-            Log::channel('satu-sehat')->error("Failed to send location to Satu Sehat", [
-                'room_id' => $this->ogranizationId,
+            Log::channel('satu-sehat')->error("Failed to send organization to Satu Sehat", [
+                'organization_id' => $this->ogranizationId,
                 'error' => $th->getMessage(),
                 'trace' => $th->getTraceAsString()
             ]);
@@ -81,7 +88,7 @@ class SendOrganizationToSatuSehatJob implements ShouldQueue
     public function failed(\Throwable $exception): void
     {
         Log::channel('satu-sehat')->critical("SendOrganizationToSatuSehatJob failed after all retries", [
-            'room_id' => $this->ogranizationId,
+            'organization_id' => $this->ogranizationId,
             'tenant_id' => $this->tenantId,
             'error' => $exception->getMessage()
         ]);

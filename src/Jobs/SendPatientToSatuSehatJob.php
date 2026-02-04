@@ -10,12 +10,12 @@ use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Support\Facades\Log;
+use Projects\WellmedBackbone\Jobs\Concerns\HasSatuSehatIntegration;
 use Projects\WellmedBackbone\Services\DashboardMetricsService;
-use Illuminate\Database\Eloquent\Model;
 
 class SendPatientToSatuSehatJob implements ShouldQueue
 {
-    use Queueable, SerializesModels, InteractsWithQueue, HasRequestData;
+    use Queueable, SerializesModels, InteractsWithQueue, HasRequestData, HasSatuSehatIntegration;
 
     public $tries = 3;
     public $timeout = 120;
@@ -29,7 +29,7 @@ class SendPatientToSatuSehatJob implements ShouldQueue
     {
         $this->tenantId = $tenantId;
         $this->patientId = $patientId;
-        $this->formPayload = $formPayload;   
+        $this->formPayload = $formPayload;
     }
 
     public function handle(): void
@@ -37,8 +37,7 @@ class SendPatientToSatuSehatJob implements ShouldQueue
         try {
             // Set tenant context for multi-tenant isolation
             MicroTenant::tenantImpersonate($this->tenantId);
-            // tenancy()->initialize($this->tenantId);
-            
+
             // Get patient model
             $patientModel = app(config('database.models.Patient'))->find($this->patientId);
             if (!$patientModel) {
@@ -50,43 +49,40 @@ class SendPatientToSatuSehatJob implements ShouldQueue
                 'model' => $patientModel,
                 'form'  => $this->formPayload
             ]);
+
             Log::channel('satu-sehat')->info("DTO", [
                 'dto' => $dto->toArray()
             ]);
-            // Send to Satu Sehat
 
+            // Send to Satu Sehat
             $patient_satu_sehat = app(config('app.contracts.PatientSatuSehat'))
                 ->useAccessToSatuSehat()
                 ->prepareStorePatientSatuSehat($dto);
-            // Update patient with IHS number
-            $prop_card_identity = $patientModel->prop_card_identity ?? [];
-            $prop_card_identity['ihs_number'] = $patient_satu_sehat->response['id'] ?? null;
-            $patientModel->setAttribute('prop_card_identity', $prop_card_identity);
 
-            // Initialize integration structure if not exists
-            $integration = $patientModel->integration ?? [];
-            if (!isset($integration['satu_sehat'])) {
-                $integration['satu_sehat'] = [
-                    'progress' => 0,
-                    'to' => 0,
-                    'from' => 0,
-                    'syncs' => [
-                        ['label' => 'Kunjungan', 'flag' => 'encounter', 'progress' => 0, 'to' => 0, 'from' => 0],
-                        ['label' => 'Resep', 'flag' => 'dispense', 'progress' => 0, 'to' => 0, 'from' => 0],
-                        ['label' => 'Diagnosa', 'flag' => 'condition', 'progress' => 0, 'to' => 0, 'from' => 0]
-                    ]
-                ];
-                $patientModel->setAttribute('integration', $integration);
+            $ihsNumber = $patient_satu_sehat->response['id'] ?? null;
+
+            // Update patient with IHS number using new integration structure
+            if ($ihsNumber) {
+                $this->updatePatientIhsNumber($patientModel, $ihsNumber);
             }
 
-            $patientModel->save();
-            
+            // Update workspace sync counter for patient
+            $workspaceModel = $this->getWorkspaceModel();
+            if ($workspaceModel) {
+                $this->updateWorkspaceSyncCounter($workspaceModel, 'patient');
+            }
+
+            // Update Elasticsearch dashboard metrics
+            $this->updateDashboardWorkspaceIntegration('patient');
+            $this->updateDashboardPatientIntegration((string) $this->patientId, 'patient');
+
             Log::channel('satu-sehat')->info("Patient sent to Satu Sehat successfully", [
                 'patient_id' => $this->patientId,
-                'ihs_number' => $patient_satu_sehat->response['id'] ?? null
+                'ihs_number' => $ihsNumber
             ]);
+
         } catch (\Throwable $th) {
-            $this->updateDashboardStatistics($this->patientId,'unsynced-patients');
+            $this->updateDashboardStatistics($this->patientId, 'unsynced-patients');
 
             Log::channel('satu-sehat')->error("Failed to send patient to Satu Sehat", [
                 'patient_id' => $this->patientId,
@@ -109,13 +105,13 @@ class SendPatientToSatuSehatJob implements ShouldQueue
     }
 
     /**
-     * Update dashboard statistics when a new visit_registration is created.
-     * Updates both total patient count and new patient count.
+     * Update dashboard statistics when sync fails.
      *
-     * @param Model $patient
+     * @param mixed $patientId
+     * @param string $type
      * @return void
      */
-    private function updateDashboardStatistics(mixed $patientId,string $type): void
+    private function updateDashboardStatistics(mixed $patientId, string $type): void
     {
         try {
             if (!config('elasticsearch.enabled', false)) {
@@ -125,15 +121,16 @@ class SendPatientToSatuSehatJob implements ShouldQueue
             $dashboardService = app(DashboardMetricsService::class);
 
             switch ($type) {
-                case 'unsynced-patients': $dashboardService->incrementNewUnsycedVisit();break;
+                case 'unsynced-patients':
+                    $dashboardService->incrementNewUnsycedVisit();
+                    break;
             }
 
-            Log::channel('elasticsearch')->info('Dashboard statistics updated for new patient', [
+            Log::channel('elasticsearch')->info('Dashboard statistics updated for patient sync failure', [
                 'patient_id' => $patientId
             ]);
 
         } catch (\Throwable $e) {
-            // Don't fail patient creation if dashboard update fails
             Log::channel('elasticsearch')->error('Failed to update dashboard statistics', [
                 'patient_id' => $patientId,
                 'error' => $e->getMessage()

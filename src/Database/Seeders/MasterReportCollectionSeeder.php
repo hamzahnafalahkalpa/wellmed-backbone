@@ -28,7 +28,7 @@ class MasterReportCollectionSeeder extends Seeder
 
         $collections = [
             [
-                "name"           => "Rekap Data Pasien",
+                "name"           => "Laporan Data Pasien",
                 "label"           => "PATIENT_DATA_RECAP_REPORT",
                 "data_type"      => "DataTable",
                 "filters"        => [
@@ -99,7 +99,7 @@ class MasterReportCollectionSeeder extends Seeder
                 ]
             ],
             [
-                "name"              => "Kunjungan Pasien",
+                "name"              => "Laporan Kunjungan Pasien",
                 "label"              => "VISIT_PATIENT_REPORT",
                 "data_type"         => "DataTable",
                 "filters"        => [
@@ -181,7 +181,7 @@ class MasterReportCollectionSeeder extends Seeder
                 ]
             ],
             [
-                "name"              => "Transaksi Billing",
+                "name"              => "Laporan Tagihan Pasien",
                 "label"              => "TRANSACTION_BILLING_REPORT",
                 "data_type"         => "DataTable",
                 "filters"        => [
@@ -205,7 +205,7 @@ class MasterReportCollectionSeeder extends Seeder
                 ]
             ],
             [
-                "name"              => "Rekap Pembayaran",
+                "name"              => "Laporan Pembayaran Pasien",
                 "label"              => "PAYMENT_RECAP_REPORT",
                 "data_type"         => "DataTable",
                 "filters"        => [
@@ -229,7 +229,7 @@ class MasterReportCollectionSeeder extends Seeder
                 ]
             ],
             [
-                "name"              => "Rekap Observasi",
+                "name"              => "Laporan Observasi Pasien",
                 "label"              => "MEDIC_OBSERVATION_RECAP_REPORT",
                 "data_type"         => "DataTable",
                 "filters"        => [
@@ -253,7 +253,7 @@ class MasterReportCollectionSeeder extends Seeder
                 ]
             ],
             [
-                "name"              => "Refund dan Diskon",
+                "name"              => "Laporan Refund dan Diskon",
                 "label"              => "REFUND_DISCOUNT_RECAP_REPORT",
                 "data_type"         => "DataTable",
                 "filters"        => [
@@ -277,7 +277,7 @@ class MasterReportCollectionSeeder extends Seeder
                 ]
             ],
             [
-                "name"              => "Diagnosa Pasien",
+                "name"              => "Laporan Diagnosis Pasien",
                 "label"              => "DIAGNOSIS_RECAP_REPORT",
                 "data_type"         => "DataTable",
                 "filters"        => [
