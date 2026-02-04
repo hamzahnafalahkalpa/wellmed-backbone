@@ -35,6 +35,7 @@ class VisitRegistration extends SchemasVisitRegistration implements ModulePatien
         }
 
         if ($this->is_recently_created){
+            $this->updateDashboardStatistics($visit_registration_model,'trends');
             $this->updateDashboardStatistics($visit_registration_model,'queue-service');
         }
         return $this;
@@ -143,9 +144,15 @@ class VisitRegistration extends SchemasVisitRegistration implements ModulePatien
 
             $dashboardService = app(DashboardMetricsService::class);
             switch ($type) {
-                case 'queue-service' : 
+                case 'queue-service' :
                     $dashboardService->incrementNewQueueService([
                         'id' => $visit_registration->getKey(),
+                        'service' => $visit_registration->prop_medic_service['name'] ?? $visit_registration->medicService->name,
+                        'service_label' => $visit_registration->prop_medic_service['label'] ?? $visit_registration->medicService->label,
+                    ]);
+                break;
+                case 'trends' :
+                    $dashboardService->incrementTrend([
                         'service' => $visit_registration->prop_medic_service['name'] ?? $visit_registration->medicService->name,
                         'service_label' => $visit_registration->prop_medic_service['label'] ?? $visit_registration->medicService->label,
                     ]);

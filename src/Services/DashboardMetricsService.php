@@ -11,6 +11,7 @@ use Projects\WellmedBackbone\Services\Concerns\HasPendingItem;
 use Projects\WellmedBackbone\Services\Concerns\HasStatistic;
 use Projects\WellmedBackbone\Services\Concerns\HasTreatmentDiagnose;
 use Projects\WellmedBackbone\Services\Concerns\HasQueueService;
+use Projects\WellmedBackbone\Services\Concerns\HasTrend;
 
 /**
  * Dashboard Metrics Service
@@ -21,7 +22,7 @@ use Projects\WellmedBackbone\Services\Concerns\HasQueueService;
 class DashboardMetricsService
 {
     use HasStatistic, HasPendingItem, HasCashier, HasBilling, HasMotivationalStats,
-        HasTreatmentDiagnose, HasQueueService;
+        HasTreatmentDiagnose, HasQueueService, HasTrend;
 
     protected $client;
     protected string $indexPrefix = 'dashboard-metrics';
@@ -127,6 +128,10 @@ class DashboardMetricsService
 
         if (isset($existing['diagnosis_treatment'])) {
             $merged['diagnosis_treatment'] = $existing['diagnosis_treatment'];
+        }
+
+        if (isset($existing['trends'])) {
+            $merged['trends'] = $existing['trends'];
         }
 
         if (isset($existing['aggregation_period'])) {
@@ -327,6 +332,7 @@ class DashboardMetricsService
             'billing' => $this->getDefaultBilling($periodType),
             'queue_services' => [],
             'diagnosis_treatment' => [],
+            'trends' => $this->getDefaultTrends($periodType, $timestamp),
             'aggregation_period' => [
                 'start_date' => $timestamp->toDateString(),
                 'end_date' => $timestamp->toDateString(),
@@ -394,6 +400,7 @@ class DashboardMetricsService
                                 'cashier' => ['type' => 'nested'],
                                 'queue_services' => ['type' => 'nested'],
                                 'diagnosis_treatment' => ['type' => 'nested'],
+                                'trends' => ['type' => 'object'],
                                 'aggregation_period' => ['type' => 'object'],
                                 'metadata' => ['type' => 'object']
                             ]
