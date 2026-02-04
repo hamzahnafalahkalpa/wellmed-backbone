@@ -17,7 +17,6 @@ class VisitExamination extends SchemasVisitExamination implements ModulePatientV
         $visit_examination = parent::prepareVisitExaminationSignOff($visit_examination_model, $visit_examination_dto);
         $visit_registration_model = $visit_examination_dto->visit_registration_model ?? $visit_examination->visitRegistration;
         $patient_model = $visit_examination_dto->patient_model ?? $visit_examination_model->patient ?? null;
-
         if (isset($patient_model)) {
             $payload = $this->prepareSatuSehatObservationPayload($visit_examination, $visit_registration_model, $patient_model);
             $this->dispatchSatuSehatSync($visit_examination_model, $patient_model, $payload);
