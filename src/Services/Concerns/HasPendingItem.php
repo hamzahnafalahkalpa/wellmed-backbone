@@ -216,7 +216,7 @@ trait HasPendingItem{
                 'count' => 0,
                 'icon' => 'mdi:file-document-edit-outline', 
                 'color' => 'text-orange-600', 
-                'link' => '/patient-emr/unsigned-visits'
+                'link' => '/patient-emr/visit-registration?is_unsigned_visits=1'
              ],
              [
                 'id' => 'unsynced-patients',
