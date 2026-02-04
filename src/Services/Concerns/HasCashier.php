@@ -18,7 +18,7 @@ trait HasCashier{
         $results = [];
         $periodTypes = $this->getPeriodTypes();
         foreach ($periodTypes as $periodType) {
-            $results[$periodType] = $this->incrementCashier('omzet', $periodType, $tenantId, $workspaceId, $omzet);
+            $results[$periodType] = $this->incrementCashier('revenue', $periodType, $tenantId, $workspaceId, $omzet);
         }
         return $results;
     }
@@ -128,7 +128,6 @@ trait HasCashier{
                     'error' => "Cashier '{$cashierId}' not found"
                 ];
             }
-            
             $currentCount = $currentData['cashier'][$cashierIdx]['count'] ?? 0;
             $currentData['cashier'][$cashierIdx]['count'] = $count = $currentCount + $increment;;
 

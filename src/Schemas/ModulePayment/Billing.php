@@ -13,11 +13,7 @@ class Billing extends SchemasBilling implements ContractBilling
 {
     protected function afterBillingCreated(Model &$billing, BillingData &$billing_dto): self{
         parent::afterBillingCreated($billing, $billing_dto);
-
-        // Update dashboard statistics for new billing
-        if ($billing->debt == 0){
-            $this->updateDashboardStatistics($billing,'omzet');
-        }
+        
         if ($this->is_recently_created) {
             // $this->updateDashboardStatistics($billing,'pending-transaction');
         }
@@ -25,6 +21,11 @@ class Billing extends SchemasBilling implements ContractBilling
     }
 
     protected function afterBillingReported(Model &$billing, BillingData &$billing_dto): self{
+        parent::afterBillingCreated($billing,$billing_dto);
+        // Update dashboard statistics for new billing
+        if ($this->is_reporting && $billing->amount == $billing->money_paid){
+            $this->updateDashboardStatistics($billing,'omzet');
+        }
         return $this;
     }
 
