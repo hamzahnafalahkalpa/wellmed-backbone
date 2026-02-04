@@ -21,6 +21,10 @@ class IntegrationTemplateData extends Data implements ContractsIntegrationTempla
     #[MapName('progress')]
     public ?float $progress = 0;
 
+    #[MapInputName('pending')]
+    #[MapName('pending')]
+    public ?float $pending = 0;
+
     #[MapInputName('last_updated_at')]
     #[MapName('last_updated_at')]
     public ?string $last_updated_at = null;
@@ -40,8 +44,10 @@ class IntegrationTemplateData extends Data implements ContractsIntegrationTempla
 
     public static function before(array &$attributes){
         $attributes['progress'] ??= 0;
+        $attributes['pending'] ??= 0;
         $attributes['last_updated_at'] ??= now()->toDateTimeString();
         $attributes['from'] ??= 0;
         $attributes['to'] ??= 0;
+        $attributes['logs'] ??= [];
     }
 }

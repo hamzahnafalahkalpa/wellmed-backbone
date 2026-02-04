@@ -19,6 +19,7 @@ class IntegrationData extends Data implements ContractsIntegrationData{
     public static function before(array &$attributes){
         $attributes['satu_sehat'] ??= [
             'progress' => 0,
+            'pending' => 0,
             'syncs' => [
                 ['label' => 'Kunjungan','flag' => 'encounter','progress' => 0],
                 ['label' => 'Resep','flag' => 'dispense','progress' => 0],
@@ -27,6 +28,7 @@ class IntegrationData extends Data implements ContractsIntegrationData{
         ];
         $attributes['bpjs'] ??= [
             'progress' => 0,
+            'pending' => 0,
             'syncs' => [
                 ['label' => 'Kunjungan','flag' => 'encounter','progress' => 0],
                 ['label' => 'Resep','flag' => 'dispense','progress' => 0],

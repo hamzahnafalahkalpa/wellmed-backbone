@@ -256,6 +256,7 @@ class VisitRegistrationEmrExport
             'treatments' => $this->transformTreatments($emr),
             'history_illnesses' => $this->transformHistoryIllnesses($emr),
             'family_illnesses' => $this->transformFamilyIllnesses($emr),
+            'physical_examinations' => $this->transformPhysicalExaminations($emr),
         ];
     }
 
@@ -605,6 +606,40 @@ class VisitRegistrationEmrExport
                 'code' => $exam['code'] ?? $exam['disease_code'] ?? '-',
             ];
         })->toArray();
+    }
+
+    /**
+     * Transform physical examinations data (body forms with images).
+     */
+    protected function transformPhysicalExaminations(array $emr): array
+    {
+        $physicalExam = $emr['PhysicalExamination']['exam'] ?? null;
+        if (!$physicalExam) return [];
+
+        $examinations = [];
+
+        // Body form types to check
+        $formTypes = [
+            'body_form' => 'Head to Toe',
+            'muscle_form' => 'Head to Toe (Muskular)',
+            'odontogram' => 'Odontogram',
+        ];
+
+        foreach ($formTypes as $key => $defaultLabel) {
+            if (isset($physicalExam[$key]) && !empty($physicalExam[$key]['asset_url'])) {
+                $form = $physicalExam[$key];
+                $examinations[] = [
+                    'type' => $key,
+                    'label' => $form['label'] ?? $defaultLabel,
+                    'morph' => $form['morph'] ?? null,
+                    'image_url' => $form['asset_url'],
+                    'data' => $form['data'] ?? [],
+                    'has_annotations' => !empty($form['data']),
+                ];
+            }
+        }
+
+        return $examinations;
     }
 
     /**

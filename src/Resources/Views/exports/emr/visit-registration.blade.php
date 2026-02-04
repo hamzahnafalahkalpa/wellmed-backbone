@@ -668,6 +668,53 @@
         }
 
         /* ============================================
+           PHYSICAL EXAMINATION - Body Forms with Images
+           ============================================ */
+        .rpt-phys-grid {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .rpt-phys-grid td {
+            width: 33.33%;
+            padding: 3px;
+            vertical-align: top;
+        }
+
+        .rpt-phys-card {
+            background: #fafafa;
+            border: 1px solid #e4e7ec;
+            border-radius: 3px;
+            padding: 4px;
+            text-align: center;
+        }
+
+        .rpt-phys-label {
+            font-size: 7px;
+            font-weight: 600;
+            color: #003049;
+            text-transform: uppercase;
+            margin-bottom: 3px;
+            padding: 2px 4px;
+            background: #e0f2fe;
+            border-radius: 2px;
+        }
+
+        .rpt-phys-img {
+            max-width: 100%;
+            max-height: 180px;
+            border: 1px solid #ddd;
+            border-radius: 2px;
+            background: #fff;
+        }
+
+        .rpt-phys-note {
+            font-size: 6px;
+            color: #888;
+            margin-top: 2px;
+        }
+
+        /* ============================================
            PAGE BREAK
            ============================================ */
         .page-break {
@@ -923,6 +970,34 @@
                                     <td class="rpt-anthro-val">{{ $anthro['value'] ?? '-' }} {{ $anthro['unit'] ?? '' }}@if(isset($anthro['interpretation'])) <span style="font-size:6px;color:#888;">({{ $anthro['interpretation'] }})</span>@endif</td>
                                 </tr>
                             </table>
+                        </div>
+                    </td>
+                    @endforeach
+                </tr>
+            </table>
+        </div>
+    </div>
+    @endif
+
+    <!-- ============================================
+         PHYSICAL EXAMINATION - Body Forms with Images
+         ============================================ -->
+    @if(isset($physical_examinations) && count($physical_examinations) > 0)
+    <div class="rpt-section">
+        <div class="rpt-sec-title">Pemeriksaan Fisik</div>
+        <div class="rpt-sec-body">
+            <table class="rpt-phys-grid">
+                <tr>
+                    @foreach($physical_examinations as $exam)
+                    <td>
+                        <div class="rpt-phys-card">
+                            <div class="rpt-phys-label">{{ $exam['label'] ?? 'Pemeriksaan' }}</div>
+                            @if(isset($exam['image_url']) && $exam['image_url'])
+                            <img src="{{ $exam['image_url'] }}" alt="{{ $exam['label'] ?? 'Physical Exam' }}" class="rpt-phys-img">
+                            @endif
+                            @if(isset($exam['has_annotations']) && $exam['has_annotations'])
+                            <div class="rpt-phys-note">* Terdapat anotasi</div>
+                            @endif
                         </div>
                     </td>
                     @endforeach
