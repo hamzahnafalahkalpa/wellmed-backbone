@@ -137,7 +137,6 @@ class WellmedBackboneServiceProvider extends WellmedBackboneEnvironment
                 }
             }
         } catch (\Throwable $e) {
-            dd($e->getMessage());
             \Log::error('Elasticsearch initialization error: ' . $e->getMessage());
         }
     }
