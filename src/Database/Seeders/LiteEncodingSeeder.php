@@ -4,6 +4,7 @@ namespace Projects\WellmedBackbone\Database\Seeders;
 
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 
+use App\Middlewares\EncodingWrapper;
 use Hanafalah\LaravelSupport\Concerns\Support\HasRequest;
 use Hanafalah\ModuleEmployee\Data\EmployeeData;
 use Illuminate\Database\Seeder;
@@ -50,5 +51,6 @@ class LiteEncodingSeeder extends Seeder
                 $model_has_encoding->save();
             }
         }
+        app(EncodingWrapper::class)->installationSetup();
     }
 }
