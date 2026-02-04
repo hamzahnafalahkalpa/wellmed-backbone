@@ -48,25 +48,27 @@ class VisitRegistration extends SchemasVisitRegistration implements ModulePatien
         $medic_service = $visit_registration_model->medicService;
         $room = $this->RoomModel()->where('medic_service_id', $medic_service->getKey())->whereNotNull("props->ihs_number")->first();
         $period = $visit_registration_model->created_at->format('Y-m-d H:i:s');
-        $practitioner = $visit_registration_model->practitionerEvaluation->practitioner;
-        return [
+        if (isset($visit_registration_model->practitionerEvaluation)){
+            $practitioner = $visit_registration_model->practitionerEvaluation->practitioner;
+        }
+        $encounter_payload = [
             'encounter_code' => $visit_registration_model->encounter_code,
             'status' => 'arrived',
             'class_code' => 'AMB',
             'patient_code' => $patient_model->prop_card_identity['ihs_number'] ?? null,
             'patient_name' => $patient_model->name,
-            'participant' => [
-                'attenders' => [
-                    [
-                        "participant_code" => $practitioner?->prop_card_identity['ihs_number'] ?? null,
-                        "participant_name" => $practitioner->name    
-                    ]
-                    // [
-                    //     "participant_code" => "12778338166",
-                    //     "participant_name" => "MULJADIE SETIAWAN"
-                    // ]
-                ]
-            ],
+            // 'participant' => [
+            //     'attenders' => [
+            //         [
+            //             "participant_code" => $practitioner?->prop_card_identity['ihs_number'] ?? null,
+            //             "participant_name" => $practitioner->name    
+            //         ]
+            //         // [
+            //         //     "participant_code" => "12778338166",
+            //         //     "participant_name" => "MULJADIE SETIAWAN"
+            //         // ]
+            //     ]
+            // ],
             // 'organization_code' => config('satu-sehat.client_organization_id') ?? config('satu-sehat.organization_id'),
             'organization_code' => config('satu-sehat.organization_id'),
             'visit_code' => $visit_patient_model->visit_code ?? Str::orderedUuid()->toString(),
@@ -78,6 +80,17 @@ class VisitRegistration extends SchemasVisitRegistration implements ModulePatien
             'location_code' => $room->ihs_number ?? null,
             'location_name' => 'Poli Umum'
         ];
+        if (isset($practitioner)){
+            $encounter_payload['paticipant'] = [
+                'attenders' => [
+                    [
+                        "participant_code" => $practitioner?->prop_card_identity['ihs_number'] ?? null,
+                        "participant_name" => $practitioner->name    
+                    ]
+                ]
+            ];
+        }
+        return $encounter_payload;
     }
 
     /**
