@@ -10,7 +10,9 @@ class ViewReservation extends ReservationViewReservation
     {
         $arr = [
             'nik' => $this->nik,
-            'phone' => $this->phone
+            'phone' => $this->phone,
+            'reference_type' => $this->reference_type,
+            'reference_id' => $this->reference_id
         ];
         $arr = $this->mergeArray(parent::toArray($request), $arr);
         return $arr;
