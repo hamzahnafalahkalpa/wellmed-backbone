@@ -4,8 +4,13 @@ namespace Projects\WellmedBackbone\Services;
 
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
+use Projects\WellmedBackbone\Services\Concerns\HasBilling;
+use Projects\WellmedBackbone\Services\Concerns\HasCashier;
+use Projects\WellmedBackbone\Services\Concerns\HasMotivationalStats;
 use Projects\WellmedBackbone\Services\Concerns\HasPendingItem;
 use Projects\WellmedBackbone\Services\Concerns\HasStatistic;
+use Projects\WellmedBackbone\Services\Concerns\HasTreatmentDiagnose;
+use Projects\WellmedBackbone\Services\Concerns\HasQueueService;
 
 /**
  * Dashboard Metrics Service
@@ -15,7 +20,8 @@ use Projects\WellmedBackbone\Services\Concerns\HasStatistic;
  */
 class DashboardMetricsService
 {
-    use HasStatistic, HasPendingItem;
+    use HasStatistic, HasPendingItem, HasCashier, HasBilling, HasMotivationalStats,
+        HasTreatmentDiagnose, HasQueueService;
 
     protected $client;
     protected string $indexPrefix = 'dashboard-metrics';
@@ -49,6 +55,8 @@ class DashboardMetricsService
     protected function getOrCreateCurrentPeriod(string $periodType, int $tenantId, mixed $workspaceId, Carbon $timestamp): array
     {
         $documentId = $this->generateDocumentId($periodType, $tenantId, $workspaceId, $timestamp);
+        $defaultDocument = $this->getDefaultDocument($periodType, $tenantId, $workspaceId, $timestamp);
+
         try {
             $this->ensureIndexExists($periodType);
 
@@ -56,12 +64,124 @@ class DashboardMetricsService
                 'index' => $this->getIndexName($periodType),
                 'id' => $documentId
             ]);
-            return $response['_source'];
+
+            $existingData = $response['_source'];
+
+            // Merge existing data with defaults to ensure all required fields exist
+            // This handles cases where documents were created before new fields (like cashier) were added
+            return $this->mergeWithDefaults($existingData, $defaultDocument);
 
         } catch (\Throwable $e) {
             // Document doesn't exist, return default structure
-            return $this->getDefaultDocument($periodType, $tenantId, $workspaceId, $timestamp);
+            return $defaultDocument;
         }
+    }
+
+    /**
+     * Merge existing document data with default structure.
+     * Ensures all required fields exist while preserving existing values.
+     *
+     * @param array $existing
+     * @param array $defaults
+     * @return array
+     */
+    protected function mergeWithDefaults(array $existing, array $defaults): array
+    {
+        $merged = $defaults;
+
+        // Preserve existing scalar values
+        foreach (['tenant_id', 'workspace_id', 'period_type', 'timestamp', 'date', 'year', 'month', 'week', 'day'] as $key) {
+            if (isset($existing[$key])) {
+                $merged[$key] = $existing[$key];
+            }
+        }
+
+        // Merge statistics - preserve existing counts and changes
+        if (isset($existing['statistics']) && is_array($existing['statistics'])) {
+            $merged['statistics'] = $this->mergeArrayById($defaults['statistics'], $existing['statistics']);
+        }
+
+        // Merge pending_items - preserve existing counts
+        if (isset($existing['pending_items']) && is_array($existing['pending_items'])) {
+            $merged['pending_items'] = $this->mergeArrayById($defaults['pending_items'], $existing['pending_items']);
+        }
+
+        // Merge cashier - preserve existing counts
+        if (isset($existing['cashier']) && is_array($existing['cashier'])) {
+            $merged['cashier'] = $this->mergeArrayById($defaults['cashier'], $existing['cashier']);
+        }
+
+        // Merge billing - preserve existing counts
+        if (isset($existing['billing']) && is_array($existing['billing'])) {
+            $merged['billing'] = $this->mergeArrayById($defaults['billing'], $existing['billing']);
+        }
+
+        // Preserve other existing fields
+        if (isset($existing['motivational_stats'])) {
+            $merged['motivational_stats'] = array_merge($defaults['motivational_stats'], $existing['motivational_stats']);
+        }
+
+        if (isset($existing['queue_services'])) {
+            $merged['queue_services'] = $existing['queue_services'];
+        }
+
+        if (isset($existing['diagnosis_treatment'])) {
+            $merged['diagnosis_treatment'] = $existing['diagnosis_treatment'];
+        }
+
+        if (isset($existing['aggregation_period'])) {
+            $merged['aggregation_period'] = array_merge($defaults['aggregation_period'], $existing['aggregation_period']);
+        }
+
+        if (isset($existing['metadata'])) {
+            $merged['metadata'] = array_merge($defaults['metadata'], $existing['metadata']);
+        }
+
+        return $merged;
+    }
+
+    /**
+     * Merge arrays by ID field, preserving existing values while ensuring all default items exist.
+     *
+     * @param array $defaults
+     * @param array $existing
+     * @return array
+     */
+    protected function mergeArrayById(array $defaults, array $existing): array
+    {
+        $merged = [];
+        $existingById = [];
+
+        // Index existing items by ID
+        foreach ($existing as $item) {
+            if (isset($item['id'])) {
+                $existingById[$item['id']] = $item;
+            }
+        }
+
+        // Merge defaults with existing
+        foreach ($defaults as $defaultItem) {
+            $id = $defaultItem['id'] ?? null;
+            if ($id && isset($existingById[$id])) {
+                // Merge existing item with default (existing values take precedence for data fields)
+                $mergedItem = $defaultItem;
+                foreach ($existingById[$id] as $key => $value) {
+                    // Preserve existing data values (count, change, etc.)
+                    $mergedItem[$key] = $value;
+                }
+                $merged[] = $mergedItem;
+                unset($existingById[$id]);
+            } else {
+                $merged[] = $defaultItem;
+            }
+        }
+
+        // Add any remaining existing items that aren't in defaults
+        foreach ($existingById as $item) {
+            $merged[] = $item;
+        }
+
+        return $merged;
     }
 
     /**
@@ -125,7 +245,6 @@ class DashboardMetricsService
             $documentId = $this->generateDocumentId($periodType, $tenantId, $workspaceId, $timestamp);
 
             $this->ensureIndexExists($periodType);
-
             $response = $this->client->index([
                 'index' => $this->getIndexName($periodType),
                 'id' => $documentId,
@@ -204,32 +323,8 @@ class DashboardMetricsService
                 'growth_percentage' => 0
             ],
             'pending_items' => $this->getDefaultPendingItems($periodType),
-            // 'pending_items' => [
-            //     [
-            //         'id' => 'unsigned_visits',
-            //         'label' => null, 
-            //         'count' => 0,
-            //         'icon' => 'mdi:file-document-edit-outline', 
-            //         'color' => 'text-orange-600', 
-            //         'link' => '/patient-emr/unsigned-visits'
-            //     ],
-            //     [
-            //         'id' => 'unsynced_patients',
-            //         'label' => null, 
-            //         'count' => 0,
-            //         'icon' => 'mdi:sync-alert', 
-            //         'color' => 'text-red-600', 
-            //         'link' => '/satu-sehat/dashboard'
-            //     ],
-            //     [
-            //         'id' => 'incomplete_diagnosis',
-            //         'label' => null, 
-            //         'count' => 0,
-            //         'icon' => 'mdi:alert-circle', 
-            //         'color' => 'text-amber-600', 
-            //         'link' => '/patient-emr/incomplete-diagnosis'
-            //     ]
-            // ],
+            'cashier' => $this->getDefaultCashier($periodType),
+            'billing' => $this->getDefaultBilling($periodType),
             'queue_services' => [],
             'diagnosis_treatment' => [],
             'aggregation_period' => [
@@ -296,6 +391,7 @@ class DashboardMetricsService
                                 'statistics' => ['type' => 'nested'],
                                 'motivational_stats' => ['type' => 'object'],
                                 'pending_items' => ['type' => 'object'],
+                                'cashier' => ['type' => 'nested'],
                                 'queue_services' => ['type' => 'nested'],
                                 'diagnosis_treatment' => ['type' => 'nested'],
                                 'aggregation_period' => ['type' => 'object'],
@@ -576,101 +672,51 @@ class DashboardMetricsService
             'year' => $timestamp->year,
             'month' => $timestamp->month,
             'day' => $timestamp->day,
-            'statistics' => [
-                [
-                    "id" => "patients",
-                    "label" => "Jumlah Pasien",
-                    "count" => $data['statistics']['patients']['count'] ?? 0,
-                    "change" => $data['statistics']['patients']['change'] ?? 0,
-                    "change_type" => $data['statistics']['patients']['change_type'] ?? 'increase',
-                    "percentage_change" => $data['statistics']['patients']['percentage_change'] ?? 0.0,
-                    "change_label" => "Dari kemarin",
-                    "icon" => "mdi:account-group",
-                    "color" => "blue",
-                    "gradient" => "from-blue-500 to-cyan-400",
-                    "bg_light" => "bg-blue-50",
-                    "text_color" => "text-blue-600",
-                    "border_color" => "border-blue-200"
-                ],
-                [
-                    "id" => "new-patients",
-                    "label" => "Pasien Baru",
-                    "count" => $data['statistics']['new_patients']['count'] ?? 0,
-                    "change" => $data['statistics']['new_patients']['change'] ?? 0,
-                    "change_type" => $data['statistics']['new_patients']['change_type'] ?? 'increase',
-                    "percentage_change" => $data['statistics']['new_patients']['percentage_change'] ?? 0.0,
-                    "change_label" => "Dari kemarin",
-                    "icon" => "mdi:account-plus",
-                    "color" => "purple",
-                    "gradient" => "from-purple-500 to-pink-400",
-                    "bg_light" => "bg-purple-50",
-                    "text_color" => "text-purple-600",
-                    "border_color" => "border-purple-200"
-                ],
-                [
-                    "id" => "revenue",
-                    "label" => "Omzet",
-                    "count" => $data['statistics']['revenue']['count'] ?? 0,
-                    "change" => $data['statistics']['revenue']['change'] ?? 0,
-                    "change_type" => $data['statistics']['revenue']['change_type'] ?? 'increase',
-                    "percentage_change" => $data['statistics']['revenue']['percentage_change'] ?? 0.0,
-                    "change_label" => "Dari kemarin",
-                    "icon" => "mdi:cash-multiple",
-                    "color" => "emerald",
-                    "gradient" => "from-emerald-500 to-teal-400",
-                    "bg_light" => "bg-emerald-50",
-                    "text_color" => "text-emerald-600",
-                    "border_color" => "border-emerald-200",
-                    "is_currency" => true
-                ],
-                [
-                    "id" => "treatment",
-                    "label" => "Tindakan Dipesankan",
-                    "count" => $data['statistics']['treatment']['count'] ?? 0,
-                    "change" => $data['statistics']['treatment']['change'] ?? 0,
-                    "change_type" => $data['statistics']['treatment']['change_type'] ?? 'increase',
-                    "percentage_change" => $data['statistics']['treatment']['percentage_change'] ?? 0.0,
-                    "change_label" => "Dari kemarin",
-                    "icon" => "mdi:clipboard-list",
-                    "color" => "orange",
-                    "gradient" => "from-orange-500 to-amber-400",
-                    "bg_light" => "bg-orange-50",
-                    "text_color" => "text-orange-600",
-                    "border_color" => "border-orange-200"
-                ]
-            ],
+            'statistics' => $this->getDefaultStatistics($periodType,
+                call_user_func(function(){
+                    $args = ['patients','new_patients','revenue','treatment'];
+                    $results = [];
+                    foreach ($args as $arg) {
+                        $results[$arg] = [
+                            'count' => $data['statistics'][$arg]['count'] ?? 0,
+                            'change' => $data['statistics'][$arg]['change'] ?? 0,
+                            'change_type' => $data['statistics'][$arg]['change_type'] ?? 'increase',
+                            'percentage_change' => $data['statistics'][$arg]['percentage_change'] ?? 0.0,
+                        ];
+                    }
+                    return $results;
+                })
+            ),
             'motivational_stats' => [
                 'today' => $data['motivational_stats']['today'] ?? 0,
                 'yesterday' => $data['motivational_stats']['yesterday'] ?? 0,
                 'target' => $data['motivational_stats']['target'] ?? 0,
                 'percentage' => $data['motivational_stats']['percentage'] ?? 0.0
             ],
-            'pending_items' => [
-                [
-                    "id" => 'unsigned_visits',
-                    "label" => ($data['pending_items']['unsigned_visits'] ?? 0).' unsigned visits',
-                    "count" => ($data['pending_items']['unsigned_visits'] ?? 0),
-                    "icon" => "mdi:file-document-edit-outline",
-                    "color" => "text-orange-600",
-                    "link" => '/patient-emr/unsigned-visits'
-                ],
-                [
-                    "id" => 'unsynced_patients',
-                    "label" => ($data['pending_items']['unsynced_patients'] ?? 0).' belum tersinkronisasi satu sehat',
-                    "count" => ($data['pending_items']['unsynced_patients'] ?? 0),
-                    "icon" => "mdi:sync-alert",
-                    "color" => "text-red-600",
-                    "link" => '/satu-sehat/dashboard'
-                ],
-                [
-                    "id" => 'incomplete_diagnosis',
-                    "label" => ($data['pending_items']['incomplete_diagnosis'] ?? 0)." tanpa ICD",
-                    "count" => ($data['pending_items']['incomplete_diagnosis'] ?? 0),
-                    "icon" => "mdi:alert-circle",
-                    "color" => "text-amber-600",
-                    "link" => "/patient-emr/incomplete-diagnosis",
-                ]
-            ],
+            'pending_items' => $this->getDefaultPendingItems($periodType,
+                call_user_func(function(){
+                    $args = ['unsigned-visits','unsynced-patients','incomplete-diagnosis'];
+                    $results = [];
+                    foreach ($args as $arg) {
+                        $results[$arg] = [
+                            'count' => $data['pending_items'][$arg]['count'] ?? 0
+                        ];
+                    }
+                    return $results;
+                })
+            ),
+            'cashier' => $this->getDefaultCashier($periodType,
+                call_user_func(function(){
+                    $args = ['revenue','unpaid','total-transactions','pending'];
+                    $results = [];
+                    foreach ($args as $arg) {
+                        $results[$arg] = [
+                            'count' => $data['cashier'][$arg]['count'] ?? 0
+                        ];
+                    }
+                    return $results;
+                })
+            ),
             'queue_services' => $data['queue_services'] ?? [],
             'diagnosis_treatment' => $data['diagnosis_treatment'] ?? [],
             'aggregation_period' => [

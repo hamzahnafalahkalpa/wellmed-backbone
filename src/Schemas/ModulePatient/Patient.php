@@ -53,9 +53,7 @@ class Patient extends SchemasPatient implements ModulePatientPatient
             if (!config('elasticsearch.enabled', false)) {
                 return;
             }
-
             $dashboardService = app(DashboardMetricsService::class);
-
             // Increment new patients counter for all period types
             $dashboardService->incrementNewPatient();
 

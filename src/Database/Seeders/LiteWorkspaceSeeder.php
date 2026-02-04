@@ -26,6 +26,7 @@ class LiteWorkspaceSeeder extends Seeder{
         request()->merge([
             'workspace_uuid' => '9e7ff0f6-7679-46c8-ac3e-71da818160sf'
         ]);
+        config(['module-workspace.satu-sehat.enabled' => false]);
         $workspace = app(config('database.models.Workspace'))->uuid('9e7ff0f6-7679-46c8-ac3e-71da818160sf')->first();        
         $generator_config = config('laravel-package-generator');
         $project_namespace = 'Projects';
@@ -155,7 +156,7 @@ class LiteWorkspaceSeeder extends Seeder{
             app(config('app.contracts.License'))->prepareStoreLicense($this->requestDTO(
                 config('app.contracts.LicenseData'),[
                     'reference_type' => $workspace->getMorphClass(),
-                    'reference_id'   => $workspace->getKey(),
+                    'reference_id'   => (string) $workspace->getKey(),
                     'expired_at' => $now->addMonth(),
                     'last_paid' => $now,
                     'status' => 'ACTIVE',
@@ -172,7 +173,7 @@ class LiteWorkspaceSeeder extends Seeder{
                 'parent_id'      => $group_tenant->getKey(),
                 'name'           => 'Tenant Wellmed Lite',
                 'flag'           => $tenant_model::FLAG_TENANT,
-                'reference_id'   => $workspace->getKey(),
+                'reference_id'   => (string) $workspace->getKey(),
                 'reference_type' => $workspace->getMorphClass(),
                 'domain'         => [
                     'domain' => 'localhost:9000'
@@ -224,7 +225,7 @@ class LiteWorkspaceSeeder extends Seeder{
         $transaction = app(config('app.contracts.Transaction'))
             ->prepareStoreTransaction($this->requestDTO(config('app.contracts.TransactionData'),[
                 'reference_model' => $workspace,
-                'reference_id' => $workspace->getKey(),
+                'reference_id' => (string) $workspace->getKey(),
                 'reference_type' => $workspace->getMorphClass()
             ]));
         $workspace->prop_transaction = $transaction->toViewApi()->resolve();

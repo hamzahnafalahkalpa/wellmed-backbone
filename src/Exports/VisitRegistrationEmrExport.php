@@ -62,7 +62,7 @@ class VisitRegistrationEmrExport
             'user_id' => $userId,
             'export_type' => 'VisitRegistrationEmr',
             'reference_type' => get_class($visitRegistration),
-            'reference_id' => $visitRegistration->id,
+            'reference_id' => (string) $visitRegistration->id,
             'status' => \Hanafalah\LaravelSupport\Enums\Export\ExportStatus::PENDING,
             'metadata' => [
                 'visit_registration_code' => $visitRegistration->visit_registration_code ?? null,

@@ -33,7 +33,7 @@ return new class extends Migration
                 $table->string('name');
                 $table->string('reference_id', 36);
                 $table->string('reference_type', 50);
-                $table->boolean('is_pom')->nullable(false)->default(false);
+                $table->unsignedSmallInteger('is_pom')->nullable(false)->default(0);
                 $table->json('props')->nullable();
                 $table->timestamps();
                 $table->softDeletes();

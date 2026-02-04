@@ -1,6 +1,7 @@
 <?php
 
 namespace Projects\WellmedBackbone\Services\Concerns;
+use Illuminate\Support\Str;
 
 trait HasStatistic{
     /**
@@ -18,8 +19,7 @@ trait HasStatistic{
 
         foreach ($periodTypes as $periodType) {
             $results[$periodType] = $this->incrementStatistic('new_patients', $periodType, $tenantId, $workspaceId);
-        }
-
+        }            
         return $results;
     }
 
@@ -36,8 +36,7 @@ trait HasStatistic{
     {
         $results = [];
         $periodTypes = $this->getPeriodTypes();
-
-        foreach ($periodTypes as $periodType) {
+        foreach ($periodTypes as $periodType) {            
             $results[$periodType] = $this->updateStatisticCount('patients', $totalCount, $periodType, $tenantId, $workspaceId);
         }
 
@@ -52,12 +51,12 @@ trait HasStatistic{
      * @param mixed $workspaceId
      * @return array Results for each period type
      */
-    public function incrementNewTreatment(?int $tenantId = null, mixed $workspaceId = null): array
+    public function incrementNewTreatment(int $count,?int $tenantId = null, mixed $workspaceId = null): array
     {
         $results = [];
         $periodTypes = $this->getPeriodTypes();
         foreach ($periodTypes as $periodType) {
-            $results[$periodType] = $this->incrementStatistic('treatment', $periodType, $tenantId, $workspaceId);
+            $results[$periodType] = $this->incrementStatistic('treatment', $periodType, $tenantId, $workspaceId, $count);
         }
         return $results;
     }
@@ -118,7 +117,6 @@ trait HasStatistic{
             $result = $this->storeCurrentPeriod($currentData, $periodType, $tenantId, $workspaceId, $timestamp);
             return $result;
         } catch (\Throwable $e) {
-            dd($e->getMessage());
             Log::channel('elasticsearch')->error('Failed to increment statistic', [
                 'error' => $e->getMessage(),
                 'statistic' => $statisticKey,
@@ -239,10 +237,10 @@ trait HasStatistic{
      * @param string $periodType
      * @return array
      */
-    protected function getDefaultStatistics(string $periodType): array
+    protected function getDefaultStatistics(string $periodType,? array $data = []): array
     {
         $changeLabel = $this->getChangeLabel($periodType);
-        return [
+        $response = [
             [
                 'id' => 'patients',
                 'label' => 'Jumlah Pasien',
@@ -305,5 +303,16 @@ trait HasStatistic{
                 'border_color' => 'border-orange-200'
             ]
         ];
+        if (count($data) > 0){
+            foreach ($response as &$resp){
+                $id = Str::snake($resp['id']);
+                if (isset($data[$id])){
+                    foreach ($data[$id] as $key => $data_item) {
+                        $resp[$key] = $data_item;
+                    }
+                }
+            }
+        }
+        return $response;
     }
 }

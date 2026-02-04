@@ -43,7 +43,7 @@ class AddNewTenantSeeder extends Seeder{
             'parent_id'      => $group_tenant_id,
             'name'           => $workspace_name,
             'flag'           => $tenant_model::FLAG_TENANT,
-            'reference_id'   => $workspace_id,
+            'reference_id'   => (string) $workspace_id,
             'reference_type' => 'Workspace',
             'domain'         => [
                 'domain' => 'localhost:9000'

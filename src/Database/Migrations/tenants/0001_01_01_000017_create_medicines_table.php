@@ -44,10 +44,10 @@ return new class extends Migration
                         $table->string('name');
                         $table->string('status')->nullable();
                         $table->string('acronym')->nullable();
-                        $table->boolean('is_lasa')->default(false)->nullable(false);
-                        $table->boolean('is_antibiotic')->default(false)->nullable(false);
-                        $table->boolean('is_high_alert')->default(false)->nullable(false);
-                        $table->boolean('is_narcotic')->default(false)->nullable(false);
+                        $table->unsignedSmallInteger('is_lasa')->default(0)->nullable(false);
+                        $table->unsignedSmallInteger('is_antibiotic')->default(0)->nullable(false);
+                        $table->unsignedSmallInteger('is_high_alert')->default(0)->nullable(false);
+                        $table->unsignedSmallInteger('is_narcotic')->default(0)->nullable(false);
 
                         $table->foreignIdFor($usageLocation::class, 'usage_location_id')
                               ->nullable()->index()->constrained($usageLocation->getTable(), $usageLocation->getKeyName())

@@ -51,7 +51,7 @@ class UserAdminSeeder extends Seeder
             app(config('app.contracts.License'))->prepareStoreLicense($this->requestDTO(
                 config('app.contracts.LicenseData'),[
                     'reference_type'    => 'Workspace',
-                    'reference_id'      => $data['workspace_id'],
+                    'reference_id'      => (string) $data['workspace_id'],
                     'name' => $user->name,
                     'expired_at'        => $now->addMonth(),
                     'last_paid'         => $now,

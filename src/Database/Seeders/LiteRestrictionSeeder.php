@@ -55,7 +55,7 @@ class LiteRestrictionSeeder extends Seeder
                     'model_type' => $medic_service->getMorphClass(),
                     'model_id' => $medic_service->getKey(),
                     'reference_type' => 'Tenant',
-                    'reference_id' => tenancy()->tenant->getKey()
+                    'reference_id' => (string) tenancy()->tenant->getKey()
                 ]));
             }
             $medic_service->save();
@@ -110,9 +110,9 @@ class LiteRestrictionSeeder extends Seeder
             }else{
                 $restriction_schema->prepareStoreRestrictionFeature($this->requestDTO(config('app.contracts.RestrictionFeatureData'),[
                     'model_type' => $permission->getMorphClass(),
-                    'model_id' => $permission->getKey(),
+                    'model_id' => (string) $permission->getKey(),
                     'reference_type' => 'Tenant',
-                    'reference_id' => tenancy()->tenant->getKey()
+                    'reference_id' => (string) tenancy()->tenant->getKey()
                 ]));
             }
         }

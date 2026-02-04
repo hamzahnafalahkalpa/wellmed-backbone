@@ -17,7 +17,7 @@ class ApiAccessSeeder extends Seeder{
         // $workspace  = app(config('database.models.Workspace'))->uuid($workspace_uuid)->firstOrFail();
         // $api_access = app(config('database.models.ApiAccess'))
                     // ->where('reference_type',$workspace->getMorphClass())
-                    // ->where('reference_id',$workspace->getKey())
+                    // ->where('reference_id',(string) $workspace->getKey())
                     // ->first();
         $api_access = app(config('database.models.ApiAccess'))
                         ->where('app_code',1)

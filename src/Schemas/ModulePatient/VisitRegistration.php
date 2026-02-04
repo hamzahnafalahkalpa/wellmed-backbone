@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\{
 use Illuminate\Support\Facades\Log;
 use Projects\WellmedBackbone\Jobs\SendEncounterToSatuSehatJob;
 use Hanafalah\MicroTenant\Facades\MicroTenant;
+use Projects\WellmedBackbone\Services\DashboardMetricsService;
 
 class VisitRegistration extends SchemasVisitRegistration implements ModulePatientVisitRegistration
 {
@@ -32,6 +33,10 @@ class VisitRegistration extends SchemasVisitRegistration implements ModulePatien
                 $this->dispatchSatuSehatSync($visit_registration_model, $patient_model, $payload);
             }
         }
+
+        if ($this->is_recently_created){
+            $this->updateDashboardStatistics($visit_registration_model,'queue-service');
+        }
         return $this;
     }
 
@@ -43,7 +48,7 @@ class VisitRegistration extends SchemasVisitRegistration implements ModulePatien
         $medic_service = $visit_registration_model->medicService;
         $room = $this->RoomModel()->where('medic_service_id', $medic_service->getKey())->whereNotNull("props->ihs_number")->first();
         $period = $visit_registration_model->created_at->format('Y-m-d H:i:s');
-
+        $practitioner = $visit_registration_model->practitionerEvaluation->practitioner;
         return [
             'encounter_code' => $visit_registration_model->encounter_code,
             'status' => 'arrived',
@@ -53,9 +58,13 @@ class VisitRegistration extends SchemasVisitRegistration implements ModulePatien
             'participant' => [
                 'attenders' => [
                     [
-                        "participant_code" => "12778338166",
-                        "participant_name" => "MULJADIE SETIAWAN"
+                        "participant_code" => $practitioner?->prop_card_identity['ihs_number'] ?? null,
+                        "participant_name" => $practitioner->name    
                     ]
+                    // [
+                    //     "participant_code" => "12778338166",
+                    //     "participant_name" => "MULJADIE SETIAWAN"
+                    // ]
                 ]
             ],
             // 'organization_code' => config('satu-sehat.client_organization_id') ?? config('satu-sehat.organization_id'),
@@ -66,7 +75,7 @@ class VisitRegistration extends SchemasVisitRegistration implements ModulePatien
                 'arrived' => $period
             ],
             // 'location_code' => '3d44d9ed-618f-45e6-b605-b36bc21ef3a5',
-            'location_code' => $room->ihs_number,
+            'location_code' => $room->ihs_number ?? null,
             'location_name' => 'Poli Umum'
         ];
     }
@@ -102,6 +111,43 @@ class VisitRegistration extends SchemasVisitRegistration implements ModulePatien
                 'visit_registration_id' => $visit_registration_id,
                 'patient_id' => $patient_id,
                 'error' => $exception->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Update dashboard statistics when a new visit registration is created.
+     *
+     * @param Model $patient
+     * @return void
+     */
+    private function updateDashboardStatistics(Model $visit_registration,string $type,?array $data = []): void
+    {
+        try {
+            if (!config('elasticsearch.enabled', false)) {
+                return;
+            }
+
+            $dashboardService = app(DashboardMetricsService::class);
+            switch ($type) {
+                case 'queue-service' : 
+                    $dashboardService->incrementNewQueueService([
+                        'id' => $visit_registration->getKey(),
+                        'service' => $visit_registration->prop_medic_service['name'] ?? $visit_registration->medicService->name,
+                        'service_label' => $visit_registration->prop_medic_service['label'] ?? $visit_registration->medicService->label,
+                    ]);
+                break;
+            }
+
+            Log::channel('elasticsearch')->info('Dashboard statistics updated for new visit_registration', [
+                'visit_registration_id' => $visit_registration->getKey()
+            ]);
+
+        } catch (\Throwable $e) {
+            // Don't fail visit_registration creation if dashboard update fails
+            Log::channel('elasticsearch')->error('Failed to update dashboard statistics', [
+                'visit_registration_id' => $visit_registration->getKey(),
+                'error' => $e->getMessage()
             ]);
         }
     }

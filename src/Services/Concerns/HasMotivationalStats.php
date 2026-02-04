@@ -59,10 +59,12 @@ trait HasMotivationalStats{
             $percentage = $previousCount == 0 ? 100 : ($count/$previousCount)*100;
             $growth = abs($remaining);
             if ($remaining < 0){
-                $growth_percentage = 0;
-            }else{
                 $growth_percentage = abs($percentage);
+            }else{
+                $growth_percentage = 0;
             }
+            if ($remaining < 0) $remaining = 0;
+
             $currentData['motivational_stats']['percentage'] = $percentage;
             $currentData['motivational_stats']['remaining'] = $remaining;
             $currentData['motivational_stats']['growth'] = $growth;

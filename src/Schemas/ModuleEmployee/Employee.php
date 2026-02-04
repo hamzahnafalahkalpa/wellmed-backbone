@@ -17,7 +17,7 @@ use Illuminate\Support\Facades\Log;
 class Employee extends SchemasEmployee implements ModuleEmployeeEmployee{
     protected function afterEmployeeCreated(Model &$employee, EmployeeData &$employee_dto): self{
         parent::afterEmployeeCreated($employee, $employee_dto);
-        $this->dispatchSatuSehatSync($employee, $payload);
+        $this->dispatchSatuSehatSync($employee);
 
         $this->fillingProps($employee, $employee_dto->props);
         $employee->save();

@@ -28,7 +28,7 @@ return new class extends Migration
             Schema::create($table_name, function (Blueprint $table) {
                 $table->ulid('id')->primary();
                 $table->string('name')->nullable(false);
-                $table->boolean('update_able')->nullable(false)->default(false);
+                $table->unsignedSmallInteger('update_able')->nullable(false)->default(0);
                 $table->json('props')->nullable();
                 $table->timestamps();
                 $table->softDeletes();

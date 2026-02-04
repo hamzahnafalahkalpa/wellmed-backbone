@@ -39,7 +39,7 @@ return new class extends Migration
                 $table->unsignedBigInteger('cogs')->default(0);
                 $table->unsignedSmallInteger('tax')->default(0);
                 $table->unsignedSmallInteger('margin')->default(0);
-                $table->boolean('current')->default(1)->nullable(false);
+                $table->unsignedSmallInteger('current')->default(1)->nullable(false);
                 $table->json('props')->nullable();
                 $table->timestamps();
                 $table->softDeletes();

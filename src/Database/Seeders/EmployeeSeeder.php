@@ -97,7 +97,7 @@ class EmployeeSeeder extends Seeder
             app(config('app.contracts.License'))->prepareStoreLicense($this->requestDTO(
                 config('app.contracts.LicenseData'),[
                     'reference_type'    => 'Workspace',
-                    'reference_id'      => $data['workspace_id'],
+                    'reference_id'      => (string) $data['workspace_id'],
                     'expired_at'        => $now->addMonth(),
                     'last_paid'         => $now,
                     'status'            => 'ACTIVE',
@@ -106,7 +106,7 @@ class EmployeeSeeder extends Seeder
                     'model_has_license' => [
                         'model_model' => $user_reference,
                         'model_type' => 'UserReference',
-                        'model_id'   => $user_reference_id,
+                        'model_id'   => (string) $user_reference_id,
                     ]
                 ]
             ));

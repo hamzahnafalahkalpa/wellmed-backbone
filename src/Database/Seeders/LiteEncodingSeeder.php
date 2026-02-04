@@ -39,6 +39,16 @@ class LiteEncodingSeeder extends Seeder
 
         $data = JobRequest::all();
         $encodings = app(config('database.models.Encoding'))->get();
-
+        $model = app(config('database.models.ModelHasEncoding'));
+        foreach ($encodings as $encoding) {
+            if (isset($this->dummy_encodings[$encoding->label])){
+                $json = $this->dummy_encodings[$encoding->label];
+                $json = json_decode($json,true);
+                $model_has_encoding = $model->where('encoding_id',$encoding->getKey())->first();
+                $model_has_encoding->setAttribute('separator',$json['separator']);
+                $model_has_encoding->setAttribute('structure',$json['structure']);
+                $model_has_encoding->save();
+            }
+        }
     }
 }

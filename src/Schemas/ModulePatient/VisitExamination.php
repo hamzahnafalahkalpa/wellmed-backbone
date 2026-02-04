@@ -6,9 +6,7 @@ use Hanafalah\ModulePatient\Contracts\Data\VisitExaminationData;
 use Hanafalah\ModulePatient\Schemas\VisitExamination as SchemasVisitExamination;
 use Projects\WellmedBackbone\Contracts\Schemas\ModulePatient\VisitExamination as ModulePatientVisitExamination;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Database\Eloquent\{
-    Model
-};
+use Illuminate\Database\Eloquent\Model;
 use Projects\WellmedBackbone\Jobs\SendObservationToSatuSehatJob;
 use Projects\WellmedBackbone\Services\DashboardMetricsService;
 
@@ -29,8 +27,18 @@ class VisitExamination extends SchemasVisitExamination implements ModulePatientV
         }
 
         if ($this->is_sign_off){
-            if ($visit_examination->treatments()->count() > 0){
-                $this->updateDashboardStatistics($visit_examination,'treatment');
+            $treatments = $visit_examination->treatments;
+            if (count($treatments) > 0){
+                $this->updateDashboardStatistics($visit_examination,'treatment',[
+                    'treatments' => $treatments
+                ]);
+            }
+
+            $diagnoses = $visit_examination->diagnoses;
+            if (count($treatments) > 0){
+                $this->updateDashboardStatistics($visit_examination,'diagnose',[
+                    'diagnoses' => $diagnoses
+                ]);
             }
             $this->updateDashboardStatistics($visit_examination,'unsigned-decrement');
         }
@@ -45,7 +53,7 @@ class VisitExamination extends SchemasVisitExamination implements ModulePatientV
      * @param Model $patient
      * @return void
      */
-    private function updateDashboardStatistics(Model $visit_examination,string $type): void
+    private function updateDashboardStatistics(Model $visit_examination,string $type,?array $data = []): void
     {
         try {
             if (!config('elasticsearch.enabled', false)) {
@@ -53,10 +61,58 @@ class VisitExamination extends SchemasVisitExamination implements ModulePatientV
             }
 
             $dashboardService = app(DashboardMetricsService::class);
-
             switch ($type) {
-                case 'treatment': $dashboardService->incrementNewTreatment();break;
-                case 'unsigned': $dashboardService->incrementNewUnsignedVisit();break;
+                case 'treatment'         : 
+                    $treatments = $data['treatments'];
+                    $dashboardService->incrementNewTreatment(count($treatments));
+                    $debt = 0;
+                    $patient_model = $visit_examination->patient;
+                    $visit_registration_model = $visit_examination->visitRegistration;
+                    foreach ($treatments as $treatment) {
+                        $debt += $treatment->price;
+                        $exam = $treatment->exam;
+                        $practitioner_evaluations = $treatment['prop_practitioner_evaluations'] ?? [];
+                        if (count($practitioner_evaluations) > 0){
+                            $practitioner_evaluation = end($practitioner_evaluations);
+                            $practitioner_name = $practitioner_evaluation['name'];
+                        }
+                        $dashboardService->incrementNewTreatmentDiagnose([
+                            'patient'     => $patient_model->name,
+                            'code'        => $exam['treatment']['reference']['treatment_code'],
+                            'type'        => 'Tindakan',
+                            'description' => $exam['name'],
+                            'poli'        => $visit_registration_model->prop_medic_service['name'] ?? $visit_registration_model->medicService->name,
+                            'date'        => $treatment->created_at->format('Y-m-d'),
+                            'doctor'      => $practitioner_name ?? null
+                        ]);
+                        
+                    }
+                    $dashboardService->incrementNewUnpaid($debt);
+                break;
+                case 'diagnose'         : 
+                    $diagnoses = $data['diagnoses'];
+                    $patient_model = $visit_examination->patient;
+                    $visit_registration_model = $visit_examination->visitRegistration;
+                    foreach ($diagnoses as $diagnose) {
+                        $exam = $diagnose->exam;
+                        $practitioner_evaluations = $diagnose['prop_practitioner_evaluations'] ?? [];
+                        if (count($practitioner_evaluations) > 0){
+                            $practitioner_evaluation = end($practitioner_evaluations);
+                            $practitioner_name = $practitioner_evaluation['name'];
+                        }
+                        $dashboardService->incrementNewTreatmentDiagnose([
+                            'patient'     => $patient_model->name,
+                            'code'        => $exam['code'],
+                            'type'        => 'Diagnosa',
+                            'description' => $exam['name'],
+                            'poli'        => $visit_registration_model->prop_medic_service['name'] ?? $visit_registration_model->medicService->name,
+                            'date'        => $diagnose->created_at->format('Y-m-d'),
+                            'doctor'      => $practitioner_name ?? null
+                        ]);
+                        
+                    }
+                break;
+                case 'unsigned'          : $dashboardService->incrementNewUnsignedVisit();break;
                 case 'unsigned-decrement': $dashboardService->decrementNewUnsignedVisit();break;
             }
 

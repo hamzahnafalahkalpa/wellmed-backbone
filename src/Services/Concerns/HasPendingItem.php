@@ -1,6 +1,7 @@
 <?php
 
 namespace Projects\WellmedBackbone\Services\Concerns;
+use Illuminate\Support\Str;
 
 trait HasPendingItem{
     /**
@@ -204,37 +205,48 @@ trait HasPendingItem{
      * @param string $periodType
      * @return array
      */
-    protected function getDefaultPendingItems(string $periodType): array
+    protected function getDefaultPendingItems(string $periodType,? array $data = []): array
     {
         $changeLabel = $this->getChangeLabel($periodType);
-        return [
+        $response = [
              [
-                 'id' => 'unsigned-visits',
-                 'label' => null,
-                 'change_label' => $changeLabel, 
-                 'count' => 0,
-                 'icon' => 'mdi:file-document-edit-outline', 
-                 'color' => 'text-orange-600', 
-                 'link' => '/patient-emr/unsigned-visits'
+                'id' => 'unsigned-visits',
+                'label' => 'Unsigned visits',
+                'change_label' => $changeLabel, 
+                'count' => 0,
+                'icon' => 'mdi:file-document-edit-outline', 
+                'color' => 'text-orange-600', 
+                'link' => '/patient-emr/unsigned-visits'
              ],
              [
-                 'id' => 'unsynced-patients',
-                 'label' => null,
-                 'change_label' => $changeLabel, 
-                 'count' => 0,
-                 'icon' => 'mdi:sync-alert', 
-                 'color' => 'text-red-600', 
-                 'link' => '/satu-sehat/dashboard'
+                'id' => 'unsynced-patients',
+                'label' => 'Belum tersinkronisasi satu sehat',
+                'change_label' => $changeLabel, 
+                'count' => 0,
+                'icon' => 'mdi:sync-alert', 
+                'color' => 'text-red-600', 
+                'link' => '/satu-sehat/dashboard'
              ],
              [
-                 'id' => 'incomplete-diagnosis',
-                 'label' => null,
-                 'change_label' => $changeLabel, 
-                 'count' => 0,
-                 'icon' => 'mdi:alert-circle', 
-                 'color' => 'text-amber-600', 
-                 'link' => '/patient-emr/incomplete-diagnosis'
+                'id' => 'incomplete-diagnosis',
+                'label' => 'Tanpa ICD',
+                'change_label' => $changeLabel, 
+                'count' => 0,
+                'icon' => 'mdi:alert-circle', 
+                'color' => 'text-amber-600', 
+                'link' => '/patient-emr/incomplete-diagnosis'
              ]
         ];
+        if (count($data) > 0){
+            foreach ($response as &$resp){
+                $id = Str::snake($resp['id']);
+                if (isset($data[$id])){
+                    foreach ($data[$id] as $key => $data_item) {
+                        $resp[$key] = $data_item;
+                    }
+                }
+            }
+        }
+        return $response;
     }
 }

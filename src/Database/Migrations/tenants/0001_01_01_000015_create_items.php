@@ -53,7 +53,7 @@ return new class extends Migration
                 $table->unsignedTinyInteger('margin')->default(20);
                 $table->unsignedTinyInteger('tax')->default(11);
                 $table->unsignedBigInteger('min_stock')->default(150);
-                $table->boolean('is_using_batch')->default(false)->nullable(false);
+                $table->unsignedSmallInteger('is_using_batch')->default(0)->nullable(false);
 
                 $table->foreignIdFor($itemStuff::class, 'unit_id')
                     ->nullable()->index()->constrained($itemStuff->getTable(), $itemStuff->getKeyName())

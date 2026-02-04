@@ -40,7 +40,7 @@ return new class extends Migration
                     $this->__table::BENEFIT_TYPE_DISCOUNT,
                     $this->__table::BENEFIT_TYPE_REPLACEMENT
                 ]);
-                $table->boolean('is_auto_implement')->default(0);
+                $table->unsignedSmallInteger('is_auto_implement')->default(0);
                 $table->unsignedBigInteger('max_benefit_value')->nullable();
                 $table->string('author_id', 50)->nullable(true);
                 $table->string('author_type', 36)->nullable(true);

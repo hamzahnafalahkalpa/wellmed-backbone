@@ -29,8 +29,8 @@ class LiteDatabaseSeeder extends Seeder
                 LiteEmployeeSeeder::class,
                 LiteEncodingSeeder::class,
                 IcdSeeder::class,
-                PatientSeeder::class,
-                ElasticSeeder::class
+                // PatientSeeder::class,
+                // ElasticSeeder::class
             ]);
         } catch (\Throwable $th) {
             throw $th;

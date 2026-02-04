@@ -26,7 +26,7 @@ class EncodingSeeder extends Seeder{
                     'label' => $encoding['label'],
                     'name' => $encoding['name'],
                     'model_has_encoding' => [
-                        'reference_id' => $workspace_id,
+                        'reference_id' => (string) $workspace_id,
                         'reference_type' => 'Workspace'
                     ]
                 ])

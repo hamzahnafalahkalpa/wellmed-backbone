@@ -64,7 +64,7 @@ return new class extends Migration
                 $table->unsignedInteger('discount')->nullable()->default(0);
                 $table->unsignedTinyInteger('tax')->nullable()->default(0);
                 $table->unsignedInteger('additional')->nullable()->default(0);
-                $table->boolean('is_loan')->nullable()->default(0);
+                $table->unsignedSmallInteger('is_loan')->nullable()->default(0);
 
                 $table->json('props')->nullable();
                 $table->timestamps();

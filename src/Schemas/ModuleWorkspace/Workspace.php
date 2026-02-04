@@ -20,10 +20,12 @@ class Workspace extends SchemasWorkspace implements ContractWorkspace
             $model->setAttribute('integration',$model->getIntegrationPayload());
         }
 
-        $integration = $model->integration;
-        $ihs_number = $integration['satu_sehat']['general']['ihs_number'];
-        if (!isset($ihs_number)){
-            $this->prepareStoreSatuSehatOrganization($model);
+        if (config('module-workspace.satu-sehat.enabled',true)){
+            $integration = $model->integration;
+            $ihs_number = $integration['satu_sehat']['general']['ihs_number'];
+            if (!isset($ihs_number)){
+                $this->prepareStoreSatuSehatOrganization($model);
+            }
         }
         $model->save();
         return $this->workspace_model = $model;

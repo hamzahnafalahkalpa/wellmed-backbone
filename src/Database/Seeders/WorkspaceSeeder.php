@@ -149,7 +149,7 @@ class WorkspaceSeeder extends Seeder{
             app(config('app.contracts.License'))->prepareStoreLicense($this->requestDTO(
                 config('app.contracts.LicenseData'),[
                     'reference_type' => $workspace->getMorphClass(),
-                    'reference_id'   => $workspace->getKey(),
+                    'reference_id'   => (string) $workspace->getKey(),
                     'expired_at' => $now->addMonth(),
                     'last_paid' => $now,
                     'billing_generated_at' => $now,
@@ -168,7 +168,7 @@ class WorkspaceSeeder extends Seeder{
                 'parent_id'      => $group_tenant->getKey(),
                 'name'           => 'Tenant Wellmed Plus',
                 'flag'           => $tenant_model::FLAG_TENANT,
-                'reference_id'   => $workspace->getKey(),
+                'reference_id'   => (string) $workspace->getKey(),
                 'reference_type' => $workspace->getMorphClass(),
                 'domain'         => [
                     'domain' => 'localhost:9000'
@@ -221,13 +221,13 @@ class WorkspaceSeeder extends Seeder{
         $transaction = app(config('app.contracts.Transaction'))
             ->prepareStoreTransaction($this->requestDTO(config('app.contracts.TransactionData'),[
                 'reference_model' => $workspace,
-                'reference_id' => $workspace->getKey(),
+                'reference_id' => (string) $workspace->getKey(),
                 'reference_type' => $workspace->getMorphClass()
             ]));
         $workspace->prop_transaction = $transaction->toViewApi()->resolve();
         $workspace->save();
 
-        if (config('module-workspace.satu-sehat.enable', true)){
+        // if (config('module-workspace.satu-sehat.enable', true)){
             try {
                 $form_payload = [
                     "active" => true,
@@ -269,6 +269,6 @@ class WorkspaceSeeder extends Seeder{
             } catch (\Throwable $th) {
                 Log::channel('satu-sehat')->error($th->getMessage());
             }
-        }
+        // }
     }
 }
