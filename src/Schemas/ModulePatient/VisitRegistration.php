@@ -36,7 +36,7 @@ class VisitRegistration extends SchemasVisitRegistration implements ModulePatien
 
         if ($this->is_recently_created){
             $this->updateDashboardStatistics($visit_registration_model,'trends');
-            $this->updateDashboardStatistics($visit_registration_model,'queue-service');
+            // $this->updateDashboardStatistics($visit_registration_model,'queue-service');
         }
         return $this;
     }
