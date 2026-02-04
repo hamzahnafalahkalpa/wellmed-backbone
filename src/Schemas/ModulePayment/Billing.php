@@ -7,6 +7,7 @@ use Hanafalah\ModulePayment\Schemas\Billing as SchemasBilling;
 use Hanafalah\ModulePayment\Contracts\Data\BillingData;
 use Illuminate\Database\Eloquent\Model;
 use Projects\WellmedBackbone\Services\DashboardMetricsService;
+use Illuminate\Support\Facades\Log;
 
 class Billing extends SchemasBilling implements ContractBilling
 {
