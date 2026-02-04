@@ -14,8 +14,11 @@ class Billing extends SchemasBilling implements ContractBilling
         parent::afterBillingCreated($billing, $billing_dto);
 
         // Update dashboard statistics for new billing
+        if ($billing->debt == 0){
+            $this->updateDashboardStatistics($billing,'omzet');
+        }
         if ($this->is_recently_created) {
-            // $this->updateDashboardStatistics($billing,'total-transaction');
+            // $this->updateDashboardStatistics($billing,'pending-transaction');
         }
         return $this;
     }
@@ -36,7 +39,12 @@ class Billing extends SchemasBilling implements ContractBilling
             }
             $dashboardService = app(DashboardMetricsService::class);
             switch ($type) {
-                case 'unsigned-decrement': $dashboardService->decrementNewUnsignedVisit();break;
+                case 'omzet': 
+                    $dashboardService->incrementNewOmzet($billing->amount);
+                break;
+                case 'pending-transaction': 
+                    // $dashboardService->incrementNewPending();
+                break;
             }
 
             Log::channel('elasticsearch')->info('Dashboard statistics updated for new billing', [

@@ -13,12 +13,12 @@ trait HasCashier{
      * @param mixed $workspaceId
      * @return array Results for each period type
      */
-    public function incrementNewOmzet(?int $tenantId = null, mixed $workspaceId = null): array
+    public function incrementNewOmzet(int $omzet, ?int $tenantId = null, mixed $workspaceId = null): array
     {
         $results = [];
         $periodTypes = $this->getPeriodTypes();
         foreach ($periodTypes as $periodType) {
-            $results[$periodType] = $this->incrementCashier('omzet', $periodType, $tenantId, $workspaceId);
+            $results[$periodType] = $this->incrementCashier('omzet', $periodType, $tenantId, $workspaceId, $omzet);
         }
         return $results;
     }

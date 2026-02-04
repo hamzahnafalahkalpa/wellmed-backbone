@@ -68,8 +68,8 @@ class VisitExamination extends SchemasVisitExamination implements ModulePatientV
                     $patient_model = $visit_examination->patient;
                     $visit_registration_model = $visit_examination->visitRegistration;
                     foreach ($treatments as $treatment) {
-                        $debt += $treatment->price;
                         $exam = $treatment->exam;
+                        $debt += $exam['treatment']['price'];
                         $practitioner_evaluations = $treatment['prop_practitioner_evaluations'] ?? [];
                         if (count($practitioner_evaluations) > 0){
                             $practitioner_evaluation = end($practitioner_evaluations);
@@ -87,6 +87,9 @@ class VisitExamination extends SchemasVisitExamination implements ModulePatientV
                         
                     }
                     $dashboardService->incrementNewUnpaid($debt);
+                    if ($debt > 0){
+                        $dashboardService->incrementNewPending();
+                    }
                 break;
                 case 'diagnose'         : 
                     $diagnoses = $data['diagnoses'];
