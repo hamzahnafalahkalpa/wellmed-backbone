@@ -140,16 +140,20 @@ class VisitExamination extends SchemasVisitExamination implements ModulePatientV
         $anthro = $this->AnthropometryModel()->where('morph', 'Anthropometry')->where('examination_id', $visit_examination->getKey())->first();
         $vital_exam = isset($vital_sign) ? $vital_sign->exam ?? [] : [];
         $antrho_exam = isset($anthro) ? $anthro->exam ?? [] : [];
+        
+        if (isset($visit_registration_model->practitionerEvaluation)){
+            $practitioner = $visit_registration_model->practitionerEvaluation->practitioner;
+        }
 
-        return [
+        $payload = [
             "encounter_code" => $visit_registration_model->ihs_number,
             "encounter_display" => "Pemeriksaan Pasien " . $patient_model->name,
             "status" => "final",
             "patient_code" => $patient_model->prop_card_identity['ihs_number'] ?? null,
             "organization_code" => config('satu-sehat.organization_id'),
-            "practitioner_codes" => [
-                "10006926841"
-            ],
+            // "practitioner_codes" => [
+            //     "10006926841"
+            // ],
             "issued_at" => now()->format('Y-m-d H:i:s'),
             "category" => [
                 "vital_signs" => [
@@ -165,6 +169,12 @@ class VisitExamination extends SchemasVisitExamination implements ModulePatientV
                 ]
             ]
         ];
+        if (isset($practitioner)){
+            $payload['practitioner_codes'] = [
+                $practitioner?->prop_card_identity['ihs_number'] ?? null
+            ];
+        }
+        return $payload;
     }
 
     /**

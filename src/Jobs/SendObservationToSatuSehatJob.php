@@ -17,12 +17,12 @@ class SendObservationToSatuSehatJob implements ShouldQueue
     public $timeout = 120;
     public $backoff = [10, 30, 60];
 
-    protected int $tenantId;
-    protected int $visitExaminationId;
-    protected int $patientId;
+    protected mixed $tenantId;
+    protected mixed $visitExaminationId;
+    protected mixed $patientId;
     protected array $formPayload;
 
-    public function __construct(int $tenantId, int $visitExaminationId, int $patientId, array $formPayload)
+    public function __construct(mixed $tenantId, mixed $visitExaminationId, mixed $patientId, array $formPayload)
     {
         $this->tenantId = $tenantId;
         $this->visitExaminationId = $visitExaminationId;
