@@ -6,7 +6,7 @@
     <th class="text-right" style="border: 1px solid #fff;"></th>
     <th class="text-right" style="border: 1px solid #fff;">{{number_format($payment_summary->amount, 2)}}</th>
     <th class="text-right" style="border: 1px solid #fff;">{{$payment_summary->discount == 0 ? '-' : number_format($payment_summary->discount, 2)}}</th>
-    <th class="text-right" style="border: 1px solid #fff;">{{number_format($payment_summary->debt, 2)}}</th>
+    <th class="text-right" style="border: 1px solid #fff;">{{number_format($payment_summary->amount - ($payment_summary->discount ?? 0), 2)}}</th>
 </tr>
 @if(isset($payment_summary->payment_history_details) && count($payment_summary->payment_history_details) > 0)
     @foreach($payment_summary->payment_history_details as $index_detail => $detail)
@@ -21,7 +21,7 @@
             <td class="text-right" style="border: 1px solid #fff;">{{$detail->qty}}</td>
             <td class="text-right" style="border: 1px solid #fff;">{{number_format($detail->amount, 2)}}</td>
             <td class="text-right" style="border: 1px solid #fff;">{{$detail->discount == 0 ? '-' : number_format($detail->discount, 2)}}</td>
-            <td class="text-right" style="border: 1px solid #fff;">{{number_format($detail->debt, 2)}}</td>
+            <td class="text-right" style="border: 1px solid #fff;">{{number_format($detail->amount - ($detail->discount ?? 0), 2)}}</td>
         </tr>
     @endforeach
 @endif
