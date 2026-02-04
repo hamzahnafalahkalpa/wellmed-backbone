@@ -60,14 +60,14 @@ class VisitRegistration extends SchemasVisitRegistration implements ModulePatien
             'patient_name' => $patient_model->name,
             // 'participant' => [
             //     'attenders' => [
-            //         [
-            //             "participant_code" => $practitioner?->prop_card_identity['ihs_number'] ?? null,
-            //             "participant_name" => $practitioner->name    
-            //         ]
             //         // [
-            //         //     "participant_code" => "12778338166",
-            //         //     "participant_name" => "MULJADIE SETIAWAN"
+            //         //     "participant_code" => $practitioner?->prop_card_identity['ihs_number'] ?? null,
+            //         //     "participant_name" => $practitioner->name    
             //         // ]
+            //         [
+            //             "participant_code" => "12778338166",
+            //             "participant_name" => "MULJADIE SETIAWAN"
+            //         ]
             //     ]
             // ],
             // 'organization_code' => config('satu-sehat.client_organization_id') ?? config('satu-sehat.organization_id'),
@@ -82,7 +82,7 @@ class VisitRegistration extends SchemasVisitRegistration implements ModulePatien
             'location_name' => 'Poli Umum'
         ];
         if (isset($practitioner)){
-            $encounter_payload['paticipant'] = [
+            $encounter_payload['participant'] = [
                 'attenders' => [
                     [
                         "participant_code" => $practitioner?->prop_card_identity['ihs_number'] ?? null,

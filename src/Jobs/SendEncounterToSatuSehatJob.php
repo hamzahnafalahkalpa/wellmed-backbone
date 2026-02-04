@@ -54,7 +54,6 @@ class SendEncounterToSatuSehatJob implements ShouldQueue
                 Log::channel('satu-sehat')->warning("Patient not found: {$this->patientId}");
                 return;
             }
-
             // Send encounter to Satu Sehat
             $encounter_satu_sehat = app(config('app.contracts.EncounterSatuSehat'))
                 ->useAccessToSatuSehat()
@@ -64,11 +63,10 @@ class SendEncounterToSatuSehatJob implements ShouldQueue
                         'form'  => $this->formPayload
                     ])
                 );
-
             // Update visit registration with IHS number
             $visitRegistrationModel->ihs_number = $encounter_satu_sehat->response['id'] ?? null;
             $visitRegistrationModel->save();
-
+            dd($visitRegistrationModel);
             // Update patient integration sync tracking
             $integration = $patientModel->integration ?? [];
 
@@ -123,6 +121,7 @@ class SendEncounterToSatuSehatJob implements ShouldQueue
             ]);
 
         } catch (\Throwable $th) {
+            dd($th->getmessage());
             Log::channel('satu-sehat')->error("Failed to send encounter to Satu Sehat", [
                 'visit_registration_id' => $this->visitRegistrationId,
                 'patient_id' => $this->patientId,
