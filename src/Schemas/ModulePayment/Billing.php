@@ -21,7 +21,6 @@ class Billing extends SchemasBilling implements ContractBilling
     }
 
     protected function afterBillingReported(Model &$billing, BillingData &$billing_dto): self{
-        dd($billing);
         return $this;
     }
 
