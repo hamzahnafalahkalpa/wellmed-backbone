@@ -36,7 +36,8 @@ class SendPatientToSatuSehatJob implements ShouldQueue
     {
         try {
             // Set tenant context for multi-tenant isolation
-            MicroTenant::tenantImpersonate($this->tenantId);
+            // MicroTenant::tenantImpersonate($this->tenantId);
+            tenancy()->initialize($this->tenantId);
             
             // Get patient model
             $patientModel = app(config('database.models.Patient'))->find($this->patientId);

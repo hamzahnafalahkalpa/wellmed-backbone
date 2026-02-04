@@ -238,8 +238,8 @@ class Patient extends SchemasPatient implements ModulePatientPatient
                 $tenant_id,
                 $patient_id,
                 $payload
-            ))->onQueue('satusehat')->onConnection(config('queue.default','rabbitmq'));
-            // ))->onQueue('satusehat')->onConnection('sync');
+            // ))->onQueue('satusehat')->onConnection(config('queue.default','rabbitmq'));
+            ))->onQueue('satusehat')->onConnection('sync');
 
             Log::channel('satu-sehat')->info('Patient queued for Satu Sehat sync', [
                 'patient_id' => $patient_id,

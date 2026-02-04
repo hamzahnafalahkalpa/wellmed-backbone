@@ -131,7 +131,6 @@ class Room extends SchemasRoom implements ModuleWarehouseRoom{
                 'tenant_id' => $tenant_id
             ]);
         } catch (\Throwable $exception) {
-            dd($exception->getMessage());
             Log::channel('satu-sehat')->error('Failed to queue location for Satu Sehat', [
                 'room_id' => $room_id,
                 'error' => $exception->getMessage()
