@@ -53,21 +53,14 @@ class Patient extends SchemasPatient implements ModulePatientPatient
             if (!config('elasticsearch.enabled', false)) {
                 return;
             }
+
             $dashboardService = app(DashboardMetricsService::class);
-            // Increment new patients counter for all period types
             $dashboardService->incrementNewPatient();
 
-            // Update total patients count
             $totalPatients = $this->PatientModel()->count();
             $dashboardService->updateTotalPatients($totalPatients);
 
-            Log::channel('elasticsearch')->info('Dashboard statistics updated for new patient', [
-                'patient_id' => $patient->getKey(),
-                'total_patients' => $totalPatients
-            ]);
-
         } catch (\Throwable $e) {
-            // Don't fail patient creation if dashboard update fails
             Log::channel('elasticsearch')->error('Failed to update dashboard statistics', [
                 'patient_id' => $patient->getKey(),
                 'error' => $e->getMessage()

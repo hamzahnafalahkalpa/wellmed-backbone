@@ -182,7 +182,6 @@ trait HasStatistic{
 
             // Update metadata
             $currentData['metadata']['updated_at'] = now()->toIso8601String();
-
             // Store updated document
             return $this->storeCurrentPeriod($currentData, $periodType, $tenantId, $workspaceId, $timestamp);
 
