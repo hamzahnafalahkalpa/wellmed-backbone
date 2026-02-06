@@ -95,14 +95,14 @@ class LiteWorkspaceSeeder extends Seeder{
                         'timezone_id' => $timezone->getKey(),
                         'timezone' => $timezone->toViewApi()->resolve(),
                         'address' => [
-                            'name'           => 'sangkuriang',
+                            'name'           => null,
                             'province_id'    => null,
                             'district_id'    => null,
                             'subdistrict_id' => null,
                             'village_id'     => null
                         ],
-                        'email'   => 'hamzahnuralfalah_lite@gmail.com',
-                        'phone'   => '081906521808',
+                        'email'   => 'client@gmail.com',
+                        'phone'   => null,
                         'owner_id' => null,
                         'owner' => [
                             'id' => null,
@@ -117,38 +117,63 @@ class LiteWorkspaceSeeder extends Seeder{
                             ],
                             "syncs" => [
                                 [
-                                    'flag' => 'encounter',
-                                    'label' => 'Kunjungan',
+                                    'flag' => 'patient',
+                                    'label' => 'Pasien',
+                                    "from" => 0,
+                                    "to" => 0,
+                                    "progress" => 0,
+                                    "last_updated_at" => null
                                 ],
                                 [
-                                    'flag' => 'condition',
-                                    'label' => 'Diagnosa',
-                                ], 
+                                    'flag' => 'encounter',
+                                    'label' => 'Kunjungan',
+                                    "from" => 0,
+                                    "to" => 0,
+                                    "progress" => 0,
+                                    "last_updated_at" => null
+                                ],
                                 [
-                                    'flag' => 'dispense',
-                                    'label' => 'Resep',
+                                    'flag' => 'observation',
+                                    'label' => 'Observasi',
+                                    "from" => 0,
+                                    "to" => 0,
+                                    "progress" => 0,
+                                    "last_updated_at" => null
                                 ]
-                            ]
+                            ],
+                            'logs' => []
                         ],
                         "bpjs" => [
                             "progress" => 0,
                             "syncs" => [
                                 [
-                                    'flag' => 'encounter',
-                                    'label' => 'Kunjungan',
+                                    'flag' => 'patient',
+                                    'label' => 'Pasien',
+                                    "from" => 0,
+                                    "to" => 0,
+                                    "progress" => 0,
+                                    "last_updated_at" => null
                                 ],
                                 [
-                                    'flag' => 'condition',
-                                    'label' => 'Diagnosa',
-                                ], 
+                                    'flag' => 'encounter',
+                                    'label' => 'Kunjungan',
+                                    "from" => 0,
+                                    "to" => 0,
+                                    "progress" => 0,
+                                    "last_updated_at" => null
+                                ],
                                 [
-                                    'flag' => 'dispense',
-                                    'label' => 'Resep',
+                                    'flag' => 'observation',
+                                    'label' => 'Observasi',
+                                    "from" => 0,
+                                    "to" => 0,
+                                    "progress" => 0,
+                                    "last_updated_at" => null
                                 ]
-                            ]
+                            ],
+                            'logs' => []
                         ]
-                    ],
-                    
+                    ]                    
                 ]
             ));
 

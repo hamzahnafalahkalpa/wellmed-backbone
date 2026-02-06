@@ -1,10 +1,11 @@
 <?php
 
 namespace Projects\WellmedBackbone\Services\Concerns;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Str;
 
-trait HasCashier{
+use Illuminate\Database\Eloquent\Model;
+
+trait HasCashier
+{
     /**
      * Increment new omzet when billing paid.
      * Updates all period types (daily, weekly, monthly, yearly).
@@ -318,91 +319,5 @@ trait HasCashier{
             'total_transactions' => 'total-transactions',
             default => $key
         };
-    }
-
-    /**
-     * Get default pendint items array with frontend presentation structure.
-     *
-     * @param string $periodType
-     * @return array
-     */
-    protected function getDefaultCashier(string $periodType,? array $data = []): array
-    {
-        $changeLabel = $this->getChangeLabel($periodType);
-        $response = [
-              [
-                'id' => 'revenue',
-                'label' => 'Omzet',
-                'count' => 0,
-                'change' => 0,
-                'changeType' => 'increase',
-                'percentage_change' => 0,
-                'changeLabel' => $changeLabel,
-                'icon' => 'mdi:cash-multiple',
-                'color' => 'emerald',
-                'gradient' => 'from-emerald-500 to-teal-400',
-                'bgLight' => 'bg-emerald-50',
-                'textColor' => 'text-emerald-600',
-                'borderColor' => 'border-emerald-200',
-                'isCurrency' => true,
-            ],
-            [
-                'id' => 'unpaid',
-                'label' => 'Jumlah Belum Dibayar',
-                'count' => 0,
-                'change' => 0,
-                'changeType' => 'increase',
-                'percentage_change' => 0,
-                'changeLabel' => $changeLabel,
-                'icon' => 'mdi:alert-circle',
-                'color' => 'red',
-                'gradient' => 'from-red-500 to-rose-400',
-                'bgLight' => 'bg-red-50',
-                'textColor' => 'text-red-600',
-                'borderColor' => 'border-red-200',
-                'isCurrency' => true,
-            ],
-            [
-                'id' => 'total-transactions',
-                'label' => 'Jumlah Transaksi',
-                'count' => 0,
-                'change' => 0,
-                'changeType' => 'increase',
-                'percentage_change' => 0,
-                'changeLabel' => $changeLabel,
-                'icon' => 'mdi:receipt-text',
-                'color' => 'blue',
-                'gradient' => 'from-blue-500 to-cyan-400',
-                'bgLight' => 'bg-blue-50',
-                'textColor' => 'text-blue-600',
-                'borderColor' => 'border-blue-200',
-            ],
-            [
-                'id' => 'pending',
-                'label' => 'Jumlah Pending',
-                'count' => 0,
-                'change' => 0,
-                'changeType' => 'increase',
-                'percentage_change' => 0,
-                'changeLabel' => $changeLabel,
-                'icon' => 'mdi:clock-alert',
-                'color' => 'orange',
-                'gradient' => 'from-orange-500 to-amber-400',
-                'bgLight' => 'bg-orange-50',
-                'textColor' => 'text-orange-600',
-                'borderColor' => 'border-orange-200',
-            ]
-        ];
-        if (count($data) > 0){
-            foreach ($response as &$resp){
-                $id = Str::snake($resp['id']);
-                if (isset($data[$id])){
-                    foreach ($data[$id] as $key => $data_item) {
-                        $resp[$key] = $data_item;
-                    }
-                }
-            }
-        }
-        return $response;
     }
 }

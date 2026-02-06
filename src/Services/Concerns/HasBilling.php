@@ -1,10 +1,9 @@
 <?php
 
 namespace Projects\WellmedBackbone\Services\Concerns;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Str;
 
-trait HasBilling{
+trait HasBilling
+{
     /**
      * Increment new omzet when billing paid.
      * Updates all period types (daily, weekly, monthly, yearly).
@@ -235,87 +234,5 @@ trait HasBilling{
             'total_revenue' => 'total-revenue',
             default => $key
         };
-    }
-
-    /**
-     * Get default pendint items array with frontend presentation structure.
-     *
-     * @param string $periodType
-     * @return array
-     */
-    protected function getDefaultBilling(string $periodType,? array $data = []): array
-    {
-        $changeLabel = $this->getChangeLabel($periodType);
-        $response = [
-              [
-                'id' => 'total-billing',
-                'label' => 'Total Billing',
-                'count' => 0,
-                'change' => 0,
-                'changeType' => 'increase',
-                'percentage_change' => 0,
-                'changeLabel' => $changeLabel,
-                'icon' => 'mdi:receipt-text',
-                'color' => 'blue',
-                'gradient' => 'from-blue-500 to-cyan-400',
-                'bgLight' => 'bg-blue-50',
-                'textColor' => 'text-blue-600',
-                'borderColor' => 'border-blue-200'
-            ],
-            [
-                'id' => 'unpaid-billing',
-                'label' => 'Billing Belum Lunas',
-                'count' => 0,
-                'change' => 0,
-                'changeType' => 'increase',
-                'changeLabel' => 'Dari kemarin',
-                'icon' => 'mdi:clock-alert',
-                'color' => 'orange',
-                'gradient' => 'from-orange-500 to-amber-400',
-                'bgLight' => 'bg-orange-50',
-                'textColor' => 'text-orange-600',
-                'borderColor' => 'border-orange-200'
-            ],
-            [
-                'id' => 'paid-billing',
-                'label' => 'Billing Lunas',
-                'count' => 0,
-                'change' => 0,
-                'changeType' => 'increase',
-                'changeLabel' => 'Dari kemarin',
-                'icon' => 'mdi:check-circle',
-                'color' => 'green',
-                'gradient' => 'from-green-500 to-emerald-400',
-                'bgLight' => 'bg-green-50',
-                'textColor' => 'text-green-600',
-                'borderColor' => 'border-green-200'
-            ],
-            [
-                'id' => 'total-revenue',
-                'label' => 'Total Pendapatan',
-                'count' => 0,
-                'change' => 0,
-                'changeType' => 'increase',
-                'changeLabel' => 'Dari kemarin',
-                'icon' => 'mdi:cash-multiple',
-                'color' => 'emerald',
-                'gradient' => 'from-emerald-500 to-teal-400',
-                'bgLight' => 'bg-emerald-50',
-                'textColor' => 'text-emerald-600',
-                'borderColor' => 'border-emerald-200',
-                'isCurrency' => true
-            ]
-        ];
-        if (count($data) > 0){
-            foreach ($response as &$resp){
-                $id = Str::snake($resp['id']);
-                if (isset($data[$id])){
-                    foreach ($data[$id] as $key => $data_item) {
-                        $resp[$key] = $data_item;
-                    }
-                }
-            }
-        }
-        return $response;
     }
 }

@@ -58,7 +58,6 @@ class WellmedBackboneServiceProvider extends WellmedBackboneEnvironment
 
                     $config = config("wellmed-backbone");
                     foreach ($config['libs'] as $key => $lib) $registry->set($key, 'projects'.$lib);
-                    
                     return $registry;
                 });
 

@@ -25,36 +25,23 @@ trait HasSatuSehatIntegration
             'flag' => 'satu-sehat',
             'label' => 'Satu Sehat',
             'progress' => 0,
-            'last_updated_at' => now()->format('Y-m-d H:i:s'),
-            'from' => 0,
-            'to' => 0,
-            'general' => [
-                'ihs_number' => null
-            ],
+            'pending' => 0,
             'syncs' => [
                 [
                     'flag' => 'encounter',
                     'label' => 'Kunjungan',
+                    'from' => null,
+                    'to' => null,
                     'progress' => 0,
-                    'last_updated_at' => now()->format('Y-m-d H:i:s'),
-                    'from' => 0,
-                    'to' => 0
+                    'last_updated_at' => null
                 ],
                 [
-                    'flag' => 'dispense',
-                    'label' => 'Resep',
+                    'flag' => 'observation',
+                    'label' => 'Observasi',
+                    'from' => null,
+                    'to' => null,
                     'progress' => 0,
-                    'last_updated_at' => now()->format('Y-m-d H:i:s'),
-                    'from' => 0,
-                    'to' => 0
-                ],
-                [
-                    'flag' => 'condition',
-                    'label' => 'Diagnosa',
-                    'progress' => 0,
-                    'last_updated_at' => now()->format('Y-m-d H:i:s'),
-                    'from' => 0,
-                    'to' => 0
+                    'last_updated_at' => null
                 ]
             ],
             'logs' => []
@@ -69,63 +56,34 @@ trait HasSatuSehatIntegration
     protected function getDefaultWorkspaceIntegrationPayload(): array
     {
         return [
-            'flag' => 'satu-sehat',
-            'label' => 'Satu Sehat',
             'progress' => 0,
-            'last_updated_at' => now()->format('Y-m-d H:i:s'),
-            'from' => 0,
-            'to' => 0,
             'general' => [
                 'ihs_number' => null
             ],
             'syncs' => [
                 [
-                    'flag' => 'encounter',
-                    'label' => 'Kunjungan',
-                    'progress' => 0,
-                    'last_updated_at' => now()->format('Y-m-d H:i:s'),
-                    'from' => 0,
-                    'to' => 0
-                ],
-                [
-                    'flag' => 'dispense',
-                    'label' => 'Resep',
-                    'progress' => 0,
-                    'last_updated_at' => now()->format('Y-m-d H:i:s'),
-                    'from' => 0,
-                    'to' => 0
-                ],
-                [
-                    'flag' => 'condition',
-                    'label' => 'Diagnosa',
-                    'progress' => 0,
-                    'last_updated_at' => now()->format('Y-m-d H:i:s'),
-                    'from' => 0,
-                    'to' => 0
-                ],
-                [
                     'flag' => 'patient',
                     'label' => 'Pasien',
+                    'from' => null,
+                    'to' => null,
                     'progress' => 0,
-                    'last_updated_at' => now()->format('Y-m-d H:i:s'),
-                    'from' => 0,
-                    'to' => 0
+                    'last_updated_at' => null
                 ],
                 [
-                    'flag' => 'location',
-                    'label' => 'Lokasi/Ruangan',
+                    'flag' => 'encounter',
+                    'label' => 'Kunjungan',
+                    'from' => null,
+                    'to' => null,
                     'progress' => 0,
-                    'last_updated_at' => now()->format('Y-m-d H:i:s'),
-                    'from' => 0,
-                    'to' => 0
+                    'last_updated_at' => null
                 ],
                 [
-                    'flag' => 'practitioner',
-                    'label' => 'Tenaga Kesehatan',
+                    'flag' => 'observation',
+                    'label' => 'Observasi',
+                    'from' => null,
+                    'to' => null,
                     'progress' => 0,
-                    'last_updated_at' => now()->format('Y-m-d H:i:s'),
-                    'from' => 0,
-                    'to' => 0
+                    'last_updated_at' => null
                 ]
             ],
             'logs' => []
@@ -176,8 +134,6 @@ trait HasSatuSehatIntegration
     protected function updatePatientIhsNumber($patientModel, string $ihsNumber): void
     {
         $integration = $this->initializePatientIntegration($patientModel);
-        $integration['satu_sehat']['general']['ihs_number'] = $ihsNumber;
-        $integration['satu_sehat']['last_updated_at'] = now()->format('Y-m-d H:i:s');
 
         $patientModel->setAttribute('integration', $integration);
 
@@ -193,7 +149,7 @@ trait HasSatuSehatIntegration
      * Update patient sync counter for a specific sync type.
      *
      * @param mixed $patientModel
-     * @param string $syncFlag Sync type flag (encounter, dispense, condition)
+     * @param string $syncFlag Sync type flag (encounter, observation)
      * @param bool $incrementFrom Increment 'from' counter
      * @param bool $incrementTo Increment 'to' counter
      * @return void
@@ -203,23 +159,40 @@ trait HasSatuSehatIntegration
         $integration = $this->initializePatientIntegration($patientModel);
         $satuSehat = &$integration['satu_sehat'];
 
+        $syncLabel = null;
+        $logFrom = $incrementFrom ? 1 : 0;
+        $logTo = $incrementTo ? 1 : 0;
+
         // Update specific sync counter
         foreach ($satuSehat['syncs'] as &$sync) {
             if ($sync['flag'] === $syncFlag) {
                 if ($incrementFrom) {
-                    $sync['from'] = ($sync['from'] ?? 0) + 1;
+                    $sync['from'] = (int)($sync['from'] ?? 0) + 1;
                 }
                 if ($incrementTo) {
-                    $sync['to'] = ($sync['to'] ?? 0) + 1;
+                    $sync['to'] = (int)($sync['to'] ?? 0) + 1;
                 }
                 $sync['progress'] = $sync['to'] > 0 ? round(($sync['from'] / $sync['to']) * 100, 2) : 0;
                 $sync['last_updated_at'] = now()->format('Y-m-d H:i:s');
+                $syncLabel = $sync['label'];
                 break;
             }
         }
 
+        // Add log entry for encounter and observation syncs (not patient)
+        if (in_array($syncFlag, ['encounter', 'observation'])) {
+            $satuSehat['logs'][] = [
+                'flag' => $syncFlag,
+                'label' => $syncLabel ?? ucfirst($syncFlag),
+                'from' => $logFrom,
+                'to' => $logTo,
+                'progress' => $logTo > 0 ? round(($logFrom / $logTo) * 100, 2) : 0,
+                'last_updated_at' => now()->format('Y-m-d H:i:s')
+            ];
+        }
+
         // Recalculate overall progress
-        $satuSehat = $this->recalculateProgress($satuSehat);
+        $satuSehat = $this->recalculatePatientProgress($satuSehat);
 
         $patientModel->setAttribute('integration', $integration);
         $patientModel->save();
@@ -245,10 +218,10 @@ trait HasSatuSehatIntegration
         foreach ($satuSehat['logs'] as &$log) {
             if ($log['flag'] === $logFlag) {
                 if ($incrementFrom) {
-                    $log['from'] = ($log['from'] ?? 0) + 1;
+                    $log['from'] = (int)($log['from'] ?? 0) + 1;
                 }
                 if ($incrementTo) {
-                    $log['to'] = ($log['to'] ?? 0) + 1;
+                    $log['to'] = (int)($log['to'] ?? 0) + 1;
                 }
                 $log['progress'] = $log['to'] > 0 ? round(($log['from'] / $log['to']) * 100, 2) : 0;
                 $log['last_updated_at'] = now()->format('Y-m-d H:i:s');
@@ -261,10 +234,10 @@ trait HasSatuSehatIntegration
             $satuSehat['logs'][] = [
                 'flag' => $logFlag,
                 'label' => $label,
+                'from' => $incrementFrom ? 1 : null,
+                'to' => $incrementTo ? 1 : null,
                 'progress' => $incrementTo ? ($incrementFrom ? 100 : 0) : 0,
-                'last_updated_at' => now()->format('Y-m-d H:i:s'),
-                'from' => $incrementFrom ? 1 : 0,
-                'to' => $incrementTo ? 1 : 0
+                'last_updated_at' => now()->format('Y-m-d H:i:s')
             ];
         }
 
@@ -283,7 +256,6 @@ trait HasSatuSehatIntegration
     {
         $integration = $this->initializeWorkspaceIntegration($workspaceModel);
         $integration['satu_sehat']['general']['ihs_number'] = $ihsNumber;
-        $integration['satu_sehat']['last_updated_at'] = now()->format('Y-m-d H:i:s');
 
         $workspaceModel->setAttribute('integration', $integration);
         $workspaceModel->save();
@@ -293,7 +265,7 @@ trait HasSatuSehatIntegration
      * Update workspace sync counter for a specific sync type.
      *
      * @param mixed $workspaceModel
-     * @param string $syncFlag Sync type flag (encounter, dispense, condition, patient, location, practitioner)
+     * @param string $syncFlag Sync type flag (patient, encounter, observation)
      * @param bool $incrementFrom Increment 'from' counter
      * @param bool $incrementTo Increment 'to' counter
      * @return void
@@ -303,48 +275,82 @@ trait HasSatuSehatIntegration
         $integration = $this->initializeWorkspaceIntegration($workspaceModel);
         $satuSehat = &$integration['satu_sehat'];
 
+        $syncLabel = null;
+        $logFrom = $incrementFrom ? 1 : 0;
+        $logTo = $incrementTo ? 1 : 0;
+
         // Update specific sync counter
         foreach ($satuSehat['syncs'] as &$sync) {
             if ($sync['flag'] === $syncFlag) {
                 if ($incrementFrom) {
-                    $sync['from'] = ($sync['from'] ?? 0) + 1;
+                    $sync['from'] = (int)($sync['from'] ?? 0) + 1;
                 }
                 if ($incrementTo) {
-                    $sync['to'] = ($sync['to'] ?? 0) + 1;
+                    $sync['to'] = (int)($sync['to'] ?? 0) + 1;
                 }
                 $sync['progress'] = $sync['to'] > 0 ? round(($sync['from'] / $sync['to']) * 100, 2) : 0;
                 $sync['last_updated_at'] = now()->format('Y-m-d H:i:s');
+                $syncLabel = $sync['label'];
                 break;
             }
         }
 
+        // Add log entry for this sync operation
+        $satuSehat['logs'][] = [
+            'flag' => $syncFlag,
+            'label' => $syncLabel ?? ucfirst($syncFlag),
+            'from' => $logFrom,
+            'to' => $logTo,
+            'progress' => $logTo > 0 ? round(($logFrom / $logTo) * 100, 2) : 0,
+            'last_updated_at' => now()->format('Y-m-d H:i:s')
+        ];
+
         // Recalculate overall progress
-        $satuSehat = $this->recalculateProgress($satuSehat);
+        $satuSehat = $this->recalculateWorkspaceProgress($satuSehat);
 
         $workspaceModel->setAttribute('integration', $integration);
         $workspaceModel->save();
     }
 
     /**
-     * Recalculate overall progress from syncs.
+     * Recalculate overall progress for workspace from syncs.
      *
      * @param array $satuSehat
      * @return array
      */
-    protected function recalculateProgress(array $satuSehat): array
+    protected function recalculateWorkspaceProgress(array $satuSehat): array
     {
         $totalFrom = 0;
         $totalTo = 0;
 
         foreach ($satuSehat['syncs'] ?? [] as $sync) {
-            $totalFrom += $sync['from'] ?? 0;
-            $totalTo += $sync['to'] ?? 0;
+            $totalFrom += (int)($sync['from'] ?? 0);
+            $totalTo += (int)($sync['to'] ?? 0);
         }
 
-        $satuSehat['from'] = $totalFrom;
-        $satuSehat['to'] = $totalTo;
         $satuSehat['progress'] = $totalTo > 0 ? round(($totalFrom / $totalTo) * 100, 2) : 0;
-        $satuSehat['last_updated_at'] = now()->format('Y-m-d H:i:s');
+
+        return $satuSehat;
+    }
+
+    /**
+     * Recalculate overall progress for patient from syncs.
+     *
+     * @param array $satuSehat
+     * @return array
+     */
+    protected function recalculatePatientProgress(array $satuSehat): array
+    {
+        $totalFrom = 0;
+        $totalTo = 0;
+
+        foreach ($satuSehat['syncs'] ?? [] as $sync) {
+            $totalFrom += (int)($sync['from'] ?? 0);
+            $totalTo += (int)($sync['to'] ?? 0);
+        }
+
+        $satuSehat['progress'] = $totalTo > 0 ? round(($totalFrom / $totalTo) * 100, 2) : 0;
+        $satuSehat['pending'] = $totalTo - $totalFrom;
 
         return $satuSehat;
     }

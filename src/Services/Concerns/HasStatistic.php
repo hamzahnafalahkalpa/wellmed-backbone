@@ -1,9 +1,9 @@
 <?php
 
 namespace Projects\WellmedBackbone\Services\Concerns;
-use Illuminate\Support\Str;
 
-trait HasStatistic{
+trait HasStatistic
+{
     /**
      * Increment new patient count when a patient is created.
      * Updates all period types (daily, weekly, monthly, yearly).
@@ -228,90 +228,5 @@ trait HasStatistic{
             'new_patients' => 'new-patients',
             default => $key
         };
-    }
-
-    /**
-     * Get default statistics array with frontend presentation structure.
-     *
-     * @param string $periodType
-     * @return array
-     */
-    protected function getDefaultStatistics(string $periodType,? array $data = []): array
-    {
-        $changeLabel = $this->getChangeLabel($periodType);
-        $response = [
-            [
-                'id' => 'patients',
-                'label' => 'Jumlah Pasien',
-                'count' => 0,
-                'change' => 0,
-                'change_type' => 'increase',
-                'percentage_change' => 0,
-                'change_label' => $changeLabel,
-                'icon' => 'mdi:account-group',
-                'color' => 'blue',
-                'gradient' => 'from-blue-500 to-cyan-400',
-                'bg_light' => 'bg-blue-50',
-                'text_color' => 'text-blue-600',
-                'border_color' => 'border-blue-200'
-            ],
-            [
-                'id' => 'new-patients',
-                'label' => 'Pasien Baru',
-                'count' => 0,
-                'change' => 0,
-                'change_type' => 'increase',
-                'percentage_change' => 0,
-                'change_label' => $changeLabel,
-                'icon' => 'mdi:account-plus',
-                'color' => 'purple',
-                'gradient' => 'from-purple-500 to-pink-400',
-                'bg_light' => 'bg-purple-50',
-                'text_color' => 'text-purple-600',
-                'border_color' => 'border-purple-200'
-            ],
-            [
-                'id' => 'revenue',
-                'label' => 'Omzet',
-                'count' => 0,
-                'change' => 0,
-                'change_type' => 'increase',
-                'percentage_change' => 0,
-                'change_label' => $changeLabel,
-                'icon' => 'mdi:cash-multiple',
-                'color' => 'emerald',
-                'gradient' => 'from-emerald-500 to-teal-400',
-                'bg_light' => 'bg-emerald-50',
-                'text_color' => 'text-emerald-600',
-                'border_color' => 'border-emerald-200',
-                'is_currency' => true
-            ],
-            [
-                'id' => 'treatment',
-                'label' => 'Tindakan Dipesankan',
-                'count' => 0,
-                'change' => 0,
-                'change_type' => 'increase',
-                'percentage_change' => 0,
-                'change_label' => $changeLabel,
-                'icon' => 'mdi:clipboard-list',
-                'color' => 'orange',
-                'gradient' => 'from-orange-500 to-amber-400',
-                'bg_light' => 'bg-orange-50',
-                'text_color' => 'text-orange-600',
-                'border_color' => 'border-orange-200'
-            ]
-        ];
-        if (count($data) > 0){
-            foreach ($response as &$resp){
-                $id = Str::snake($resp['id']);
-                if (isset($data[$id])){
-                    foreach ($data[$id] as $key => $data_item) {
-                        $resp[$key] = $data_item;
-                    }
-                }
-            }
-        }
-        return $response;
     }
 }

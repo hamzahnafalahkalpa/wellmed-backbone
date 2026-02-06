@@ -189,30 +189,6 @@ trait HasTrend
     }
 
     /**
-     * Get default trends structure.
-     *
-     * @param string $periodType
-     * @param Carbon $timestamp
-     * @return array
-     */
-    protected function getDefaultTrends(string $periodType, Carbon $timestamp): array
-    {
-        return [
-            'services' => [],
-            'dataset' => [
-                'source' => [
-                    $this->getTrendLabels($periodType, $timestamp)
-                ]
-            ],
-            'title' => 'Tren Kunjungan per Poliklinik',
-            'subtitle' => $this->getTrendSubtitle($periodType),
-            'chart_type' => 'line',
-            'series_layout' => 'row',
-            'period_type' => $periodType
-        ];
-    }
-
-    /**
      * Get period key for the current timestamp.
      *
      * @param string $periodType
@@ -296,69 +272,6 @@ trait HasTrend
             self::PERIOD_MONTHLY => 12, // 12 months
             self::PERIOD_YEARLY => 5,   // 5 years
             default => 7
-        };
-    }
-
-    /**
-     * Get x-axis labels for the trend chart.
-     *
-     * @param string $periodType
-     * @param Carbon $timestamp
-     * @return array
-     */
-    protected function getTrendLabels(string $periodType, Carbon $timestamp): array
-    {
-        $labels = ['Kunjungan']; // First element is the header
-        $count = $this->getTrendPeriodCount($periodType);
-        $now = Carbon::now();
-
-        for ($i = $count - 1; $i >= 0; $i--) {
-            $periodTimestamp = match ($periodType) {
-                self::PERIOD_DAILY => $now->copy()->subDays($i),
-                self::PERIOD_WEEKLY => $now->copy()->subWeeks($i),
-                self::PERIOD_MONTHLY => $now->copy()->subMonths($i),
-                self::PERIOD_YEARLY => $now->copy()->subYears($i),
-                default => $now->copy()->subDays($i)
-            };
-
-            $labels[] = $this->getTrendPeriodLabel($periodType, $periodTimestamp);
-        }
-
-        return $labels;
-    }
-
-    /**
-     * Get label for a specific period.
-     *
-     * @param string $periodType
-     * @param Carbon $timestamp
-     * @return string
-     */
-    protected function getTrendPeriodLabel(string $periodType, Carbon $timestamp): string
-    {
-        return match ($periodType) {
-            self::PERIOD_DAILY => $timestamp->format('d M'),
-            self::PERIOD_WEEKLY => 'W' . $timestamp->format('W'),
-            self::PERIOD_MONTHLY => $timestamp->format('M Y'),
-            self::PERIOD_YEARLY => $timestamp->format('Y'),
-            default => $timestamp->format('d M')
-        };
-    }
-
-    /**
-     * Get subtitle for trend chart.
-     *
-     * @param string $periodType
-     * @return string
-     */
-    protected function getTrendSubtitle(string $periodType): string
-    {
-        return match ($periodType) {
-            self::PERIOD_DAILY => 'Berdasarkan 7 hari terakhir',
-            self::PERIOD_WEEKLY => 'Berdasarkan 4 minggu terakhir',
-            self::PERIOD_MONTHLY => 'Berdasarkan 12 bulan terakhir',
-            self::PERIOD_YEARLY => 'Berdasarkan 5 tahun terakhir',
-            default => ''
         };
     }
 

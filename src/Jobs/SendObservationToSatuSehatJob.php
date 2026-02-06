@@ -65,17 +65,17 @@ class SendObservationToSatuSehatJob implements ShouldQueue
                     ])
                 );
 
-            // Update patient integration tracking - observation goes to logs
-            $this->updatePatientLog($patientModel, 'observation', 'Observasi Pasien');
+            // Update patient integration sync tracking (also adds log entry)
+            $this->updatePatientSyncCounter($patientModel, 'observation');
 
             // Update workspace integration tracking
             $workspaceModel = $this->getWorkspaceModel();
             if ($workspaceModel) {
-                $this->updateWorkspaceSyncCounter($workspaceModel, 'encounter');
+                $this->updateWorkspaceSyncCounter($workspaceModel, 'observation');
             }
 
             // Update Elasticsearch dashboard metrics
-            $this->updateDashboardWorkspaceIntegration('encounter');
+            $this->updateDashboardWorkspaceIntegration('observation');
             $this->updateDashboardPatientIntegration((string) $this->patientId, 'observation');
 
             Log::channel('satu-sehat')->info("Observation sent to Satu Sehat successfully", [

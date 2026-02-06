@@ -70,11 +70,8 @@ class SendEncounterToSatuSehatJob implements ShouldQueue
             $visitRegistrationModel->ihs_number = $ihsNumber;
             $visitRegistrationModel->save();
 
-            // Update patient integration sync tracking
+            // Update patient integration sync tracking (also adds log entry)
             $this->updatePatientSyncCounter($patientModel, 'encounter');
-
-            // Update patient log for encounter
-            $this->updatePatientLog($patientModel, 'encounter', 'Kunjungan Pasien');
 
             // Update workspace integration tracking
             $workspaceModel = $this->getWorkspaceModel();

@@ -23,9 +23,30 @@ class IntegrationData extends Data implements ContractsIntegrationData{
             'progress' => 0,
             'pending' => 0,
             'syncs' => [
-                ['label' => 'Kunjungan','flag' => 'encounter','progress' => 0],
-                ['label' => 'Resep','flag' => 'dispense','progress' => 0],
-                ['label' => 'Diagnosa','flag' => 'condition','progress' => 0]
+                [
+                    'flag' => 'patient',
+                    'label' => 'Pasien',
+                    'from' => 0,
+                    'to' => 0,
+                    'progress' => 0,
+                    'last_updated_at' => null
+                ],
+                [
+                    'flag' => 'encounter',
+                    'label' => 'Kunjungan',
+                    'from' => 0,
+                    'to' => 0,
+                    'progress' => 0,
+                    'last_updated_at' => null
+                ],
+                [
+                    'flag' => 'observation',
+                    'label' => 'Observasi',
+                    'from' => 0,
+                    'to' => 0,
+                    'progress' => 0,
+                    'last_updated_at' => null
+                ]
             ],
             'logs' => []
         ];
@@ -35,9 +56,22 @@ class IntegrationData extends Data implements ContractsIntegrationData{
             'progress' => 0,
             'pending' => 0,
             'syncs' => [
-                ['label' => 'Kunjungan','flag' => 'encounter','progress' => 0],
-                ['label' => 'Resep','flag' => 'dispense','progress' => 0],
-                ['label' => 'Diagnosa','flag' => 'condition','progress' => 0]
+                [
+                    'flag' => 'encounter',
+                    'label' => 'Kunjungan',
+                    'from' => 0,
+                    'to' => 0,
+                    'progress' => 0,
+                    'last_updated_at' => null
+                ],
+                [
+                    'flag' => 'observation',
+                    'label' => 'Observasi',
+                    'from' => 0,
+                    'to' => 0,
+                    'progress' => 0,
+                    'last_updated_at' => null
+                ]
             ],
             'logs' => []
         ];
