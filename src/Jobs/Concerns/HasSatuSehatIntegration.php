@@ -131,7 +131,7 @@ trait HasSatuSehatIntegration
      * @param string $ihsNumber
      * @return void
      */
-    protected function updatePatientIhsNumber($patientModel, string $ihsNumber): void
+    protected function updatePatientIhsNumber(&$patientModel, string $ihsNumber): void
     {
         $integration = $this->initializePatientIntegration($patientModel);
 
@@ -141,7 +141,6 @@ trait HasSatuSehatIntegration
         $propCardIdentity = $patientModel->prop_card_identity ?? [];
         $propCardIdentity['ihs_number'] = $ihsNumber;
         $patientModel->setAttribute('prop_card_identity', $propCardIdentity);
-
         $patientModel->save();
     }
 

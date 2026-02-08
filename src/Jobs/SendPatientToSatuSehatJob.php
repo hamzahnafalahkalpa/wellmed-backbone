@@ -5,6 +5,7 @@ namespace Projects\WellmedBackbone\Jobs;
 use Exception;
 use Hanafalah\LaravelSupport\Concerns\Support\HasRequestData;
 use Hanafalah\MicroTenant\Facades\MicroTenant;
+use Hanafalah\SatuSehat\Facades\SatuSehat;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Queue\SerializesModels;
@@ -24,6 +25,7 @@ class SendPatientToSatuSehatJob implements ShouldQueue
     protected mixed $tenantId;
     protected mixed $patientId;
     protected array $formPayload;
+    protected ?object $dto;
 
     public function __construct(mixed $tenantId, mixed $patientId, array $formPayload)
     {
@@ -37,15 +39,17 @@ class SendPatientToSatuSehatJob implements ShouldQueue
         try {
             // Set tenant context for multi-tenant isolation
             MicroTenant::tenantImpersonate($this->tenantId);
+            // tenancy()->initialize($this->tenantId);
 
             // Get patient model
             $patientModel = app(config('database.models.Patient'))->find($this->patientId);
+
             if (!$patientModel) {
                 Log::channel('satu-sehat')->warning("Patient not found: {$this->patientId}");
                 throw new Exception('Patient not found: '.$this->patientId);
             }
 
-            $dto = $this->requestDTO(config('app.contracts.PatientSatuSehatData'), [
+            $this->dto = $dto = $this->requestDTO(config('app.contracts.PatientSatuSehatData'), [
                 'model' => $patientModel,
                 'form'  => $this->formPayload
             ]);
@@ -81,14 +85,13 @@ class SendPatientToSatuSehatJob implements ShouldQueue
                 'ihs_number' => $ihsNumber
             ]);
 
-        } catch (\Throwable $th) {
-            $this->updateDashboardStatistics($this->patientId, 'unsynced-patients');
-
+        } catch (\Throwable $th) {            
             Log::channel('satu-sehat')->error("Failed to send patient to Satu Sehat", [
                 'patient_id' => $this->patientId,
                 'error' => $th->getMessage(),
                 'trace' => $th->getTraceAsString()
             ]);
+            $this->updateDashboardStatistics($this->patientId, 'unsynced-patients');
 
             // Re-throw to trigger retry mechanism
             throw $th;

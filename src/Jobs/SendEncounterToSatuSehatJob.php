@@ -37,10 +37,10 @@ class SendEncounterToSatuSehatJob implements ShouldQueue
         try {
             // Set tenant context for multi-tenant isolation
             MicroTenant::tenantImpersonate($this->tenantId);
+            tenancy()->initialize($this->tenantId);
 
             // Get visit registration model
             $visitRegistrationModel = app(config('database.models.VisitRegistration'))->find($this->visitRegistrationId);
-
             if (!$visitRegistrationModel) {
                 Log::channel('satu-sehat')->warning("Visit registration not found: {$this->visitRegistrationId}");
                 return;

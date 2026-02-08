@@ -2,6 +2,7 @@
 
 namespace Projects\WellmedBackbone\Services;
 
+use Hanafalah\LaravelSupport\Concerns\Support\HasElasticsearchLog;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 use Hanafalah\LaravelSupport\Jobs\ElasticJob;
@@ -14,6 +15,8 @@ use Hanafalah\LaravelSupport\Jobs\ElasticJob;
  */
 class ReportingService
 {
+    use HasElasticsearchLog;
+
     protected $client;
 
     // Report index types
@@ -74,8 +77,9 @@ class ReportingService
         }
 
         try {
+            $indexName = $this->getIndexName($indexType);
             $params = [
-                'index' => $this->getIndexName($indexType),
+                'index' => $indexName,
                 'body' => $data,
             ];
 
@@ -84,12 +88,23 @@ class ReportingService
             }
 
             $response = $this->client->index($params);
+            $responseArray = $response->asArray();
+
+            $finalDocumentId = $responseArray['_id'] ?? $documentId;
+
+            // Log to elasticsearch_logs table (reporting creates new records)
+            if (config('elasticsearch.logging.enabled', true) && $finalDocumentId) {
+                $this->logSingleOperation($indexName, $finalDocumentId, 'index', [
+                    'result' => $responseArray['result'] ?? null,
+                    '_version' => $responseArray['_version'] ?? null,
+                ]);
+            }
 
             return [
                 'success' => true,
-                'id' => $response['_id'] ?? null,
-                'index' => $response['_index'] ?? null,
-                'result' => $response['result'] ?? null,
+                'id' => $finalDocumentId,
+                'index' => $responseArray['_index'] ?? null,
+                'result' => $responseArray['result'] ?? null,
             ];
         } catch (\Throwable $e) {
             Log::channel('elasticsearch')->error("Failed to index {$indexType}", [
@@ -154,12 +169,18 @@ class ReportingService
             }
 
             $response = $this->client->bulk(['body' => $body]);
+            $responseArray = $response->asArray();
+
+            // Log bulk operations
+            if (config('elasticsearch.logging.enabled', true)) {
+                $this->logElasticsearchOperations($body, $responseArray);
+            }
 
             return [
-                'success' => !($response['errors'] ?? false),
-                'took' => $response['took'] ?? 0,
-                'items_count' => count($response['items'] ?? []),
-                'errors' => $response['errors'] ?? false,
+                'success' => !($responseArray['errors'] ?? false),
+                'took' => $responseArray['took'] ?? 0,
+                'items_count' => count($responseArray['items'] ?? []),
+                'errors' => $responseArray['errors'] ?? false,
             ];
         } catch (\Throwable $e) {
             Log::channel('elasticsearch')->error("Failed to bulk index {$indexType}", [
@@ -182,14 +203,23 @@ class ReportingService
         }
 
         try {
+            $indexName = $this->getIndexName($indexType);
             $response = $this->client->delete([
-                'index' => $this->getIndexName($indexType),
+                'index' => $indexName,
                 'id' => $documentId,
             ]);
+            $responseArray = $response->asArray();
+
+            // Log delete operation
+            if (config('elasticsearch.logging.enabled', true)) {
+                $this->logSingleOperation($indexName, $documentId, 'delete', [
+                    'result' => $responseArray['result'] ?? null,
+                ]);
+            }
 
             return [
                 'success' => true,
-                'result' => $response['result'] ?? null,
+                'result' => $responseArray['result'] ?? null,
             ];
         } catch (\Throwable $e) {
             Log::channel('elasticsearch')->error("Failed to delete from {$indexType}", [
@@ -239,15 +269,25 @@ class ReportingService
         }
 
         try {
+            $indexName = $this->getIndexName($indexType);
             $response = $this->client->update([
-                'index' => $this->getIndexName($indexType),
+                'index' => $indexName,
                 'id' => $documentId,
                 'body' => ['doc' => $data],
             ]);
+            $responseArray = $response->asArray();
+
+            // Log update operation
+            if (config('elasticsearch.logging.enabled', true)) {
+                $this->logSingleOperation($indexName, $documentId, 'update', [
+                    'result' => $responseArray['result'] ?? null,
+                    '_version' => $responseArray['_version'] ?? null,
+                ]);
+            }
 
             return [
                 'success' => true,
-                'result' => $response['result'] ?? null,
+                'result' => $responseArray['result'] ?? null,
             ];
         } catch (\Throwable $e) {
             Log::channel('elasticsearch')->error("Failed to update {$indexType}", [

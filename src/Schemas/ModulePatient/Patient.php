@@ -21,6 +21,12 @@ class Patient extends SchemasPatient implements ModulePatientPatient
     protected function afterPatientCreated(Model &$patient, PatientData &$patient_dto): self
     {
         parent::afterPatientCreated($patient, $patient_dto);
+
+        // Update dashboard statistics for new patient
+        if ($this->is_recently_created) {
+            $this->updateDashboardStatistics($patient);
+        }
+
         if (!isset($patient->prop_card_identity['ihs_number'])){
             $this->handleIntegrationData($patient, $patient_dto);
             $this->loadPatientRelationships($patient);
@@ -29,13 +35,8 @@ class Patient extends SchemasPatient implements ModulePatientPatient
             $this->dispatchSatuSehatSync($patient, $payload);
         }
 
-        $this->fillingProps($patient, $patient_dto->props);
-        $patient->save();
-
-        // Update dashboard statistics for new patient
-        if ($this->is_recently_created) {
-            $this->updateDashboardStatistics($patient);
-        }
+        // $this->fillingProps($patient, $patient_dto->props);
+        // $patient->save();
 
         return $this;
     }

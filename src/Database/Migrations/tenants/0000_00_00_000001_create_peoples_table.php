@@ -41,7 +41,7 @@ return new class extends Migration
 
                 $table->ulid('id')->primary();
                 $table->string('uuid', 36)->nullable();
-                $table->string('name', 100)->nullable(false);
+                $table->string('name', 100)->nullable();
                 $table->string('first_name', 50)->nullable();
                 $table->string('last_name', 50)->nullable();
                 $table->date('dob')->nullable();

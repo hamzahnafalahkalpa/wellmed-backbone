@@ -25,6 +25,11 @@ class VisitRegistration extends SchemasVisitRegistration implements ModulePatien
         $visit_registration_model->ihs_number ??= null;
         $visit_registration_model->save();
 
+        if ($this->is_recently_created){
+            $this->updateDashboardStatistics($visit_registration_model,'trends');
+            // $this->updateDashboardStatistics($visit_registration_model,'queue-service');
+        }
+
         if (!isset($visit_registration_model->ihs_number)) {
             $patient_model = $visit_registration_dto->patient_model ?? $visit_patient_model->patient ?? null;
 
@@ -32,11 +37,6 @@ class VisitRegistration extends SchemasVisitRegistration implements ModulePatien
                 $payload = $this->prepareSatuSehatEncounterPayload($visit_registration_model, $visit_patient_model, $patient_model);
                 $this->dispatchSatuSehatSync($visit_registration_model, $patient_model, $payload);
             }
-        }
-
-        if ($this->is_recently_created){
-            $this->updateDashboardStatistics($visit_registration_model,'trends');
-            // $this->updateDashboardStatistics($visit_registration_model,'queue-service');
         }
         return $this;
     }
@@ -114,6 +114,7 @@ class VisitRegistration extends SchemasVisitRegistration implements ModulePatien
                 $patient_id,
                 $payload
             ))->onQueue('satusehat')->onConnection(config('queue.default', 'rabbitmq'));
+            // ))->onQueue('satusehat')->onConnection('sync');
 
             Log::channel('satu-sehat')->info('Encounter queued for Satu Sehat sync', [
                 'visit_registration_id' => $visit_registration_id,

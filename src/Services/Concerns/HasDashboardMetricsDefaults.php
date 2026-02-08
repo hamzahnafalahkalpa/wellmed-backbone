@@ -3,6 +3,7 @@
 namespace Projects\WellmedBackbone\Services\Concerns;
 
 use Carbon\Carbon;
+use Hanafalah\LaravelSupport\Concerns\Support\HasElasticsearchLog;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
@@ -20,6 +21,8 @@ use Illuminate\Support\Str;
  */
 trait HasDashboardMetricsDefaults
 {
+    use HasElasticsearchLog;
+
     public const PERIOD_DAILY = 'daily';
     public const PERIOD_WEEKLY = 'weekly';
     public const PERIOD_MONTHLY = 'monthly';
@@ -1039,13 +1042,26 @@ trait HasDashboardMetricsDefaults
                 $data['workspace_integrations'] = $this->getDefaultWorkspaceIntegrations($periodType);
             }
 
+            $indexName = $this->getIndexName($periodType);
+            $documentId = $this->generateDocumentId($periodType, $tenantId, $workspaceId, $timestamp);
+
             $response = $this->client->index([
-                'index' => $this->getIndexName($periodType),
-                'id' => $this->generateDocumentId($periodType, $tenantId, $workspaceId, $timestamp),
+                'index' => $indexName,
+                'id' => $documentId,
                 'body' => $data
             ]);
 
-            return ['success' => true, 'id' => $response['_id'] ?? null, 'index' => $response['_index'] ?? null];
+            $responseArray = $response->asArray();
+
+            // Log to elasticsearch_logs table (dashboard updates same record)
+            if (config('elasticsearch.logging.enabled', true)) {
+                $this->logSingleOperation($indexName, $documentId, 'index', [
+                    'result' => $responseArray['result'] ?? null,
+                    '_version' => $responseArray['_version'] ?? null,
+                ]);
+            }
+
+            return ['success' => true, 'id' => $responseArray['_id'] ?? null, 'index' => $responseArray['_index'] ?? null];
 
         } catch (\Throwable $e) {
             Log::channel('elasticsearch')->error('Failed to store document', [

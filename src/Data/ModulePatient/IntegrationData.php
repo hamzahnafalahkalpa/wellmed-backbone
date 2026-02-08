@@ -22,15 +22,9 @@ class IntegrationData extends Data implements ContractsIntegrationData{
             'label' => 'Satu Sehat',
             'progress' => 0,
             'pending' => 0,
+            'from' => 0,
+            'to' => 0,
             'syncs' => [
-                [
-                    'flag' => 'patient',
-                    'label' => 'Pasien',
-                    'from' => 0,
-                    'to' => 0,
-                    'progress' => 0,
-                    'last_updated_at' => null
-                ],
                 [
                     'flag' => 'encounter',
                     'label' => 'Kunjungan',
@@ -55,6 +49,8 @@ class IntegrationData extends Data implements ContractsIntegrationData{
             'label' => 'Bpjs',
             'progress' => 0,
             'pending' => 0,
+            'from' => 0,
+            'to' => 0,
             'syncs' => [
                 [
                     'flag' => 'encounter',
