@@ -4,9 +4,9 @@ namespace Projects\WellmedBackbone\Services;
 
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
-use Hanafalah\ApiHelper\Concerns\HasDashboardMetricsDefaults;
 use Projects\WellmedBackbone\Services\Concerns\HasBilling;
 use Projects\WellmedBackbone\Services\Concerns\HasCashier;
+use Projects\WellmedBackbone\Services\Concerns\HasDashboardMetricsDefaults;
 use Projects\WellmedBackbone\Services\Concerns\HasMotivationalStats;
 use Projects\WellmedBackbone\Services\Concerns\HasPendingItem;
 use Projects\WellmedBackbone\Services\Concerns\HasStatistic;

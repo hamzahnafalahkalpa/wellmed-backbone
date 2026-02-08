@@ -64,6 +64,9 @@ trait HasStatistic
     /**
      * Increment a specific statistic counter.
      *
+     * Only updates count. The previous_count is set when document is created.
+     * The transformer calculates change, change_type, percentage_change from count and previous_count.
+     *
      * @param string $statisticKey The statistic key (e.g., 'new_patients', 'patients')
      * @param string $periodType Period type (daily, weekly, monthly, yearly)
      * @param int|null $tenantId
@@ -78,7 +81,7 @@ trait HasStatistic
             $workspaceId = $workspaceId ?? tenancy()->tenant->reference?->getKey();
             $timestamp = now();
 
-            // Get or create current document
+            // Get or create current document (previous_count is set during creation)
             $currentData = $this->getOrCreateCurrentPeriod($periodType, $tenantId, $workspaceId, $timestamp);
 
             // Map key to ID (e.g., 'new_patients' -> 'new-patients')
@@ -92,30 +95,18 @@ trait HasStatistic
                     'error' => "Statistic '{$statisticId}' not found"
                 ];
             }
-            // Increment the statistic
+
+            // Increment the count
             $currentCount = $currentData['statistics'][$statIndex]['count'] ?? 0;
             $currentData['statistics'][$statIndex]['count'] = $currentCount + $increment;
-
-            // Calculate change from previous period
-            $previousData = $this->getPreviousPeriodData($periodType, $tenantId, $workspaceId, $timestamp);
-            $previousStatIndex = $this->findStatisticIndex($previousData['statistics'], $statisticId);
-            $previousCount = $previousStatIndex !== null
-                ? ($previousData['statistics'][$previousStatIndex]['count'] ?? 0)
-                : 0;
-
-            $change = $currentData['statistics'][$statIndex]['count'] - $previousCount;
-            $currentData['statistics'][$statIndex]['change'] = abs($change);
-            $currentData['statistics'][$statIndex]['change_type'] = $change >= 0 ? 'increase' : 'decrease';
-            $currentData['statistics'][$statIndex]['percentage_change'] = $previousCount > 0
-                ? round((abs($change) / $previousCount) * 100, 1)
-                : 100;
+            $currentData['statistics'][$statIndex]['updated_at'] = now()->toIso8601String();
 
             // Update metadata
             $currentData['metadata']['updated_at'] = now()->toIso8601String();
 
             // Store updated document
-            $result = $this->storeCurrentPeriod($currentData, $periodType, $tenantId, $workspaceId, $timestamp);
-            return $result;
+            return $this->storeCurrentPeriod($currentData, $periodType, $tenantId, $workspaceId, $timestamp);
+
         } catch (\Throwable $e) {
             Log::channel('elasticsearch')->error('Failed to increment statistic', [
                 'error' => $e->getMessage(),
@@ -133,6 +124,9 @@ trait HasStatistic
     /**
      * Update a specific statistic count (set absolute value).
      *
+     * Only updates count. The previous_count is set when document is created.
+     * The transformer calculates change, change_type, percentage_change from count and previous_count.
+     *
      * @param string $statisticKey
      * @param int $count
      * @param string $periodType
@@ -147,7 +141,7 @@ trait HasStatistic
             $workspaceId = $workspaceId ?? tenancy()->tenant->reference?->getKey();
             $timestamp = now();
 
-            // Get or create current document
+            // Get or create current document (previous_count is set during creation)
             $currentData = $this->getOrCreateCurrentPeriod($periodType, $tenantId, $workspaceId, $timestamp);
 
             // Map key to ID (e.g., 'new_patients' -> 'new-patients')
@@ -165,23 +159,11 @@ trait HasStatistic
 
             // Set the count
             $currentData['statistics'][$statIndex]['count'] = $count;
-
-            // Calculate change from previous period
-            $previousData = $this->getPreviousPeriodData($periodType, $tenantId, $workspaceId, $timestamp);
-            $previousStatIndex = $this->findStatisticIndex($previousData['statistics'], $statisticId);
-            $previousCount = $previousStatIndex !== null
-                ? ($previousData['statistics'][$previousStatIndex]['count'] ?? 0)
-                : 0;
-
-            $change = $count - $previousCount;
-            $currentData['statistics'][$statIndex]['change'] = abs($change);
-            $currentData['statistics'][$statIndex]['change_type'] = $change >= 0 ? 'increase' : 'decrease';
-            $currentData['statistics'][$statIndex]['percentage_change'] = $previousCount > 0
-                ? round((abs($change) / $previousCount) * 100, 1)
-                : 0;
+            $currentData['statistics'][$statIndex]['updated_at'] = now()->toIso8601String();
 
             // Update metadata
             $currentData['metadata']['updated_at'] = now()->toIso8601String();
+
             // Store updated document
             return $this->storeCurrentPeriod($currentData, $periodType, $tenantId, $workspaceId, $timestamp);
 

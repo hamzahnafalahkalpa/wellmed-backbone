@@ -88,7 +88,7 @@ class FlushDashboardMetricsCommand extends Command
         Carbon $date,
         string $period,
         ?int $tenantId = null,
-        ?int $workspaceId = null
+        mixed $workspaceId = null
     ): array {
         // This is a placeholder - you'll need to implement actual database queries
         // based on your data models and business logic
@@ -130,7 +130,7 @@ class FlushDashboardMetricsCommand extends Command
     /**
      * Get patient count for specific date
      */
-    protected function getPatientCount(Carbon $date, ?int $tenantId = null, ?int $workspaceId = null): int
+    protected function getPatientCount(Carbon $date, ?int $tenantId = null, mixed $workspaceId = null): int
     {
         // TODO: Implement actual query
         // Example:
@@ -146,7 +146,7 @@ class FlushDashboardMetricsCommand extends Command
     /**
      * Get pending items
      */
-    protected function getPendingItems(?int $tenantId = null, ?int $workspaceId = null): array
+    protected function getPendingItems(?int $tenantId = null, mixed $workspaceId = null): array
     {
         // TODO: Implement actual queries for pending items
         return [];
@@ -155,7 +155,7 @@ class FlushDashboardMetricsCommand extends Command
     /**
      * Get queue services
      */
-    protected function getQueueServices(Carbon $date, ?int $tenantId = null, ?int $workspaceId = null): array
+    protected function getQueueServices(Carbon $date, ?int $tenantId = null, mixed $workspaceId = null): array
     {
         // TODO: Implement actual queries for queue services
         return [];
@@ -164,7 +164,7 @@ class FlushDashboardMetricsCommand extends Command
     /**
      * Get diagnosis and treatment records
      */
-    protected function getDiagnosisTreatment(Carbon $date, ?int $tenantId = null, ?int $workspaceId = null): array
+    protected function getDiagnosisTreatment(Carbon $date, ?int $tenantId = null, mixed $workspaceId = null): array
     {
         // TODO: Implement actual queries for diagnosis/treatment
         return [];

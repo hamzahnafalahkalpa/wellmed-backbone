@@ -891,7 +891,7 @@ class SatuSehatDashboardService
                         'mappings' => [
                             'properties' => [
                                 'tenant_id' => ['type' => 'integer'],
-                                'workspace_id' => ['type' => 'integer'],
+                                'workspace_id' => ['type' => 'string'],
                                 'integration_stats' => ['type' => 'nested'],
                                 'summary' => ['type' => 'object'],
                                 'updated_at' => ['type' => 'date'],

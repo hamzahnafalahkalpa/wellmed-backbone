@@ -1,6 +1,6 @@
 <?php
 
-namespace Projects\WellmedBackbone\Schemas\ModuleWorkspace;
+namespace Projects\WellmedBackbone\Schemas\ModuleRegional;
 
 use Hanafalah\ModuleRegional\Schemas\Regional\Address;
 use Illuminate\Database\Eloquent\Model;

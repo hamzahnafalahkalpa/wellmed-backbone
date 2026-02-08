@@ -309,9 +309,9 @@ class PatientDashboardMetricsService
                         ],
                         'mappings' => [
                             'properties' => [
-                                'patient_id' => ['type' => 'integer'],
+                                'patient_id' => ['type' => 'string'],
                                 'tenant_id' => ['type' => 'integer'],
-                                'workspace_id' => ['type' => 'integer'],
+                                'workspace_id' => ['type' => 'string'],
                                 'period_type' => ['type' => 'keyword'],
                                 'timestamp' => ['type' => 'date'],
                                 'date' => ['type' => 'date', 'format' => 'yyyy-MM-dd'],

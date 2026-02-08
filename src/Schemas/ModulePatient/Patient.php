@@ -56,7 +56,7 @@ class Patient extends SchemasPatient implements ModulePatientPatient
 
             $dashboardService = app(DashboardMetricsService::class);
             $dashboardService->incrementNewPatient();
-
+            
             $totalPatients = $this->PatientModel()->count();
             $dashboardService->updateTotalPatients($totalPatients);
 
