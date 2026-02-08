@@ -15,7 +15,11 @@ class Workspace extends WorkspaceWorkspace
     protected $integration = [
         'integration' => [
             "satu_sehat" => [
-                "progress" => 0,
+                'flag' => 'satu-sehat',
+                'progress' => 0,
+                'last_updated_at' => null,
+                'from' => 0,
+                'to' => 0,
                 "general" => [
                     "ihs_number" => null
                 ],
@@ -48,7 +52,11 @@ class Workspace extends WorkspaceWorkspace
                 'logs' => []
             ],
             "bpjs" => [
-                "progress" => 0,
+                'flag' => 'bpjs',
+                'progress' => 0,
+                'last_updated_at' => null,
+                'from' => 0,
+                'to' => 0,
                 "syncs" => [
                     [
                         'flag' => 'patient',

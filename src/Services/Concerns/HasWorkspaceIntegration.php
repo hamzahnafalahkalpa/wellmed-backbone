@@ -370,6 +370,130 @@ trait HasWorkspaceIntegration
     }
 
     /**
+     * Set the total count (to) for a sync type.
+     * This should be called when initiating a batch sync to set how many items need to be synced.
+     *
+     * @param string $syncType
+     * @param int $total
+     * @param int|null $tenantId
+     * @param mixed $workspaceId
+     * @return array
+     */
+    public function setSyncTotal(string $syncType, int $total, ?int $tenantId = null, mixed $workspaceId = null): array
+    {
+        $results = [];
+        $periodTypes = $this->getPeriodTypes();
+
+        foreach ($periodTypes as $periodType) {
+            try {
+                $tenantId = $tenantId ?? tenancy()->tenant->getKey();
+                $workspaceId = $workspaceId ?? tenancy()->tenant->reference?->getKey();
+                $timestamp = now();
+
+                $currentData = $this->getOrCreateCurrentPeriod($periodType, $tenantId, $workspaceId, $timestamp);
+
+                if (!isset($currentData['workspace_integrations'])) {
+                    $currentData['workspace_integrations'] = $this->getDefaultWorkspaceIntegrations($periodType);
+                }
+
+                $syncs = &$currentData['workspace_integrations']['syncs'];
+                foreach ($syncs as &$sync) {
+                    if ($sync['flag'] === $syncType) {
+                        $sync['to'] = $total;
+                        $sync['progress'] = $total > 0
+                            ? round((($sync['from'] ?? 0) / $total) * 100, 2)
+                            : 0;
+                        $sync['last_updated_at'] = now()->format('Y-m-d H:i:s');
+                        break;
+                    }
+                }
+
+                // Recalculate overall from/to/progress at workspace level
+                $currentData['workspace_integrations'] = $this->recalculateWorkspaceOverallProgress($currentData['workspace_integrations']);
+                $currentData['metadata']['updated_at'] = now()->toIso8601String();
+
+                $results[$periodType] = $this->storeCurrentPeriod($currentData, $periodType, $tenantId, $workspaceId, $timestamp);
+
+            } catch (\Throwable $e) {
+                Log::channel('elasticsearch')->error('Failed to set sync total', [
+                    'error' => $e->getMessage(),
+                    'sync_type' => $syncType,
+                    'total' => $total,
+                    'period_type' => $periodType
+                ]);
+
+                $results[$periodType] = [
+                    'success' => false,
+                    'error' => $e->getMessage()
+                ];
+            }
+        }
+
+        return $results;
+    }
+
+    /**
+     * Increment the total count (to) for a sync type by 1.
+     * Use this when adding a new item to be synced.
+     *
+     * @param string $syncType
+     * @param int|null $tenantId
+     * @param mixed $workspaceId
+     * @return array
+     */
+    public function incrementSyncTotal(string $syncType, ?int $tenantId = null, mixed $workspaceId = null): array
+    {
+        $results = [];
+        $periodTypes = $this->getPeriodTypes();
+
+        foreach ($periodTypes as $periodType) {
+            try {
+                $tenantId = $tenantId ?? tenancy()->tenant->getKey();
+                $workspaceId = $workspaceId ?? tenancy()->tenant->reference?->getKey();
+                $timestamp = now();
+
+                $currentData = $this->getOrCreateCurrentPeriod($periodType, $tenantId, $workspaceId, $timestamp);
+
+                if (!isset($currentData['workspace_integrations'])) {
+                    $currentData['workspace_integrations'] = $this->getDefaultWorkspaceIntegrations($periodType);
+                }
+
+                $syncs = &$currentData['workspace_integrations']['syncs'];
+                foreach ($syncs as &$sync) {
+                    if ($sync['flag'] === $syncType) {
+                        $sync['to'] = ($sync['to'] ?? 0) + 1;
+                        $sync['progress'] = $sync['to'] > 0
+                            ? round((($sync['from'] ?? 0) / $sync['to']) * 100, 2)
+                            : 0;
+                        $sync['last_updated_at'] = now()->format('Y-m-d H:i:s');
+                        break;
+                    }
+                }
+
+                // Recalculate overall from/to/progress at workspace level
+                $currentData['workspace_integrations'] = $this->recalculateWorkspaceOverallProgress($currentData['workspace_integrations']);
+                $currentData['metadata']['updated_at'] = now()->toIso8601String();
+
+                $results[$periodType] = $this->storeCurrentPeriod($currentData, $periodType, $tenantId, $workspaceId, $timestamp);
+
+            } catch (\Throwable $e) {
+                Log::channel('elasticsearch')->error('Failed to increment sync total', [
+                    'error' => $e->getMessage(),
+                    'sync_type' => $syncType,
+                    'period_type' => $periodType
+                ]);
+
+                $results[$periodType] = [
+                    'success' => false,
+                    'error' => $e->getMessage()
+                ];
+            }
+        }
+
+        return $results;
+    }
+
+    /**
      * Update integration counter.
      *
      * @param string $syncType
@@ -404,12 +528,24 @@ trait HasWorkspaceIntegration
                 if ($sync['flag'] === $syncType) {
                     $currentCount = $sync[$counterKey] ?? 0;
                     $sync[$counterKey] = $currentCount + $increment;
+
+                    // Also update from/to when success_count changes
+                    if ($counterKey === 'success_count') {
+                        $sync['from'] = ($sync['from'] ?? 0) + $increment;
+                    }
+
+                    // Recalculate sync progress
+                    $sync['progress'] = ($sync['to'] ?? 0) > 0
+                        ? round((($sync['from'] ?? 0) / $sync['to']) * 100, 2)
+                        : 0;
+
                     $sync['last_updated_at'] = now()->format('Y-m-d H:i:s');
                     break;
                 }
             }
 
-            $currentData['workspace_integrations']['last_updated_at'] = now()->format('Y-m-d H:i:s');
+            // Recalculate overall from/to/progress at workspace level
+            $currentData['workspace_integrations'] = $this->recalculateWorkspaceOverallProgress($currentData['workspace_integrations']);
             $currentData['metadata']['updated_at'] = now()->toIso8601String();
 
             return $this->storeCurrentPeriod($currentData, $periodType, $tenantId, $workspaceId, $timestamp);

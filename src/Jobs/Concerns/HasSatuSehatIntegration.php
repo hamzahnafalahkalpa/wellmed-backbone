@@ -15,6 +15,32 @@ use Projects\WellmedBackbone\Services\PatientDashboardMetricsService;
 trait HasSatuSehatIntegration
 {
     /**
+     * Maximum number of logs to keep in integration
+     */
+    protected const MAX_INTEGRATION_LOGS = 20;
+
+    /**
+     * Add a log entry to the logs array with size limit.
+     * New logs are added at the beginning, old logs are removed if limit is reached.
+     *
+     * @param array $logs Current logs array
+     * @param array $newLog New log entry to add
+     * @return array Updated logs array
+     */
+    protected function addLogEntry(array $logs, array $newLog): array
+    {
+        // Add new log at the beginning (unshift)
+        array_unshift($logs, $newLog);
+
+        // Keep only the latest MAX_INTEGRATION_LOGS entries
+        if (count($logs) > self::MAX_INTEGRATION_LOGS) {
+            $logs = array_slice($logs, 0, self::MAX_INTEGRATION_LOGS);
+        }
+
+        return $logs;
+    }
+
+    /**
      * Get default patient integration payload structure.
      *
      * @return array
@@ -24,22 +50,24 @@ trait HasSatuSehatIntegration
         return [
             'flag' => 'satu-sehat',
             'label' => 'Satu Sehat',
+            'from' => 0,
+            'to' => 0,
             'progress' => 0,
             'pending' => 0,
             'syncs' => [
                 [
                     'flag' => 'encounter',
                     'label' => 'Kunjungan',
-                    'from' => null,
-                    'to' => null,
+                    'from' => 0,
+                    'to' => 0,
                     'progress' => 0,
                     'last_updated_at' => null
                 ],
                 [
                     'flag' => 'observation',
                     'label' => 'Observasi',
-                    'from' => null,
-                    'to' => null,
+                    'from' => 0,
+                    'to' => 0,
                     'progress' => 0,
                     'last_updated_at' => null
                 ]
@@ -56,6 +84,8 @@ trait HasSatuSehatIntegration
     protected function getDefaultWorkspaceIntegrationPayload(): array
     {
         return [
+            'from' => 0,
+            'to' => 0,
             'progress' => 0,
             'general' => [
                 'ihs_number' => null
@@ -64,24 +94,24 @@ trait HasSatuSehatIntegration
                 [
                     'flag' => 'patient',
                     'label' => 'Pasien',
-                    'from' => null,
-                    'to' => null,
+                    'from' => 0,
+                    'to' => 0,
                     'progress' => 0,
                     'last_updated_at' => null
                 ],
                 [
                     'flag' => 'encounter',
                     'label' => 'Kunjungan',
-                    'from' => null,
-                    'to' => null,
+                    'from' => 0,
+                    'to' => 0,
                     'progress' => 0,
                     'last_updated_at' => null
                 ],
                 [
                     'flag' => 'observation',
                     'label' => 'Observasi',
-                    'from' => null,
-                    'to' => null,
+                    'from' => 0,
+                    'to' => 0,
                     'progress' => 0,
                     'last_updated_at' => null
                 ]
@@ -180,14 +210,14 @@ trait HasSatuSehatIntegration
 
         // Add log entry for encounter and observation syncs (not patient)
         if (in_array($syncFlag, ['encounter', 'observation'])) {
-            $satuSehat['logs'][] = [
+            $satuSehat['logs'] = $this->addLogEntry($satuSehat['logs'] ?? [], [
                 'flag' => $syncFlag,
                 'label' => $syncLabel ?? ucfirst($syncFlag),
                 'from' => $logFrom,
                 'to' => $logTo,
                 'progress' => $logTo > 0 ? round(($logFrom / $logTo) * 100, 2) : 0,
                 'last_updated_at' => now()->format('Y-m-d H:i:s')
-            ];
+            ]);
         }
 
         // Recalculate overall progress
@@ -230,14 +260,19 @@ trait HasSatuSehatIntegration
         }
 
         if (!$logFound) {
-            $satuSehat['logs'][] = [
+            $satuSehat['logs'] = $this->addLogEntry($satuSehat['logs'] ?? [], [
                 'flag' => $logFlag,
                 'label' => $label,
-                'from' => $incrementFrom ? 1 : null,
-                'to' => $incrementTo ? 1 : null,
+                'from' => $incrementFrom ? 1 : 0,
+                'to' => $incrementTo ? 1 : 0,
                 'progress' => $incrementTo ? ($incrementFrom ? 100 : 0) : 0,
                 'last_updated_at' => now()->format('Y-m-d H:i:s')
-            ];
+            ]);
+        }
+
+        // Ensure logs don't exceed limit after updates
+        if (count($satuSehat['logs'] ?? []) > self::MAX_INTEGRATION_LOGS) {
+            $satuSehat['logs'] = array_slice($satuSehat['logs'], 0, self::MAX_INTEGRATION_LOGS);
         }
 
         $patientModel->setAttribute('integration', $integration);
@@ -294,15 +329,15 @@ trait HasSatuSehatIntegration
             }
         }
 
-        // Add log entry for this sync operation
-        $satuSehat['logs'][] = [
+        // Add log entry for this sync operation (newest first, max 20)
+        $satuSehat['logs'] = $this->addLogEntry($satuSehat['logs'] ?? [], [
             'flag' => $syncFlag,
             'label' => $syncLabel ?? ucfirst($syncFlag),
             'from' => $logFrom,
             'to' => $logTo,
             'progress' => $logTo > 0 ? round(($logFrom / $logTo) * 100, 2) : 0,
             'last_updated_at' => now()->format('Y-m-d H:i:s')
-        ];
+        ]);
 
         // Recalculate overall progress
         $satuSehat = $this->recalculateWorkspaceProgress($satuSehat);
@@ -327,6 +362,8 @@ trait HasSatuSehatIntegration
             $totalTo += (int)($sync['to'] ?? 0);
         }
 
+        $satuSehat['from'] = $totalFrom;
+        $satuSehat['to'] = $totalTo;
         $satuSehat['progress'] = $totalTo > 0 ? round(($totalFrom / $totalTo) * 100, 2) : 0;
 
         return $satuSehat;
@@ -348,6 +385,8 @@ trait HasSatuSehatIntegration
             $totalTo += (int)($sync['to'] ?? 0);
         }
 
+        $satuSehat['from'] = $totalFrom;
+        $satuSehat['to'] = $totalTo;
         $satuSehat['progress'] = $totalTo > 0 ? round(($totalFrom / $totalTo) * 100, 2) : 0;
         $satuSehat['pending'] = $totalTo - $totalFrom;
 
