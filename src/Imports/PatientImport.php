@@ -11,7 +11,8 @@ use Maatwebsite\Excel\Concerns\{
     ToCollection,
     WithHeadingRow,
     WithChunkReading,
-    WithStartRow
+    WithStartRow,
+    WithMultipleSheets
 };
 use PhpOffice\PhpSpreadsheet\Shared\Date;
 
@@ -19,7 +20,8 @@ class PatientImport implements
     ToCollection,
     WithHeadingRow,
     WithChunkReading,
-    WithStartRow
+    WithStartRow,
+    WithMultipleSheets
 {
     use HasRequestData;
 
@@ -35,6 +37,17 @@ class PatientImport implements
     public function chunkSize(): int
     {
         return 100;
+    }
+
+    /**
+     * Only process the first sheet (index 0)
+     * This prevents duplicate processing when Excel file has multiple sheets
+     */
+    public function sheets(): array
+    {
+        return [
+            0 => $this, // Only process sheet at index 0
+        ];
     }
 
     public function collection(Collection $rows)

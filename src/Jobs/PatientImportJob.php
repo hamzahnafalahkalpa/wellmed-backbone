@@ -4,24 +4,40 @@ namespace Projects\WellmedBackbone\Jobs;
 
 use Hanafalah\LaravelSupport\Concerns\Support\HasRequestData;
 use Hanafalah\MicroTenant\Facades\MicroTenant;
+use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Http;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Str;
 use Projects\WellmedBackbone\Imports\PatientImport;
 
-class PatientImportJob implements ShouldQueue
+class PatientImportJob implements ShouldQueue, ShouldBeUnique
 {
     use Queueable, SerializesModels, HasRequestData;
 
     public array $data;
 
+    /**
+     * The number of seconds after which the job's unique lock will be released.
+     */
+    public int $uniqueFor = 3600; // 1 hour
+
     public function __construct(array $data)
     {
         $this->data = $data;
+    }
+
+    /**
+     * The unique ID of the job - prevents duplicate processing of same file
+     */
+    public function uniqueId(): string
+    {
+        $paths = $this->data['support']['paths'] ?? [];
+        return 'patient_import_' . md5(json_encode($paths) . ($this->data['tenant_id'] ?? ''));
     }
 
     /**
@@ -32,15 +48,34 @@ class PatientImportJob implements ShouldQueue
         $support = $this->data['support'] ?? [];
         $paths = $support['paths'] ?? [];
 
+        Log::channel('import')->info('PatientImportJob started', [
+            'tenant_id' => $this->data['tenant_id'] ?? null,
+            'paths_count' => count($paths),
+            'paths' => $paths,
+            'unique_id' => $this->uniqueId(),
+        ]);
+
         MicroTenant::tenantImpersonate($this->data['tenant_id']);
-        foreach ($paths as $path) {
+        foreach ($paths as $index => $path) {
             try {
+                Log::channel('import')->info('Processing file', [
+                    'index' => $index,
+                    'path' => $path,
+                ]);
                 $filePath = $this->resolveFilePath($path);
             } catch (\Throwable $th) {
+                Log::channel('import')->error('Failed to resolve file path', [
+                    'path' => $path,
+                    'error' => $th->getMessage(),
+                ]);
                 throw $th;
             }
             Excel::import(new PatientImport, $filePath);
         }
+
+        Log::channel('import')->info('PatientImportJob completed', [
+            'unique_id' => $this->uniqueId(),
+        ]);
     }
 
     protected function resolveFilePath(string $path): string
