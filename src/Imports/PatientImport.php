@@ -36,7 +36,7 @@ class PatientImport implements
 
     public function chunkSize(): int
     {
-        return 5000;
+        return 100;
     }
 
     /**
