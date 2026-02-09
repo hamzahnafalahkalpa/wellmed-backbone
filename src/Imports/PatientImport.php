@@ -27,7 +27,7 @@ class PatientImport implements
 
     protected array $seenMr  = [];
     protected array $seenNik = [];
-    protected int $processedRows = 0; // Track total rows processed across chunks
+    protected int $chunkNumber = 0;
 
     public function startRow(): int
     {
@@ -52,14 +52,23 @@ class PatientImport implements
 
     public function collection(Collection $rows)
     {
+        $this->chunkNumber++;
+        $chunkStart = (($this->chunkNumber - 1) * $this->chunkSize()) + 2; // +2 karena header di row 1
+        $chunkEnd = $chunkStart + $rows->count() - 1;
+
+        Log::channel('import')->info('=== CHUNK START ===', [
+            'chunk' => $this->chunkNumber,
+            'rows_in_chunk' => $rows->count(),
+            'row_range' => "{$chunkStart}-{$chunkEnd}",
+            'seenMr_count' => count($this->seenMr),
+            'seenNik_count' => count($this->seenNik),
+        ]);
+
         app(EncodingWrapper::class)->installationSetup();
         config(['module-patient.satu-sehat.enable' => false]);
-        foreach ($rows as $index => $row) {
-            $this->processedRows++;
-            $rowNumber = $this->processedRows + 1; // +1 because startRow is 2 (row 1 is header)
 
-            $patient_model = app(config('database.models.Patient'))->where('row_imported',$rowNumber)->first();
-            if (isset($patient_model)) continue;
+        foreach ($rows as $index => $row) {
+            $rowNumber = $chunkStart + $index; // Row number absolut dari Excel
 
             /**
              * ======================
@@ -106,9 +115,12 @@ class PatientImport implements
              * 3. DEDUP DI DATABASE
              * ======================
              */
-            if ($is_has_emr || $is_has_nik){
+            if ($is_has_emr || $is_has_nik) {
                 if ($this->existsInDatabase($row)) {
-                    $this->logSkip($rowNumber, 'MR / NIK sudah ada di database');
+                    $this->logSkip($rowNumber, 'MR / NIK sudah ada di database', [
+                        'no_emr' => $row['no_emr'] ?? null,
+                        'nik' => $row['nik'] ?? null,
+                    ]);
                     continue;
                 }
             }
@@ -158,7 +170,6 @@ class PatientImport implements
                                 'bpjs'       => $row['no_bpjs'] ?? null,
                             ],
                             'name' => $row['nama'],
-                            'row_imported' => $rowNumber,
                             'reference_type' => 'People',
                             'reference' => [
                                 'first_name' => $firstName,
@@ -188,10 +199,17 @@ class PatientImport implements
             } catch (\Throwable $e) {
                 Log::channel('import')->error('Failed import patient', [
                     'row' => $rowNumber,
+                    'name' => $row['nama'] ?? 'unknown',
                     'error' => $e->getMessage(),
                 ]);
             }
         }
+
+        Log::channel('import')->info('=== CHUNK END ===', [
+            'chunk' => $this->chunkNumber,
+            'seenMr_count' => count($this->seenMr),
+            'seenNik_count' => count($this->seenNik),
+        ]);
     }
 
     /**
@@ -203,15 +221,16 @@ class PatientImport implements
     {
         $query = app(config('database.models.CardIdentity'))::query();
 
-        if (!isset($row['no_emr'])) {
-            $query->orWhere(function($query) use ($row){
-                $query->where('flag','old_mr')->where('value', (string) $row['no_emr']);
+        // Fix: Logic was inverted - should check when value IS set, not when NOT set
+        if (isset($row['no_emr']) && !empty($row['no_emr'])) {
+            $query->orWhere(function($q) use ($row){
+                $q->where('flag', 'old_mr')->where('value', (string) $row['no_emr']);
             });
         }
 
-        if (!isset($row['nik'])) {
-            $query->orWhere(function($query) use ($row){
-                $query->where('flag','nik')->where('value', (string) $row['nik']);
+        if (isset($row['nik']) && !empty($row['nik'])) {
+            $query->orWhere(function($q) use ($row){
+                $q->where('flag', 'nik')->where('value', (string) $row['nik']);
             });
         }
 
