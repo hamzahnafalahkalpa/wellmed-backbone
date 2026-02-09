@@ -36,7 +36,7 @@ class PatientImport implements
 
     public function chunkSize(): int
     {
-        return 100;
+        return 5000;
     }
 
     /**
@@ -157,7 +157,8 @@ class PatientImport implements
              * ======================
              */
             $rowKey = $emrValue ?? $nikValue ?? "row_{$rowNumber}";
-            $medicalRecord = $this->getOrGenerateMedicalRecord($rowKey);
+            // $medicalRecord = $this->getOrGenerateMedicalRecord($rowKey);
+            $medicalRecord = null;
 
             /**
              * ======================
