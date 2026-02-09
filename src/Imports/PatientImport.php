@@ -38,6 +38,7 @@ class PatientImport implements
     public function collection(Collection $rows)
     {
         app(EncodingWrapper::class)->installationSetup();
+        config(['module-patient.satu-sehat.enable' => false]);
         foreach ($rows as $index => $row) {
             $rowNumber = $index + 2; // biar sesuai excel
 
@@ -79,9 +80,6 @@ class PatientImport implements
                     continue;
                 }
                 $this->seenNik[$row['nik']] = true;
-                config(['module-patient.satu-sehat.enable' => true]);
-            }else{
-                config(['module-patient.satu-sehat.enable' => false]);
             }
 
             /**

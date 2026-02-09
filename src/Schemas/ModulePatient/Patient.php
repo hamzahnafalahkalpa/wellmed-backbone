@@ -224,7 +224,6 @@ class Patient extends SchemasPatient implements ModulePatientPatient
         if (!config('module-patient.satu-sehat.enable', true)) {
             return;
         }
-
         $tenant_id = tenancy()->tenant->getKey();
         $patient_id = $patient->getKey();
         try {
