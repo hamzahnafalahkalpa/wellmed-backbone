@@ -2,6 +2,7 @@
 
 namespace Projects\WellmedBackbone\Imports;
 
+use App\Middlewares\EncodingWrapper;
 use Hanafalah\LaravelSupport\Concerns\Support\HasRequestData;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
@@ -36,6 +37,7 @@ class PatientImport implements
 
     public function collection(Collection $rows)
     {
+        app(EncodingWrapper::class)->installationSetup();
         foreach ($rows as $index => $row) {
             $rowNumber = $index + 2; // biar sesuai excel
 
@@ -49,17 +51,19 @@ class PatientImport implements
                 continue;
             }
 
-            if (!isset($row['no_emr']) && !isset($row['nik'])) {
-                $this->logSkip($rowNumber, 'MR dan NIK sama-sama kosong');
-                continue;
-            }
+            // if (!isset($row['no_emr']) && !isset($row['nik'])) {
+            //     $this->logSkip($rowNumber, 'MR dan NIK sama-sama kosong');
+            //     continue;
+            // }
 
             /**
              * ======================
              * 2. DEDUP DALAM FILE
              * ======================
              */
-            if (!isset($row['no_emr'])) {
+            $is_has_emr = false;
+            if (isset($row['no_emr'])) {
+                $is_has_emr = true;
                 if (isset($this->seenMr[$row['no_emr']])) {
                     $this->logSkip($rowNumber, 'duplicate MR dalam file', $row['no_emr']);
                     continue;
@@ -67,7 +71,9 @@ class PatientImport implements
                 $this->seenMr[$row['no_emr']] = true;
             }
 
+            $is_has_nik = false;
             if (isset($row['nik'])) {
+                $is_has_nik = true;
                 if (isset($this->seenNik[$row['nik']])) {
                     $this->logSkip($rowNumber, 'duplicate NIK dalam file', $row['nik']);
                     continue;
@@ -80,9 +86,11 @@ class PatientImport implements
              * 3. DEDUP DI DATABASE
              * ======================
              */
-            if ($this->existsInDatabase($row)) {
-                $this->logSkip($rowNumber, 'MR / NIK sudah ada di database');
-                continue;
+            if ($is_has_emr || $is_has_nik){
+                if ($this->existsInDatabase($row)) {
+                    $this->logSkip($rowNumber, 'MR / NIK sudah ada di database');
+                    continue;
+                }
             }
             /**
              * ======================
@@ -101,12 +109,23 @@ class PatientImport implements
                 null
             );
 
+            if (isset($firstName) && !isset($lastName)){
+                $lastName = $firstName;
+                $firstName = null;
+            }else{
+                if (!isset($firstName) && !isset($lastName)){
+                    $lastName = $row['nama'];
+                }
+            }
+
             /**
              * ======================
              * 5. STORE
              * ======================
              */
             try {
+                $nik = $row['nik'] ?? null;
+                if (isset($nik)) $nik = (string) $nik;
                 app(config('app.contracts.Patient'))->prepareStorePatient(
                     $this->requestDTO(config('app.contracts.PatientData'), [
                         'id' => null,
@@ -130,7 +149,7 @@ class PatientImport implements
                                 'residence' => ['name' => $row['alamat_domisili'] ?? null],
                             ],
                             'card_identity' => [
-                                'nik'      => $row['nik'] ?? null,
+                                'nik'      => $nik,
                                 'passport' => $row['passport'] ?? null,
                             ],
                         ],
@@ -159,15 +178,15 @@ class PatientImport implements
     {
         $query = app(config('database.models.CardIdentity'))::query();
 
-        if (!empty($row['no_emr'])) {
+        if (!isset($row['no_emr'])) {
             $query->orWhere(function($query) use ($row){
-                $query->where('flag','old_mr')->where('value', $row['no_emr']);
+                $query->where('flag','old_mr')->where('value', (string) $row['no_emr']);
             });
         }
 
-        if (!empty($row['nik'])) {
+        if (!isset($row['nik'])) {
             $query->orWhere(function($query) use ($row){
-                $query->where('flag','nik')->where('value', $row['nik']);
+                $query->where('flag','nik')->where('value', (string) $row['nik']);
             });
         }
 
