@@ -79,6 +79,9 @@ class PatientImport implements
                     continue;
                 }
                 $this->seenNik[$row['nik']] = true;
+                config(['module-patient.satu-sehat.enable' => true]);
+            }else{
+                config(['module-patient.satu-sehat.enable' => false]);
             }
 
             /**
