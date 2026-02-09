@@ -1,4 +1,6 @@
-<?php 
+<?php
+
+use Projects\WellmedBackbone\Imports\Item;
 
 return [
     'item_reference_types' => [
@@ -14,6 +16,9 @@ return [
         'reagent' => [
             'schema' => 'Reagent'
         ]
+    ],
+    'imports' => [
+        'Item' => Item::class
     ],
     'inventory_types' => [
         'healthcare_equipment' => [
