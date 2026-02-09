@@ -51,7 +51,6 @@ class SendLocationToSatuSehatJob implements ShouldQueue
             Log::channel('satu-sehat')->info("DTO", [
                 'dto' => $dto->toArray()
             ]);
-
             // Send to Satu Sehat
             $location_satu_sehat = app(config('app.contracts.LocationSatuSehat'))
                 ->useAccessToSatuSehat()
