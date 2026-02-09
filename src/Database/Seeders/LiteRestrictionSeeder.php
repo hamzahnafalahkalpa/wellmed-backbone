@@ -22,6 +22,26 @@ class LiteRestrictionSeeder extends Seeder
 
         $data = JobRequest::all();
         $workspace = app(config('database.models.Workspace'))->with('installedFeatures')->findOrFail($data['workspace_id']);
+        
+        //ADD LICENSE : 1 SUDAH DI USER ADMIN SEEDER, SISA 2 UNTUK LITE
+        for ($i=0; $i < 1; $i++) { 
+            $now = now();
+            app(config('app.contracts.License'))->prepareStoreLicense($this->requestDTO(
+                config('app.contracts.LicenseData'),[
+                    'reference_type'    => 'Workspace',
+                    'reference_id'      => (string) $data['workspace_id'],
+                    'name' => null,
+                    'expired_at'        => $now->addMonth(),
+                    'last_paid'         => $now,
+                    'billing_generated_at' => $now,
+                    'is_billing_generated' => false,
+                    'status'            => 'ACTIVE',
+                    'recurring_type'    => 'MONTHLY',
+                    'flag'              => 'USER_LICENSE'
+                ]
+            ));
+        }
+
         $medic_services = app(config('database.models.MedicService'))->withoutGlobalScopes(['restriction'])->get();
         $skips = [
             'ADMINISTRASI', 'RAWAT JALAN'
@@ -31,7 +51,7 @@ class LiteRestrictionSeeder extends Seeder
         foreach ($workspace->installedFeatures as $installed_feature) {
             if ($installed_feature->master_feature_type == 'MedicService'){
                 $wellmed_medic_service = app(config('database.models.WellmedUnicode'))->withoutGlobalScope('flag')->findOrFail($installed_feature->master_feature_id);
-                $medic_service = app(config('database.models.MedicService'))->withoutGlobalScopes()->where('label',$wellmed_medic_service->label)->first();
+                $medic_service = app(config('database.models.MedicService'))->withoutGlobalScopes()->where('flag','MedicService')->where('label',$wellmed_medic_service->label)->first();
                 $skips[] = $medic_service->label;
                 $room_payloads[] = [
                     "name" => "Ruang ".$medic_service->name,
