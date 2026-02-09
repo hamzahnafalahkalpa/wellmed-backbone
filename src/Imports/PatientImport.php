@@ -7,31 +7,31 @@ use Hanafalah\LaravelSupport\Concerns\Support\HasRequestData;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Redis;
 use Maatwebsite\Excel\Concerns\{
     ToCollection,
     WithHeadingRow,
     WithChunkReading,
-    WithStartRow,
     WithMultipleSheets
 };
+use Hanafalah\ModuleEncoding\Concerns\HasEncoding;
 use PhpOffice\PhpSpreadsheet\Shared\Date;
 
 class PatientImport implements
     ToCollection,
     WithHeadingRow,
     WithChunkReading,
-    WithStartRow,
     WithMultipleSheets
 {
     use HasRequestData;
 
-    protected array $seenMr  = [];
-    protected array $seenNik = [];
+    protected string $importId;
     protected int $chunkNumber = 0;
+    protected const REDIS_TTL = 86400; // 24 hours
 
-    public function startRow(): int
+    public function __construct(?string $importId = null)
     {
-        return 2;
+        $this->importId = $importId ?? uniqid('patient_import_', true);
     }
 
     public function chunkSize(): int
@@ -57,11 +57,12 @@ class PatientImport implements
         $chunkEnd = $chunkStart + $rows->count() - 1;
 
         Log::channel('import')->info('=== CHUNK START ===', [
+            'import_id' => $this->importId,
             'chunk' => $this->chunkNumber,
             'rows_in_chunk' => $rows->count(),
             'row_range' => "{$chunkStart}-{$chunkEnd}",
-            'seenMr_count' => count($this->seenMr),
-            'seenNik_count' => count($this->seenNik),
+            'redis_mr_count' => $this->getRedisSetCount('mr'),
+            'redis_nik_count' => $this->getRedisSetCount('nik'),
         ]);
 
         app(EncodingWrapper::class)->installationSetup();
@@ -80,34 +81,29 @@ class PatientImport implements
                 continue;
             }
 
-            // if (!isset($row['no_emr']) && !isset($row['nik'])) {
-            //     $this->logSkip($rowNumber, 'MR dan NIK sama-sama kosong');
-            //     continue;
-            // }
-
             /**
              * ======================
-             * 2. DEDUP DALAM FILE
+             * 2. DEDUP VIA REDIS (persist across chunks & retries)
              * ======================
              */
             $is_has_emr = false;
-            if (isset($row['no_emr'])) {
+            $emrValue = isset($row['no_emr']) && !empty($row['no_emr']) ? (string) $row['no_emr'] : null;
+            if ($emrValue) {
                 $is_has_emr = true;
-                if (isset($this->seenMr[$row['no_emr']])) {
-                    $this->logSkip($rowNumber, 'duplicate MR dalam file', $row['no_emr']);
+                if ($this->isInRedisSet('mr', $emrValue)) {
+                    $this->logSkip($rowNumber, 'duplicate MR (redis)', $emrValue);
                     continue;
                 }
-                $this->seenMr[$row['no_emr']] = true;
             }
 
             $is_has_nik = false;
-            if (isset($row['nik'])) {
+            $nikValue = isset($row['nik']) && !empty($row['nik']) ? (string) $row['nik'] : null;
+            if ($nikValue) {
                 $is_has_nik = true;
-                if (isset($this->seenNik[$row['nik']])) {
-                    $this->logSkip($rowNumber, 'duplicate NIK dalam file', $row['nik']);
+                if ($this->isInRedisSet('nik', $nikValue)) {
+                    $this->logSkip($rowNumber, 'duplicate NIK (redis)', $nikValue);
                     continue;
                 }
-                $this->seenNik[$row['nik']] = true;
             }
 
             /**
@@ -117,9 +113,13 @@ class PatientImport implements
              */
             if ($is_has_emr || $is_has_nik) {
                 if ($this->existsInDatabase($row)) {
+                    // Add to Redis so we don't check DB again for same value
+                    if ($emrValue) $this->addToRedisSet('mr', $emrValue);
+                    if ($nikValue) $this->addToRedisSet('nik', $nikValue);
+
                     $this->logSkip($rowNumber, 'MR / NIK sudah ada di database', [
-                        'no_emr' => $row['no_emr'] ?? null,
-                        'nik' => $row['nik'] ?? null,
+                        'no_emr' => $emrValue,
+                        'nik' => $nikValue,
                     ]);
                     continue;
                 }
@@ -158,18 +158,19 @@ class PatientImport implements
              * If one row fails, subsequent rows can still be processed.
              */
             try {
-                DB::transaction(function () use ($row, $firstName, $lastName, $rowNumber) {
-                    $nik = $row['nik'] ?? null;
-                    if (isset($nik)) $nik = (string) $nik;
+                request()->replace([]);
+                DB::transaction(function () use ($row, $firstName, $lastName, $rowNumber, $emrValue, $nikValue) {
+                    $nik = $nikValue;
                     app(config('app.contracts.Patient'))->prepareStorePatient(
                         $this->requestDTO(config('app.contracts.PatientData'), [
                             'id' => null,
                             'card_identity' => [
-                                'old_mr'     => $row['no_emr'] ?? null,
+                                'old_mr'     => $emrValue,
                                 'ihs_number' => $row['ihs_satu_sehat'] ?? null,
                                 'bpjs'       => $row['no_bpjs'] ?? null,
                             ],
                             'name' => $row['nama'],
+                            'medical_record' => HasEncoding::generateCode('MEDICAL_RECORD'),
                             'reference_type' => 'People',
                             'reference' => [
                                 'first_name' => $firstName,
@@ -196,6 +197,11 @@ class PatientImport implements
                         'name' => $row['nama'],
                     ]);
                 });
+
+                // Add to Redis AFTER successful insert
+                if ($emrValue) $this->addToRedisSet('mr', $emrValue);
+                if ($nikValue) $this->addToRedisSet('nik', $nikValue);
+
             } catch (\Throwable $e) {
                 Log::channel('import')->error('Failed import patient', [
                     'row' => $rowNumber,
@@ -206,9 +212,10 @@ class PatientImport implements
         }
 
         Log::channel('import')->info('=== CHUNK END ===', [
+            'import_id' => $this->importId,
             'chunk' => $this->chunkNumber,
-            'seenMr_count' => count($this->seenMr),
-            'seenNik_count' => count($this->seenNik),
+            'redis_mr_count' => $this->getRedisSetCount('mr'),
+            'redis_nik_count' => $this->getRedisSetCount('nik'),
         ]);
     }
 
@@ -222,13 +229,13 @@ class PatientImport implements
         $query = app(config('database.models.CardIdentity'))::query();
 
         // Fix: Logic was inverted - should check when value IS set, not when NOT set
-        if (isset($row['no_emr']) && !empty($row['no_emr'])) {
+        if (isset($row['no_emr'])) {
             $query->orWhere(function($q) use ($row){
                 $q->where('flag', 'old_mr')->where('value', (string) $row['no_emr']);
             });
         }
 
-        if (isset($row['nik']) && !empty($row['nik'])) {
+        if (isset($row['nik'])) {
             $query->orWhere(function($q) use ($row){
                 $q->where('flag', 'nik')->where('value', (string) $row['nik']);
             });
@@ -244,5 +251,47 @@ class PatientImport implements
             'reason' => $reason,
             'value'  => $value,
         ]);
+    }
+
+    /**
+     * ======================
+     * REDIS HELPERS
+     * ======================
+     */
+    protected function getRedisKey(string $type): string
+    {
+        return "patient_import:{$this->importId}:{$type}";
+    }
+
+    protected function isInRedisSet(string $type, string $value): bool
+    {
+        return (bool) Redis::sismember($this->getRedisKey($type), $value);
+    }
+
+    protected function addToRedisSet(string $type, string $value): void
+    {
+        $key = $this->getRedisKey($type);
+        Redis::sadd($key, $value);
+        Redis::expire($key, self::REDIS_TTL);
+    }
+
+    protected function getRedisSetCount(string $type): int
+    {
+        return (int) Redis::scard($this->getRedisKey($type));
+    }
+
+    /**
+     * Clean up Redis keys after import completes
+     */
+    public function cleanupRedis(): void
+    {
+        Redis::del($this->getRedisKey('mr'));
+        Redis::del($this->getRedisKey('nik'));
+        Log::channel('import')->info('Redis cleanup completed', ['import_id' => $this->importId]);
+    }
+
+    public function getImportId(): string
+    {
+        return $this->importId;
     }
 }

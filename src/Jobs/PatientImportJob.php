@@ -48,19 +48,27 @@ class PatientImportJob implements ShouldQueue, ShouldBeUnique
         $support = $this->data['support'] ?? [];
         $paths = $support['paths'] ?? [];
 
+        // Use job's uniqueId as the importId for Redis tracking
+        $importId = $this->uniqueId();
+
         Log::channel('import')->info('PatientImportJob started', [
             'tenant_id' => $this->data['tenant_id'] ?? null,
             'paths_count' => count($paths),
             'paths' => $paths,
-            'unique_id' => $this->uniqueId(),
+            'import_id' => $importId,
         ]);
 
         MicroTenant::tenantImpersonate($this->data['tenant_id']);
+
+        // Create single importer instance to share Redis state across all files
+        $importer = new PatientImport($importId);
+
         foreach ($paths as $index => $path) {
             try {
                 Log::channel('import')->info('Processing file', [
                     'index' => $index,
                     'path' => $path,
+                    'import_id' => $importId,
                 ]);
                 $filePath = $this->resolveFilePath($path);
             } catch (\Throwable $th) {
@@ -70,11 +78,14 @@ class PatientImportJob implements ShouldQueue, ShouldBeUnique
                 ]);
                 throw $th;
             }
-            Excel::import(new PatientImport, $filePath);
+            Excel::import($importer, $filePath);
         }
 
+        // Cleanup Redis after successful import
+        $importer->cleanupRedis();
+
         Log::channel('import')->info('PatientImportJob completed', [
-            'unique_id' => $this->uniqueId(),
+            'import_id' => $importId,
         ]);
     }
 
