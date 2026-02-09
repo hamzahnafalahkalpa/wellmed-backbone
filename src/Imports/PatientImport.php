@@ -5,6 +5,7 @@ namespace Projects\WellmedBackbone\Imports;
 use App\Middlewares\EncodingWrapper;
 use Hanafalah\LaravelSupport\Concerns\Support\HasRequestData;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Concerns\{
     ToCollection,
@@ -24,6 +25,7 @@ class PatientImport implements
 
     protected array $seenMr  = [];
     protected array $seenNik = [];
+    protected int $processedRows = 0; // Track total rows processed across chunks
 
     public function startRow(): int
     {
@@ -32,7 +34,7 @@ class PatientImport implements
 
     public function chunkSize(): int
     {
-        return 500;
+        return 100;
     }
 
     public function collection(Collection $rows)
@@ -40,7 +42,8 @@ class PatientImport implements
         app(EncodingWrapper::class)->installationSetup();
         config(['module-patient.satu-sehat.enable' => false]);
         foreach ($rows as $index => $row) {
-            $rowNumber = $index + 2; // biar sesuai excel
+            $this->processedRows++;
+            $rowNumber = $this->processedRows + 1; // +1 because startRow is 2 (row 1 is header)
 
             /**
              * ======================
@@ -123,44 +126,48 @@ class PatientImport implements
              * ======================
              * 5. STORE
              * ======================
+             * Each row is wrapped in its own transaction to ensure proper isolation.
+             * If one row fails, subsequent rows can still be processed.
              */
             try {
-                $nik = $row['nik'] ?? null;
-                if (isset($nik)) $nik = (string) $nik;
-                app(config('app.contracts.Patient'))->prepareStorePatient(
-                    $this->requestDTO(config('app.contracts.PatientData'), [
-                        'id' => null,
-                        'card_identity' => [
-                            'old_mr'     => $row['no_emr'] ?? null,
-                            'ihs_number' => $row['ihs_satu_sehat'] ?? null,
-                            'bpjs'       => $row['no_bpjs'] ?? null,
-                        ],
-                        'name' => $row['nama'],
-                        'reference_type' => 'People',
-                        'reference' => [
-                            'first_name' => $firstName,
-                            'last_name'  => $lastName,
-                            'phone_1'    => $row['kontakhp'] ?? null,
-                            'blood_type' => $row['golongan_darah'] ?? null,
-                            'pob'        => $row['tempat_lahir'] ?? null,
-                            'dob'        => $row['tanggal_lahir'] ?? null,
-                            'sex'        => $row['jenis_kelamin'] ?? null,
-                            'address' => [
-                                'ktp' => ['name' => $row['alamat_ktp'] ?? null],
-                                'residence' => ['name' => $row['alamat_domisili'] ?? null],
-                            ],
+                DB::transaction(function () use ($row, $firstName, $lastName, $rowNumber) {
+                    $nik = $row['nik'] ?? null;
+                    if (isset($nik)) $nik = (string) $nik;
+                    app(config('app.contracts.Patient'))->prepareStorePatient(
+                        $this->requestDTO(config('app.contracts.PatientData'), [
+                            'id' => null,
                             'card_identity' => [
-                                'nik'      => $nik,
-                                'passport' => $row['passport'] ?? null,
+                                'old_mr'     => $row['no_emr'] ?? null,
+                                'ihs_number' => $row['ihs_satu_sehat'] ?? null,
+                                'bpjs'       => $row['no_bpjs'] ?? null,
                             ],
-                        ],
-                    ])
-                );
+                            'name' => $row['nama'],
+                            'reference_type' => 'People',
+                            'reference' => [
+                                'first_name' => $firstName,
+                                'last_name'  => $lastName,
+                                'phone_1'    => $row['kontakhp'] ?? null,
+                                'blood_type' => $row['golongan_darah'] ?? null,
+                                'pob'        => $row['tempat_lahir'] ?? null,
+                                'dob'        => $row['tanggal_lahir'] ?? null,
+                                'sex'        => $row['jenis_kelamin'] ?? null,
+                                'address' => [
+                                    'ktp' => ['name' => $row['alamat_ktp'] ?? null],
+                                    'residence' => ['name' => $row['alamat_domisili'] ?? null],
+                                ],
+                                'card_identity' => [
+                                    'nik'      => $nik,
+                                    'passport' => $row['passport'] ?? null,
+                                ],
+                            ],
+                        ])
+                    );
 
-                Log::channel('import')->info('Patient imported', [
-                    'row' => $rowNumber,
-                    'name' => $row['nama'],
-                ]);
+                    Log::channel('import')->info('Patient imported', [
+                        'row' => $rowNumber,
+                        'name' => $row['nama'],
+                    ]);
+                });
             } catch (\Throwable $e) {
                 Log::channel('import')->error('Failed import patient', [
                     'row' => $rowNumber,
