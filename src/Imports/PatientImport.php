@@ -7,36 +7,29 @@ use Hanafalah\LaravelSupport\Concerns\Support\HasRequestData;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Redis;
 use Maatwebsite\Excel\Concerns\{
     ToCollection,
-    WithHeadingRow,
     WithChunkReading,
+    WithHeadingRow,
     WithMultipleSheets
 };
-use Hanafalah\ModuleEncoding\Concerns\HasEncoding;
 use PhpOffice\PhpSpreadsheet\Shared\Date;
 
 class PatientImport implements
     ToCollection,
-    WithHeadingRow,
     WithChunkReading,
+    WithHeadingRow,
     WithMultipleSheets
 {
     use HasRequestData;
 
     protected string $importId;
     protected int $chunkNumber = 0;
-    protected const REDIS_TTL = 86400; // 24 hours
+    protected int $processedRows = 0;
 
     public function __construct(?string $importId = null)
     {
         $this->importId = $importId ?? uniqid('patient_import_', true);
-    }
-
-    public function chunkSize(): int
-    {
-        return 100;
     }
 
     /**
@@ -50,27 +43,30 @@ class PatientImport implements
         ];
     }
 
+    public function chunkSize(): int
+    {
+        return 100;
+    }
+
     public function collection(Collection $rows)
     {
         $this->chunkNumber++;
-        $chunkStart = (($this->chunkNumber - 1) * $this->chunkSize()) + 2; // +2 karena header di row 1
-        $chunkEnd = $chunkStart + $rows->count() - 1;
+        $chunkStartRow = $this->processedRows + 2; // +2 because row 1 is header
 
         Log::channel('import')->info('=== CHUNK START ===', [
             'import_id' => $this->importId,
-            'chunk' => $this->chunkNumber,
-            'rows_in_chunk' => $rows->count(),
-            'row_range' => "{$chunkStart}-{$chunkEnd}",
-            'redis_mr_count' => $this->getRedisSetCount('mr'),
-            'redis_nik_count' => $this->getRedisSetCount('nik'),
-            'redis_medical_records_count' => $this->getRedisSetCount('medical_records'),
+            'chunk_number' => $this->chunkNumber,
+            'chunk_rows' => $rows->count(),
+            'chunk_start_row' => $chunkStartRow,
         ]);
 
+        // Load encoding counter from DB at the start of each chunk
+        // This ensures we have the latest counter value (persisted from previous chunk)
         app(EncodingWrapper::class)->installationSetup();
         config(['module-patient.satu-sehat.enable' => false]);
 
         foreach ($rows as $index => $row) {
-            $rowNumber = $chunkStart + $index; // Row number absolut dari Excel
+            $rowNumber = $chunkStartRow + $index; // Actual row number in Excel file
 
             /**
              * ======================
@@ -84,40 +80,21 @@ class PatientImport implements
 
             /**
              * ======================
-             * 2. DEDUP VIA REDIS (persist across chunks & retries)
+             * 2. EXTRACT IDENTIFIERS
              * ======================
              */
-            $is_has_emr = false;
             $emrValue = isset($row['no_emr']) && !empty($row['no_emr']) ? (string) $row['no_emr'] : null;
-            if ($emrValue) {
-                $is_has_emr = true;
-                if ($this->isInRedisSet('mr', $emrValue)) {
-                    $this->logSkip($rowNumber, 'duplicate MR (redis)', $emrValue);
-                    continue;
-                }
-            }
-
-            $is_has_nik = false;
             $nikValue = isset($row['nik']) && !empty($row['nik']) ? (string) $row['nik'] : null;
-            if ($nikValue) {
-                $is_has_nik = true;
-                if ($this->isInRedisSet('nik', $nikValue)) {
-                    $this->logSkip($rowNumber, 'duplicate NIK (redis)', $nikValue);
-                    continue;
-                }
-            }
 
             /**
              * ======================
              * 3. DEDUP DI DATABASE
              * ======================
+             * With chunking, we rely on database checks for deduplication
+             * since in-memory arrays don't persist across chunks
              */
-            if ($is_has_emr || $is_has_nik) {
+            if ($emrValue || $nikValue) {
                 if ($this->existsInDatabase($row)) {
-                    // Add to Redis so we don't check DB again for same value
-                    if ($emrValue) $this->addToRedisSet('mr', $emrValue);
-                    if ($nikValue) $this->addToRedisSet('nik', $nikValue);
-
                     $this->logSkip($rowNumber, 'MR / NIK sudah ada di database', [
                         'no_emr' => $emrValue,
                         'nik' => $nikValue,
@@ -153,23 +130,14 @@ class PatientImport implements
 
             /**
              * ======================
-             * 5. GENERATE MEDICAL RECORD (with Redis caching for idempotency)
-             * ======================
-             */
-            $rowKey = $emrValue ?? $nikValue ?? "row_{$rowNumber}";
-            // $medicalRecord = $this->getOrGenerateMedicalRecord($rowKey);
-            $medicalRecord = null;
-
-            /**
-             * ======================
-             * 6. STORE
+             * 5. STORE
              * ======================
              * Each row is wrapped in its own transaction to ensure proper isolation.
              * If one row fails, subsequent rows can still be processed.
              */
             try {
                 request()->replace([]);
-                DB::transaction(function () use ($row, $firstName, $lastName, $rowNumber, $emrValue, $nikValue, $medicalRecord) {
+                DB::transaction(function () use ($row, $firstName, $lastName, $rowNumber, $emrValue, $nikValue) {
                     $nik = $nikValue;
                     app(config('app.contracts.Patient'))->prepareStorePatient(
                         $this->requestDTO(config('app.contracts.PatientData'), [
@@ -180,7 +148,7 @@ class PatientImport implements
                                 'bpjs'       => $row['no_bpjs'] ?? null,
                             ],
                             'name' => $row['nama'],
-                            'medical_record' => $medicalRecord,
+                            // medical_record will be auto-generated by Patient schema
                             'reference_type' => 'People',
                             'reference' => [
                                 'first_name' => $firstName,
@@ -208,10 +176,6 @@ class PatientImport implements
                     ]);
                 });
 
-                // Add to Redis AFTER successful insert
-                if ($emrValue) $this->addToRedisSet('mr', $emrValue);
-                if ($nikValue) $this->addToRedisSet('nik', $nikValue);
-
             } catch (\Throwable $e) {
                 Log::channel('import')->error('Failed import patient', [
                     'row' => $rowNumber,
@@ -221,12 +185,17 @@ class PatientImport implements
             }
         }
 
+        // Update processed rows counter for next chunk
+        $this->processedRows += $rows->count();
+
+        // CRITICAL: Persist encoding counter to database AFTER each chunk
+        // This ensures the next chunk will load the correct counter value
+        app(EncodingWrapper::class)->setup();
+
         Log::channel('import')->info('=== CHUNK END ===', [
             'import_id' => $this->importId,
-            'chunk' => $this->chunkNumber,
-            'redis_mr_count' => $this->getRedisSetCount('mr'),
-            'redis_nik_count' => $this->getRedisSetCount('nik'),
-            'redis_medical_records_count' => $this->getRedisSetCount('medical_records'),
+            'chunk_number' => $this->chunkNumber,
+            'total_processed_rows' => $this->processedRows,
         ]);
     }
 
@@ -262,80 +231,6 @@ class PatientImport implements
             'reason' => $reason,
             'value'  => $value,
         ]);
-    }
-
-    /**
-     * ======================
-     * REDIS HELPERS
-     * ======================
-     */
-    protected function getRedisKey(string $type): string
-    {
-        return "patient_import:{$this->importId}:{$type}";
-    }
-
-    /**
-     * Get existing medical_record from Redis or generate a new one
-     * This ensures idempotency - same row processed twice gets same medical_record
-     */
-    protected function getOrGenerateMedicalRecord(string $rowKey): string
-    {
-        $redisKey = "patient_import:{$this->importId}:medical_record:{$rowKey}";
-
-        // Check if already generated for this row
-        $existing = Redis::get($redisKey);
-        if ($existing) {
-            Log::channel('import')->debug('Using cached medical_record', [
-                'row_key' => $rowKey,
-                'medical_record' => $existing,
-            ]);
-            return $existing;
-        }
-
-        // Generate new medical_record
-        $medicalRecord = HasEncoding::generateCode('MEDICAL_RECORD');
-
-        // Cache it in Redis
-        Redis::setex($redisKey, self::REDIS_TTL, $medicalRecord);
-
-        // Also add to set for tracking/validation
-        $this->addToRedisSet('medical_records', $medicalRecord);
-
-        Log::channel('import')->debug('Generated new medical_record', [
-            'row_key' => $rowKey,
-            'medical_record' => $medicalRecord,
-        ]);
-
-        return $medicalRecord;
-    }
-
-    protected function isInRedisSet(string $type, string $value): bool
-    {
-        return (bool) Redis::sismember($this->getRedisKey($type), $value);
-    }
-
-    protected function addToRedisSet(string $type, string $value): void
-    {
-        $key = $this->getRedisKey($type);
-        Redis::sadd($key, $value);
-        Redis::expire($key, self::REDIS_TTL);
-    }
-
-    protected function getRedisSetCount(string $type): int
-    {
-        return (int) Redis::scard($this->getRedisKey($type));
-    }
-
-    /**
-     * Clean up Redis keys after import completes
-     * Note: Individual medical_record cache keys will auto-expire via TTL
-     */
-    public function cleanupRedis(): void
-    {
-        Redis::del($this->getRedisKey('mr'));
-        Redis::del($this->getRedisKey('nik'));
-        Redis::del($this->getRedisKey('medical_records'));
-        Log::channel('import')->info('Redis cleanup completed', ['import_id' => $this->importId]);
     }
 
     public function getImportId(): string

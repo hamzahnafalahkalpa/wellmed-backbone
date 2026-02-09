@@ -41,10 +41,18 @@ class PatientImportJob implements ShouldQueue, ShouldBeUnique
     }
 
     /**
+     * The number of seconds the job can run before timing out.
+     */
+    public int $timeout = 7200; // 2 hours for large imports
+
+    /**
      * Execute the job.
      */
     public function handle(): void
     {
+        // Increase memory limit for large imports (18k+ rows)
+        ini_set('memory_limit', '1G');
+
         $support = $this->data['support'] ?? [];
         $paths = $support['paths'] ?? [];
 
@@ -60,7 +68,7 @@ class PatientImportJob implements ShouldQueue, ShouldBeUnique
 
         MicroTenant::tenantImpersonate($this->data['tenant_id']);
 
-        // Create single importer instance to share Redis state across all files
+        // Create single importer instance
         $importer = new PatientImport($importId);
 
         foreach ($paths as $index => $path) {
@@ -80,9 +88,6 @@ class PatientImportJob implements ShouldQueue, ShouldBeUnique
             }
             Excel::import($importer, $filePath);
         }
-
-        // Cleanup Redis after successful import
-        $importer->cleanupRedis();
 
         Log::channel('import')->info('PatientImportJob completed', [
             'import_id' => $importId,
