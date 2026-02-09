@@ -58,6 +58,9 @@ class PatientImport implements
             $this->processedRows++;
             $rowNumber = $this->processedRows + 1; // +1 because startRow is 2 (row 1 is header)
 
+            $patient_model = app(config('database.models.Patient'))->where('props->row_imported',$rowNumber)->first();
+            if (isset($patient_model)) continue;
+
             /**
              * ======================
              * 1. VALIDASI WAJIB
@@ -155,6 +158,7 @@ class PatientImport implements
                                 'bpjs'       => $row['no_bpjs'] ?? null,
                             ],
                             'name' => $row['nama'],
+                            'row_imported' => $rowNumber,
                             'reference_type' => 'People',
                             'reference' => [
                                 'first_name' => $firstName,
