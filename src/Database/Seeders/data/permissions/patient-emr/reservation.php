@@ -9,6 +9,7 @@ return [
     'show_in_acl'     => true,
     'type'            => Type::MENU->value,
     'guard_name'      => 'api',
+    'ordering'   => 5,
     'childs'          => [        
         [
             'name'        => 'Kelola Reservasi ', 
