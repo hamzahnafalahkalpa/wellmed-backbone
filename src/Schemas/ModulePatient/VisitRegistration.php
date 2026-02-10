@@ -34,11 +34,15 @@ class VisitRegistration extends SchemasVisitRegistration implements ModulePatien
             $patient_model = $visit_registration_dto->patient_model ?? $visit_patient_model->patient ?? null;
 
             if (isset($patient_model)) {
-                $payload = $this->prepareSatuSehatEncounterPayload($visit_registration_model, $visit_patient_model, $patient_model);
-                $this->dispatchSatuSehatSync($visit_registration_model, $patient_model, $payload);
+                $this->prepareStoreEncounterSatuSehatLog($visit_registration_model,$visit_patient_model,$patient_model);
             }
         }
         return $this;
+    }
+
+    public function prepareStoreEncounterSatuSehatLog(Model $visit_registration_model, Model $visit_patient_model, Model $patient_model, ?array $payload = null, ? array $existing = null){
+        $payload ??= $this->prepareSatuSehatEncounterPayload($visit_registration_model, $visit_patient_model, $patient_model);
+        $this->dispatchSatuSehatSync($visit_registration_model, $patient_model, $payload, $existing);
     }
 
     /**
@@ -97,7 +101,7 @@ class VisitRegistration extends SchemasVisitRegistration implements ModulePatien
     /**
      * Dispatch encounter data to Satu Sehat via async job if enabled.
      */
-    private function dispatchSatuSehatSync(Model $visit_registration_model, Model $patient_model, array $payload): void
+    private function dispatchSatuSehatSync(Model $visit_registration_model, Model $patient_model, array $payload,? array $existing = null): void
     {
         if (!config('module-patient.satu-sehat.enable', true)) {
             return;
@@ -106,13 +110,15 @@ class VisitRegistration extends SchemasVisitRegistration implements ModulePatien
         $tenant_id = tenancy()->tenant->getKey();
         $visit_registration_id = $visit_registration_model->getKey();
         $patient_id = $patient_model->getKey();
-
         try {
             dispatch(new SendEncounterToSatuSehatJob(
                 $tenant_id,
                 $visit_registration_id,
                 $patient_id,
-                $payload
+                $payload,
+                $existing['id'] ?? null,
+                $existing['referenceId'] ?? null,
+                $existing['referenceType'] ?? null
             ))->onQueue('satusehat')->onConnection(config('queue.default', 'rabbitmq'));
             // ))->onQueue('satusehat')->onConnection('sync');
 

@@ -23,8 +23,9 @@ class VisitExamination extends SchemasVisitExamination implements ModulePatientV
 
         if ($this->is_sign_off){
             if (isset($patient_model)) {
-                $payload = $this->prepareSatuSehatObservationPayload($visit_examination, $visit_registration_model, $patient_model);
-                $this->dispatchSatuSehatSync($visit_examination_model, $patient_model, $payload);
+                $this->prepareStoreObservationSatuSehatLog($visit_examination_model,$visit_registration_model,$patient_model);
+                // $payload = $this->prepareSatuSehatObservationPayload($visit_examination, $visit_registration_model, $patient_model);
+                // $this->dispatchSatuSehatSync($visit_examination, $patient_model, $payload);
             }
             $treatments = $visit_examination->treatments;
             if (count($treatments) > 0){
@@ -43,6 +44,11 @@ class VisitExamination extends SchemasVisitExamination implements ModulePatientV
         }
 
         return $visit_examination;
+    }
+
+    public function prepareStoreObservationSatuSehatLog(Model $visit_examination_model, Model $visit_registration_model, Model $patient_model, ?array $payload = null, ? array $existing = null){
+        $payload = $this->prepareSatuSehatObservationPayload($visit_examination_model, $visit_registration_model, $patient_model);
+        $this->dispatchSatuSehatSync($visit_examination_model, $patient_model, $payload, $existing);
     }
 
     /**
@@ -180,7 +186,7 @@ class VisitExamination extends SchemasVisitExamination implements ModulePatientV
     /**
      * Dispatch observation data to Satu Sehat via async job if enabled.
      */
-    private function dispatchSatuSehatSync(Model $visit_examination_model, Model $patient_model, array $payload): void
+    private function dispatchSatuSehatSync(Model $visit_examination_model, Model $patient_model, array $payload,? array $existing = null): void
     {
         if (!config('module-patient.satu-sehat.enable', true)) {
             return;
@@ -195,7 +201,10 @@ class VisitExamination extends SchemasVisitExamination implements ModulePatientV
                 $tenant_id,
                 $visit_examination_id,
                 $patient_id,
-                $payload
+                $payload,
+                $existing['id'] ?? null,
+                $existing['referenceId'] ?? null,
+                $existing['referenceType'] ?? null
             ))->onQueue('satusehat')->onConnection(config('queue.default', 'rabbitmq'));
 
             Log::channel('satu-sehat')->info('Observation queued for Satu Sehat sync', [

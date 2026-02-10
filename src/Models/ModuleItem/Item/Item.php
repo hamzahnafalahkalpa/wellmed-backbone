@@ -8,7 +8,7 @@ class Item extends ModelsItem
 {
     protected $casts = [
         'name' => 'string',
-        'selling_price' => 'int',
+        'selling_price' => 'integer',
         'reference_type' => 'string',
         'inventory_reference_type' => 'string',
         'medical_item_reference_type' => 'string',

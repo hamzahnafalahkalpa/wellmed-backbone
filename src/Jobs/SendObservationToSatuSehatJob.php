@@ -20,15 +20,22 @@ class SendObservationToSatuSehatJob implements ShouldQueue
     public $backoff = [10, 30, 60];
 
     protected mixed $tenantId;
+    protected mixed $id;
+    protected mixed $referenceId;
+    protected ?string $referenceType = null;
     protected mixed $visitExaminationId;
     protected mixed $patientId;
     protected array $formPayload;
+    protected ?object $dto;
 
-    public function __construct(mixed $tenantId, mixed $visitExaminationId, mixed $patientId, array $formPayload)
+    public function __construct(mixed $tenantId, mixed $visitExaminationId, mixed $patientId, array $formPayload, mixed $id = null, mixed $referenceId = null, ?string $referenceType = null)
     {
         $this->tenantId = $tenantId;
         $this->visitExaminationId = $visitExaminationId;
         $this->patientId = $patientId;
+        $this->id = $id;
+        $this->referenceId = $referenceId;
+        $this->referenceType = $referenceType;
         $this->formPayload = $formPayload;
         $this->onQueue('satusehat');
     }
@@ -55,15 +62,23 @@ class SendObservationToSatuSehatJob implements ShouldQueue
                 return;
             }
 
+            $this->dto = $dto = $this->requestDTO(config('app.contracts.ObservationSatuSehatData'), [
+                'id' => $this->id ?? null,
+                'reference_type' => $this->referenceType ?? null,
+                'reference_id' => $this->referenceId ?? null,
+                'model' => $visitExaminationModel,
+                'form'  => $this->formPayload
+            ]);
+            
+            // Send encounter to Satu Sehat
+            Log::channel('satu-sehat')->info("DTO", [
+                'dto' => $dto->toArray()
+            ]);
+
             // Send observation to Satu Sehat
             $observation_satu_sehat = app(config('app.contracts.ObservationSatuSehat'))
                 ->useAccessToSatuSehat()
-                ->prepareStoreObservationSatuSehat(
-                    $this->requestDTO(config('app.contracts.ObservationSatuSehatData'), [
-                        'model' => $visitExaminationModel,
-                        'form'  => $this->formPayload
-                    ])
-                );
+                ->prepareStoreObservationSatuSehat($dto);
 
             // Update patient integration sync tracking (also adds log entry)
             $this->updatePatientSyncCounter($patientModel, 'observation');

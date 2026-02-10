@@ -20,15 +20,22 @@ class SendEncounterToSatuSehatJob implements ShouldQueue
     public $backoff = [10, 30, 60];
 
     protected mixed $tenantId;
+    protected mixed $id;
+    protected mixed $referenceId;
+    protected ?string $referenceType = null;
     protected string $visitRegistrationId;
     protected string $patientId;
     protected array $formPayload;
+    protected ?object $dto;
 
-    public function __construct(mixed $tenantId, string $visitRegistrationId, string $patientId, array $formPayload)
+    public function __construct(mixed $tenantId, string $visitRegistrationId, string $patientId, array $formPayload, mixed $id = null, mixed $referenceId = null, ?string $referenceType = null)
     {
         $this->tenantId = $tenantId;
         $this->visitRegistrationId = $visitRegistrationId;
         $this->patientId = $patientId;
+        $this->id = $id;
+        $this->referenceId = $referenceId;
+        $this->referenceType = $referenceType;
         $this->formPayload = $formPayload;
     }
 
@@ -54,16 +61,22 @@ class SendEncounterToSatuSehatJob implements ShouldQueue
                 return;
             }
 
+            $this->dto = $dto = $this->requestDTO(config('app.contracts.EncounterSatuSehatData'), [
+                'id' => $this->id ?? null,
+                'reference_type' => $this->referenceType ?? null,
+                'reference_id' => $this->referenceId ?? null,
+                'model' => $visitRegistrationModel,
+                'form'  => $this->formPayload
+            ]);
+            
             // Send encounter to Satu Sehat
+            Log::channel('satu-sehat')->info("DTO", [
+                'dto' => $dto->toArray()
+            ]);
             $encounter_satu_sehat = app(config('app.contracts.EncounterSatuSehat'))
                 ->useAccessToSatuSehat()
-                ->prepareStoreEncounterSatuSehat(
-                    $this->requestDTO(config('app.contracts.EncounterSatuSehatData'), [
-                        'model' => $visitRegistrationModel,
-                        'form'  => $this->formPayload
-                    ])
-                );
-
+                ->prepareStoreEncounterSatuSehat($dto);
+            Log::channel('satu-sehat')->info("Encounter Service Sended");
             $ihsNumber = $encounter_satu_sehat->response['id'] ?? null;
 
             // Update visit registration with IHS number
@@ -96,9 +109,6 @@ class SendEncounterToSatuSehatJob implements ShouldQueue
                 'error' => $th->getMessage(),
                 'trace' => $th->getTraceAsString()
             ]);
-
-            // Re-throw to trigger retry mechanism
-            throw $th;
         }
     }
 

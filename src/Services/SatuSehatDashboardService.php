@@ -84,7 +84,7 @@ class SatuSehatDashboardService
 
     public function __construct()
     {
-        $this->client = app('elasticsearch');
+        if (config('elasticsearch.enable',false)) $this->client = app('elasticsearch');
     }
 
     /**

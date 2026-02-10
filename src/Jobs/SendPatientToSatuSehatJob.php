@@ -5,7 +5,6 @@ namespace Projects\WellmedBackbone\Jobs;
 use Exception;
 use Hanafalah\LaravelSupport\Concerns\Support\HasRequestData;
 use Hanafalah\MicroTenant\Facades\MicroTenant;
-use Hanafalah\SatuSehat\Facades\SatuSehat;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Queue\SerializesModels;
@@ -23,14 +22,20 @@ class SendPatientToSatuSehatJob implements ShouldQueue
     public $backoff = [10, 30, 60];
 
     protected mixed $tenantId;
+    protected mixed $id;
+    protected mixed $referenceId;
+    protected ?string $referenceType = null;
     protected mixed $patientId;
     protected array $formPayload;
     protected ?object $dto;
 
-    public function __construct(mixed $tenantId, mixed $patientId, array $formPayload)
+    public function __construct(mixed $tenantId, mixed $patientId, array $formPayload, mixed $id = null, mixed $referenceId = null, ?string $referenceType = null)
     {
         $this->tenantId = $tenantId;
         $this->patientId = $patientId;
+        $this->id = $id;
+        $this->referenceId = $referenceId;
+        $this->referenceType = $referenceType;
         $this->formPayload = $formPayload;
     }
 
@@ -50,6 +55,9 @@ class SendPatientToSatuSehatJob implements ShouldQueue
             }
 
             $this->dto = $dto = $this->requestDTO(config('app.contracts.PatientSatuSehatData'), [
+                'id' => $this->id ?? null,
+                'reference_type' => $this->referenceType ?? null,
+                'reference_id' => $this->referenceId ?? null,
                 'model' => $patientModel,
                 'form'  => $this->formPayload
             ]);

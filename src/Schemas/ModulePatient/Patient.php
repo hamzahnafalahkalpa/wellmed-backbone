@@ -29,16 +29,16 @@ class Patient extends SchemasPatient implements ModulePatientPatient
 
         if (!isset($patient->prop_card_identity['ihs_number'])){
             $this->handleIntegrationData($patient, $patient_dto);
-            $this->loadPatientRelationships($patient);
-
-            $payload = $this->prepareSatuSehatPayload($patient);
-            $this->dispatchSatuSehatSync($patient, $payload);
+            $this->prepareStorePatientSatuSehatLog($patient);
         }
-
-        // $this->fillingProps($patient, $patient_dto->props);
-        // $patient->save();
-
         return $this;
+    }
+
+    public function prepareStorePatientSatuSehatLog($patient,? array $payload = null, ? array $existing = null){
+        $this->loadPatientRelationships($patient);
+
+        $payload ??= $this->prepareSatuSehatPayload($patient);
+        $this->dispatchSatuSehatSync($patient, $payload, $existing);
     }
 
     /**
@@ -219,7 +219,7 @@ class Patient extends SchemasPatient implements ModulePatientPatient
     /**
      * Dispatch patient data to Satu Sehat via async job if enabled.
      */
-    private function dispatchSatuSehatSync(Model $patient, array $payload): void
+    private function dispatchSatuSehatSync(Model $patient, array $payload, ?array $existing = []): void
     {
         if (!config('module-patient.satu-sehat.enable', true)) {
             return;
@@ -230,9 +230,11 @@ class Patient extends SchemasPatient implements ModulePatientPatient
             dispatch(new SendPatientToSatuSehatJob(
                 $tenant_id,
                 $patient_id,
-                $payload
+                $payload,
+                $existing['id'] ?? null,
+                $existing['referenceId'] ?? null,
+                $existing['referenceType'] ?? null
             ))->onQueue('satusehat')->onConnection(config('queue.default','rabbitmq'));
-            // ))->onQueue('satusehat')->onConnection('sync');
 
             Log::channel('satu-sehat')->info('Patient queued for Satu Sehat sync', [
                 'patient_id' => $patient_id,
