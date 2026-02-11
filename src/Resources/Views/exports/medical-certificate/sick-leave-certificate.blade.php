@@ -9,6 +9,8 @@
     $genderText = $patientGender === 'male' ? 'Laki-laki' : ($patientGender === 'female' ? 'Perempuan' : '-');
     $examDate = $visit_examination?->created_at ? \Carbon\Carbon::parse($visit_examination->created_at) : now();
 
+    $doctor = $visit_registration->practitioner_evaluation;
+
     // Rest period calculation
     $restDays = $rest_days ?? 3;
     $restStartDate = isset($rest_start_date) ? \Carbon\Carbon::parse($rest_start_date) : $examDate;
@@ -41,7 +43,7 @@
         <th>Umur</th>
         <td>{{ $patientAge ?? '-' }} tahun</td>
     </tr>
-    <tr>
+    {{-- <tr>
         <th>Jenis Kelamin</th>
         <td>{{ $genderText }}</td>
     </tr>
@@ -52,14 +54,14 @@
     <tr>
         <th>Alamat</th>
         <td>{{ $patient->people?->address?->ktp?->name ?? $patient->people?->address?->domicile?->name ?? '-' }}</td>
-    </tr>
+    </tr> --}}
 </table>
 
 <div class="content-text">
-    Telah dilakukan pemeriksaan kesehatan pada:
+    Telah dilakukan pemeriksaan kesehatan pada: {{ $examDate->isoFormat('D MMMM Y') }} yang berlokasi di {{ $workspace?->name ?? '-' }} dengan nomor rekam medis <b>{{ $patient->medical_record ?? '-' }}</b>.
 </div>
 
-<table class="patient-table" style="width: 60%;">
+{{-- <table class="patient-table" style="width: 60%;">
     <tr>
         <th>Tanggal Pemeriksaan</th>
         <td>{{ $examDate->isoFormat('D MMMM Y') }}</td>
@@ -72,7 +74,7 @@
         <th>No. Rekam Medis</th>
         <td>{{ $patient->medical_record ?? '-' }}</td>
     </tr>
-</table>
+</table> --}}
 
 <div class="content-text" style="margin-top: 15px;">
     Berdasarkan hasil pemeriksaan yang telah dilakukan, yang bersangkutan dinyatakan:
@@ -102,12 +104,8 @@
         <td><strong>{{ $restDays }} ({{ $rest_days_text ?? 'tiga' }}) hari</strong></td>
     </tr>
     <tr>
-        <th>Mulai Tanggal</th>
-        <td>{{ $restStartDate->isoFormat('dddd, D MMMM Y') }}</td>
-    </tr>
-    <tr>
-        <th>Sampai Dengan Tanggal</th>
-        <td>{{ $restEndDate->isoFormat('dddd, D MMMM Y') }}</td>
+        <th>Rentang Tanggal</th>
+        <td>{{ $restStartDate->setTimezone('Asia/Jakarta')->locale('id')->isoFormat('dddd, D MMMM Y').' - '.$restEndDate->setTimezone('Asia/Jakarta')->locale('id')->isoFormat('dddd, D MMMM Y') }}</td>
     </tr>
     <tr>
         <th>Keterangan Tambahan</th>
@@ -149,16 +147,16 @@
                 <strong>Dokter Pemeriksa,</strong>
                 <div class="signature-box"></div>
                 <div class="signature-name">
-                    {{ $doctor?->name ?? $visit_examination?->doctor?->name ?? '(...................................)' }}
+                    {{ $doctor?->name ?? '(...................................)' }}
                 </div>
-                <div style="font-size: 10px;">
+                {{-- <div style="font-size: 10px;">
                     @if($doctor?->sip_number ?? $visit_examination?->doctor?->sip_number)
                         SIP: {{ $doctor?->sip_number ?? $visit_examination?->doctor?->sip_number }}
                     @endif
-                </div>
-                <div class="stamp-area">
+                </div> --}}
+                {{-- <div class="stamp-area">
                     <span>Stempel<br>Klinik</span>
-                </div>
+                </div> --}}
             </td>
         </tr>
     </table>

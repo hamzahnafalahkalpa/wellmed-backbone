@@ -123,7 +123,7 @@ tfoot { display: table-footer-group; }
 .patient-table th,
 .patient-table td {
     border: 1px solid #333;
-    padding: 6px 10px;
+    padding: 6px;
     font-size: 11px;
 }
 
@@ -143,7 +143,7 @@ tfoot { display: table-footer-group; }
 
 .result-box {
     text-align: center;
-    margin: 20px auto;
+    margin: 10px auto;
     padding: 15px 30px;
     border: 2px solid #1a365d;
     background-color: #f0f7ff;
@@ -163,7 +163,7 @@ tfoot { display: table-footer-group; }
 }
 
 .signature-section {
-    margin-top: 30px;
+    margin-top: 10px;
 }
 
 .signature-table {
@@ -177,7 +177,7 @@ tfoot { display: table-footer-group; }
 }
 
 .signature-box {
-    height: 70px;
+    height: 40px;
     margin: 10px 0;
 }
 
@@ -213,7 +213,7 @@ tfoot { display: table-footer-group; }
     color: #666;
     font-style: italic;
     text-align: center;
-    margin-top: 20px;
+    margin-top: 0px;
     padding: 8px;
     border: 1px dashed #999;
     background-color: #fffef0;
@@ -262,15 +262,15 @@ tfoot { display: table-footer-group; }
 <header>
     <div class="header-grid">
         <div>
-            @if($workspace?->logo)
-                <img src="{{ $workspace->logo }}" height="55" alt="Logo">
+            @if($workspace?->setting?->logo)
+                <img src="{{ $workspace->setting->logo }}" height="55" alt="Logo">
             @else
                 <img src="{!! backbone_asset('/assets/kalpa-logo.png') !!}" height="55" alt="Logo">
             @endif
         </div>
         <div>
             <p class="clinic-name">{{ $workspace?->name ?? 'NAMA KLINIK/RUMAH SAKIT' }}</p>
-            @if($workspace?->setting?->tagline)
+            @if(isset($workspace?->setting?->tagline))
                 <p class="clinic-tagline">"{{ $workspace->setting->tagline }}"</p>
             @endif
             <p class="clinic-address">{{ $workspace?->setting?->address?->full_address ?? $workspace?->setting?->address?->ktp?->name ?? 'Alamat Klinik' }}</p>

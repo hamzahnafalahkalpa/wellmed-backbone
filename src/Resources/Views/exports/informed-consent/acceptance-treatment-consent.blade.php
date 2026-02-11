@@ -15,7 +15,7 @@
     <tr>
         <th style="width: 150px;">Diagnosis</th>
         <td>
-            @if($diagnosis->count() > 0)
+            @if(count($diagnosis) > 0)
                 @foreach ($diagnosis as $index => $diag)
                     {{ ($index + 1) }}. {{ $diag->name ?? $diag->icd10?->name ?? '-' }}
                     @if($diag->icd10?->code)
@@ -36,7 +36,7 @@
     <tr>
         <th style="width: 150px;">Nama Tindakan</th>
         <td>
-            @if($treatments->count() > 0)
+            @if(count($treatments) > 0)
                 @foreach ($treatments as $index => $treatment)
                     {{ ($index + 1) }}. {{ $treatment->name ?? 'Nama tindakan tidak tersedia' }}<br>
                 @endforeach
@@ -79,10 +79,10 @@
             <span class="checkbox-box">{{ ($anesthesia_type ?? '') === 'none' ? '✓' : '' }}</span> Tanpa Anestesi
         </td>
     </tr>
-    <tr>
+    {{-- <tr>
         <th>Perkiraan Biaya</th>
         <td>{{ $estimated_cost ? 'Rp ' . number_format($estimated_cost, 0, ',', '.') : '...............................................................................................................................' }}</td>
-    </tr>
+    </tr> --}}
 </table>
 
 {{-- SECTION F: PERNYATAAN PASIEN/WALI --}}

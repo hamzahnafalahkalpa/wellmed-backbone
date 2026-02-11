@@ -250,8 +250,8 @@ tfoot { display: table-footer-group; }
 <header>
     <div class="header-grid">
         <div>
-            @if($workspace?->logo)
-                <img src="{{ $workspace->logo }}" height="50" alt="Logo">
+            @if($workspace?->setting?->logo)
+                <img src="{{ $workspace->setting->logo }}" height="50" alt="Logo">
             @else
                 <img src="{!! backbone_asset('/assets/kalpa-logo.png') !!}" height="50" alt="Logo">
             @endif
@@ -291,7 +291,7 @@ tfoot { display: table-footer-group; }
 </footer>
 
 <main>
-    <div class="document-title">@yield('document-title', 'FORMULIR PERSETUJUAN TINDAKAN MEDIS')</div>
+    <div class="document-title">@yield('document-title', 'GENERAL CONSENT')</div>
     <div class="document-number">No: {{ $documentNumber }}</div>
 
     {{-- SECTION A: IDENTITAS PASIEN --}}
@@ -332,19 +332,19 @@ tfoot { display: table-footer-group; }
     <table class="bordered-table">
         <tr>
             <th>Nama Lengkap</th>
-            <td>{{ $guardian?->name ?? '......................................................................' }}</td>
+            <td>{{ $guardian?->name ?? '.......................................................' }}</td>
             <th>Hubungan dengan Pasien</th>
-            <td>{{ $guardian?->relationship ?? '..........................................' }}</td>
+            <td>{{ $guardian?->relationship ?? '...........................' }}</td>
         </tr>
         <tr>
             <th>NIK</th>
-            <td>{{ $guardian?->nik ?? '......................................................................' }}</td>
+            <td>{{ $guardian?->nik ?? '.......................................................' }}</td>
             <th>No. Telepon</th>
-            <td>{{ $guardian?->phone ?? '..........................................' }}</td>
+            <td>{{ $guardian?->phone ?? '...........................' }}</td>
         </tr>
         <tr>
             <th>Alamat</th>
-            <td colspan="3">{{ $guardian?->address ?? '........................................................................................................................' }}</td>
+            <td colspan="3">{{ $guardian?->address ?? '.........................................................................................................' }}</td>
         </tr>
     </table>
 
@@ -353,15 +353,15 @@ tfoot { display: table-footer-group; }
     <table class="bordered-table">
         <tr>
             <th>Nama Dokter</th>
-            <td>{{ $doctor?->name ?? $visit_examination?->doctor?->name ?? '......................................................................' }}</td>
+            <td>{{ $doctor?->name ?? $visit_examination?->doctor?->name ?? '.......................................................' }}</td>
             <th>Spesialisasi</th>
-            <td>{{ $doctor?->specialization ?? $visit_examination?->doctor?->specialization ?? '..........................................' }}</td>
+            <td>{{ $doctor?->specialization ?? $visit_examination?->doctor?->specialization ?? '...........................' }}</td>
         </tr>
         <tr>
             <th>No. SIP</th>
-            <td>{{ $doctor?->sip_number ?? $visit_examination?->doctor?->sip_number ?? '......................................................................' }}</td>
+            <td>{{ $doctor?->sip_number ?? $visit_examination?->doctor?->sip_number ?? '.......................................................' }}</td>
             <th>No. STR</th>
-            <td>{{ $doctor?->str_number ?? $visit_examination?->doctor?->str_number ?? '..........................................' }}</td>
+            <td>{{ $doctor?->str_number ?? $visit_examination?->doctor?->str_number ?? '...........................' }}</td>
         </tr>
     </table>
 
