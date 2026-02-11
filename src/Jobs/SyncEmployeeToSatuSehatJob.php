@@ -82,6 +82,9 @@ class SyncEmployeeToSatuSehatJob implements ShouldQueue
             // Update Elasticsearch dashboard metrics
             $this->updateDashboardWorkspaceIntegration('practitioner');
 
+            // Update Satu Sehat dashboard (increment satuSehatCount)
+            $this->updateSatuSehatDashboard('practitioners');
+
             Log::channel('satu-sehat')->info("Employee synced to Satu Sehat successfully", [
                 'employee_id' => $this->employeeId,
                 'ihs_number' => $ihsNumber

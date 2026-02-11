@@ -13,10 +13,19 @@ use Illuminate\Support\Str;
 use Projects\WellmedBackbone\Contracts\Schemas\ModuleEmployee\Employee as ModuleEmployeeEmployee;
 use Projects\WellmedBackbone\Jobs\SyncEmployeeToSatuSehatJob;
 use Illuminate\Support\Facades\Log;
+use Projects\WellmedBackbone\Schemas\Concerns\HasSatuSehatDashboard;
 
 class Employee extends SchemasEmployee implements ModuleEmployeeEmployee{
+    use HasSatuSehatDashboard;
+
     protected function afterEmployeeCreated(Model &$employee, EmployeeData &$employee_dto): self{
         parent::afterEmployeeCreated($employee, $employee_dto);
+
+        // Increment wellMedCount for Satu Sehat dashboard when a new employee is created
+        if ($this->is_recently_created) {
+            $this->incrementSatuSehatWellMedCount('practitioners');
+        }
+
         $this->dispatchSatuSehatSync($employee);
 
         $this->fillingProps($employee, $employee_dto->props);

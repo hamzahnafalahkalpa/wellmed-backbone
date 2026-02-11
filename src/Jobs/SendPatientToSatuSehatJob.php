@@ -88,6 +88,9 @@ class SendPatientToSatuSehatJob implements ShouldQueue
             $this->updateDashboardWorkspaceIntegration('patient');
             $this->updateDashboardPatientIntegration((string) $this->patientId, 'patient');
 
+            // Update Satu Sehat dashboard (increment satuSehatCount)
+            $this->updateSatuSehatDashboard('patients');
+
             Log::channel('satu-sehat')->info("Patient sent to Satu Sehat successfully", [
                 'patient_id' => $this->patientId,
                 'ihs_number' => $ihsNumber

@@ -10,8 +10,10 @@ use Projects\WellmedBackbone\Contracts\Schemas\ModuleWarehouse\Room as ModuleWar
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Projects\WellmedBackbone\Jobs\SendLocationToSatuSehatJob;
+use Projects\WellmedBackbone\Schemas\Concerns\HasSatuSehatDashboard;
 
 class Room extends SchemasRoom implements ModuleWarehouseRoom{
+    use HasSatuSehatDashboard;
 
     public function createRoom(mixed $room_dto): Model{
         $room_model = $this->usingEntity()->updateOrCreate([
@@ -46,6 +48,12 @@ class Room extends SchemasRoom implements ModuleWarehouseRoom{
 
     public function prepareStoreRoom(RoomData $room_dto): Model{
         $this->room_model = $room_model = parent::prepareStoreRoom($room_dto);
+
+        // Increment wellMedCount for Satu Sehat dashboard when a new room is created
+        if ($this->is_recently_created) {
+            $this->incrementSatuSehatWellMedCount('location');
+        }
+
         $this->prepareStoreSatuSehatLocation($room_dto,$room_model);
         return $this->room_model;
     }

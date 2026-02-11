@@ -93,6 +93,9 @@ class SendObservationToSatuSehatJob implements ShouldQueue
             $this->updateDashboardWorkspaceIntegration('observation');
             $this->updateDashboardPatientIntegration((string) $this->patientId, 'observation');
 
+            // Update Satu Sehat dashboard (increment satuSehatCount)
+            $this->updateSatuSehatDashboard('observation');
+
             Log::channel('satu-sehat')->info("Observation sent to Satu Sehat successfully", [
                 'visit_examination_id' => $this->visitExaminationId,
                 'patient_id' => $this->patientId,

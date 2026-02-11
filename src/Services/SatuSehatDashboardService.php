@@ -2,8 +2,10 @@
 
 namespace Projects\WellmedBackbone\Services;
 
+use Hanafalah\LaravelSupport\Concerns\Support\HasElasticsearchLog;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
+use Projects\WellmedBackbone\Config\SatuSehat\SatuSehatDashboardConfig;
 
 /**
  * Satu Sehat Dashboard Service
@@ -11,76 +13,20 @@ use Carbon\Carbon;
  * Handles storage and retrieval of Satu Sehat integration metrics in Elasticsearch.
  * Tracks synced/unsynced counters for each resource type.
  *
+ * ES stores only raw data (counts, timestamps). Presentation data (icons, colors, etc.)
+ * is provided by SatuSehatDashboardConfig and merged on retrieval.
+ *
  * Supports two modes:
  * 1. Current/Live data - Real-time counters without date filtering
  * 2. Monthly snapshots - Historical data segmented by month (for future use)
  */
 class SatuSehatDashboardService
 {
+    use HasElasticsearchLog;
+
     protected $client;
     protected string $indexName = 'satu-sehat-dashboard';
     protected string $snapshotIndexName = 'satu-sehat-dashboard-snapshots';
-
-    /**
-     * Resource types with their categories
-     */
-    protected array $resourceTypes = [
-        // Prerequisites
-        'organization' => [
-            'category' => 'Prerequisites',
-            'name' => 'Organization',
-            'icon' => 'mdi:domain',
-            'color' => 'blue',
-            'description' => 'Data organisasi/fasilitas kesehatan'
-        ],
-        'location' => [
-            'category' => 'Prerequisites',
-            'name' => 'Location',
-            'icon' => 'mdi:map-marker',
-            'color' => 'indigo',
-            'description' => 'Data lokasi layanan kesehatan'
-        ],
-        'practitioners' => [
-            'category' => 'Prerequisites',
-            'name' => 'Practitioners',
-            'icon' => 'mdi:doctor',
-            'color' => 'teal',
-            'description' => 'Data tenaga medis dan praktisi'
-        ],
-        'patients' => [
-            'category' => 'Prerequisites',
-            'name' => 'Patients',
-            'icon' => 'mdi:account-group',
-            'color' => 'green',
-            'description' => 'Data pasien yang terdaftar',
-            'loggerPath' => '/satu-sehat/data-logger/non-medical'
-        ],
-        // Interoperability
-        'encounter' => [
-            'category' => 'Interoperability',
-            'name' => 'Encounter',
-            'icon' => 'mdi:calendar-check',
-            'color' => 'purple',
-            'description' => 'Data kunjungan pasien',
-            'loggerPath' => '/satu-sehat/data-logger/medical'
-        ],
-        'condition' => [
-            'category' => 'Interoperability',
-            'name' => 'Condition',
-            'icon' => 'mdi:medical-bag',
-            'color' => 'red',
-            'description' => 'Data diagnosa dan kondisi medis',
-            'loggerPath' => '/satu-sehat/data-logger/medical'
-        ],
-        'observation' => [
-            'category' => 'Interoperability',
-            'name' => 'Observation',
-            'icon' => 'mdi:clipboard-pulse',
-            'color' => 'orange',
-            'description' => 'Data hasil pemeriksaan dan observasi',
-            'loggerPath' => '/satu-sehat/data-logger/medical'
-        ],
-    ];
 
     public function __construct()
     {
@@ -88,13 +34,13 @@ class SatuSehatDashboardService
     }
 
     /**
-     * Get all resource types configuration
+     * Get all resource types configuration from config class
      *
      * @return array
      */
     public function getResourceTypes(): array
     {
-        return $this->resourceTypes;
+        return SatuSehatDashboardConfig::getResourceTypes();
     }
 
     /**
@@ -157,7 +103,7 @@ class SatuSehatDashboardService
 
                 return [
                     'success' => true,
-                    'data' => $response['_source']
+                    'data' => $this->mergeWithPresentationData($response['_source'])
                 ];
             } catch (\Throwable $e) {
                 // Check if it's a 404 error (index or document not found)
@@ -177,7 +123,7 @@ class SatuSehatDashboardService
             return [
                 'success' => false,
                 'error' => $e->getMessage(),
-                'data' => $this->getDefaultDashboardData($tenantId ?? 0, $workspaceId)
+                'data' => $this->mergeWithPresentationData($this->getDefaultDashboardData($tenantId ?? 0, $workspaceId))
             ];
         }
     }
@@ -212,7 +158,7 @@ class SatuSehatDashboardService
 
             return [
                 'success' => true,
-                'data' => $defaultData,
+                'data' => $this->mergeWithPresentationData($defaultData),
                 'message' => 'Dashboard initialized with default values',
                 'initialized' => true
             ];
@@ -226,7 +172,7 @@ class SatuSehatDashboardService
             // Return defaults even if store fails
             return [
                 'success' => true,
-                'data' => $this->getDefaultDashboardData($tenantId, $workspaceId),
+                'data' => $this->mergeWithPresentationData($this->getDefaultDashboardData($tenantId, $workspaceId)),
                 'message' => 'Returning defaults (failed to store)',
                 'initialized' => false
             ];
@@ -279,7 +225,7 @@ class SatuSehatDashboardService
 
                 return [
                     'success' => true,
-                    'data' => $response['_source'],
+                    'data' => $this->mergeWithPresentationData($response['_source']),
                     'is_snapshot' => true,
                     'month' => $month
                 ];
@@ -361,6 +307,19 @@ class SatuSehatDashboardService
                 'month' => $month,
                 'document_id' => $response['_id'] ?? null
             ]);
+
+            // Log to elasticsearch_logs table
+            if (config('elasticsearch.logging.enabled', true)) {
+                $this->logSingleOperation(
+                    $this->getSnapshotIndexName(),
+                    $documentId,
+                    'index',
+                    [
+                        'result' => $response['result'] ?? 'created',
+                        '_version' => $response['_version'] ?? 1
+                    ]
+                );
+            }
 
             return [
                 'success' => true,
@@ -477,6 +436,19 @@ class SatuSehatDashboardService
                 'tenant_id' => $tenantId,
                 'document_id' => $response['_id'] ?? null
             ]);
+
+            // Log to elasticsearch_logs table
+            if (config('elasticsearch.logging.enabled', true)) {
+                $this->logSingleOperation(
+                    $this->getIndexName(),
+                    $documentId,
+                    'index',
+                    [
+                        'result' => $response['result'] ?? 'created',
+                        '_version' => $response['_version'] ?? 1
+                    ]
+                );
+            }
 
             return [
                 'success' => true,
@@ -668,6 +640,51 @@ class SatuSehatDashboardService
     }
 
     /**
+     * Increment current/wellMed count for a resource type (called when record is created in WellMed)
+     *
+     * @param string $resourceType
+     * @param int $increment Amount to increment (default 1)
+     * @param int|null $tenantId
+     * @param mixed $workspaceId
+     * @return array
+     */
+    public function incrementCurrentCount(string $resourceType, int $increment = 1, ?int $tenantId = null, mixed $workspaceId = null): array
+    {
+        try {
+            $tenantId = $tenantId ?? tenancy()->tenant->getKey();
+            $workspaceId = $workspaceId ?? tenancy()->tenant->reference?->getKey();
+
+            // Get current dashboard data
+            $dashboardResult = $this->getDashboard($tenantId, $workspaceId);
+            $dashboard = $dashboardResult['data'];
+
+            // Find and update the resource
+            foreach ($dashboard['integration_stats'] as &$stat) {
+                if ($stat['id'] === $resourceType) {
+                    $stat['wellMedCount'] += $increment;
+                    $stat['unsyncedCount'] = max(0, $stat['wellMedCount'] - $stat['satuSehatCount']);
+                    $stat['syncPercentage'] = $stat['wellMedCount'] > 0
+                        ? round(($stat['satuSehatCount'] / $stat['wellMedCount']) * 100, 1)
+                        : 0;
+                    break;
+                }
+            }
+
+            // Recalculate summary
+            $dashboard['summary'] = $this->calculateSummary($dashboard['integration_stats']);
+
+            // Store updated dashboard
+            return $this->store($dashboard, $tenantId, $workspaceId);
+
+        } catch (\Throwable $e) {
+            return [
+                'success' => false,
+                'error' => $e->getMessage()
+            ];
+        }
+    }
+
+    /**
      * Bulk update multiple resource counts at once
      *
      * @param array $updates Array of ['resource_type' => ['current' => x, 'synced' => y]]
@@ -755,7 +772,8 @@ class SatuSehatDashboardService
     }
 
     /**
-     * Get default dashboard data structure
+     * Get default dashboard raw data structure (for ES storage).
+     * Only stores counts and IDs - no presentation data.
      *
      * @param int|null $tenantId
      * @param mixed $workspaceId
@@ -764,22 +782,17 @@ class SatuSehatDashboardService
     protected function getDefaultDashboardData(?int $tenantId, mixed $workspaceId): array
     {
         $integrationStats = [];
+        $resourceTypeIds = SatuSehatDashboardConfig::getResourceTypeIds();
 
-        foreach ($this->resourceTypes as $id => $config) {
+        foreach ($resourceTypeIds as $id) {
             $integrationStats[] = [
                 'id' => $id,
-                'category' => $config['category'],
-                'name' => $config['name'],
-                'icon' => $config['icon'],
-                'color' => $config['color'],
                 'wellMedCount' => 0,
                 'satuSehatCount' => 0,
                 'unsyncedCount' => 0,
                 'syncedCount' => 0,
                 'syncPercentage' => 0,
                 'lastSync' => null,
-                'loggerPath' => $config['loggerPath'] ?? null,
-                'description' => $config['description'],
             ];
         }
 
@@ -796,6 +809,40 @@ class SatuSehatDashboardService
             ],
             'updated_at' => now()->toIso8601String(),
         ];
+    }
+
+    /**
+     * Merge raw ES data with presentation data from config.
+     * Called when returning data to the client.
+     *
+     * @param array $rawData Raw data from ES
+     * @return array Data with presentation info merged
+     */
+    protected function mergeWithPresentationData(array $rawData): array
+    {
+        $resourceTypes = SatuSehatDashboardConfig::getResourceTypes();
+
+        // Merge presentation data into integration_stats
+        if (isset($rawData['integration_stats'])) {
+            foreach ($rawData['integration_stats'] as &$stat) {
+                $id = $stat['id'] ?? null;
+                if ($id && isset($resourceTypes[$id])) {
+                    $config = $resourceTypes[$id];
+                    $stat['category'] = $config['category'];
+                    $stat['name'] = $config['name'];
+                    $stat['icon'] = $config['icon'];
+                    $stat['color'] = $config['color'];
+                    $stat['gradient'] = $config['gradient'] ?? null;
+                    $stat['bg_light'] = $config['bg_light'] ?? null;
+                    $stat['text_color'] = $config['text_color'] ?? null;
+                    $stat['border_color'] = $config['border_color'] ?? null;
+                    $stat['description'] = $config['description'];
+                    $stat['loggerPath'] = $config['loggerPath'] ?? null;
+                }
+            }
+        }
+
+        return $rawData;
     }
 
     /**

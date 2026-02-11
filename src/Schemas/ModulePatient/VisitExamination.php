@@ -9,9 +9,12 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Database\Eloquent\Model;
 use Projects\WellmedBackbone\Jobs\SendObservationToSatuSehatJob;
 use Projects\WellmedBackbone\Services\DashboardMetricsService;
+use Projects\WellmedBackbone\Schemas\Concerns\HasSatuSehatDashboard;
 
 class VisitExamination extends SchemasVisitExamination implements ModulePatientVisitExamination
 {
+    use HasSatuSehatDashboard;
+
     public function prepareVisitExaminationSignOff(Model &$visit_examination_model, VisitExaminationData &$visit_examination_dto): Model
     {
         $visit_examination = parent::prepareVisitExaminationSignOff($visit_examination_model, $visit_examination_dto);
@@ -19,6 +22,8 @@ class VisitExamination extends SchemasVisitExamination implements ModulePatientV
         $patient_model = $visit_examination_dto->patient_model ?? $visit_examination_model->patient ?? null;
         if ($this->is_recently_created){
             $this->updateDashboardStatistics($visit_examination,'unsigned');
+            // Increment wellMedCount for Satu Sehat dashboard
+            $this->incrementSatuSehatWellMedCount('observation');
         }
 
         if ($this->is_sign_off){

@@ -71,6 +71,9 @@ class SendLocationToSatuSehatJob implements ShouldQueue
             // Update Elasticsearch dashboard metrics
             $this->updateDashboardWorkspaceIntegration('location');
 
+            // Update Satu Sehat dashboard (increment satuSehatCount)
+            $this->updateSatuSehatDashboard('location');
+
             Log::channel('satu-sehat')->info("Location sent to Satu Sehat successfully", [
                 'room_id' => $this->roomId,
                 'ihs_number' => $ihsNumber

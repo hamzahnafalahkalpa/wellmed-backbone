@@ -5,6 +5,7 @@ namespace Projects\WellmedBackbone\Jobs\Concerns;
 use Illuminate\Support\Facades\Log;
 use Projects\WellmedBackbone\Services\DashboardMetricsService;
 use Projects\WellmedBackbone\Services\PatientDashboardMetricsService;
+use Projects\WellmedBackbone\Services\SatuSehatDashboardService;
 
 /**
  * Trait HasSatuSehatIntegration
@@ -457,6 +458,30 @@ trait HasSatuSehatIntegration
                 'error' => $e->getMessage()
             ]);
             return null;
+        }
+    }
+
+    /**
+     * Update Satu Sehat dashboard by incrementing satuSehatCount when sync succeeds.
+     *
+     * @param string $resourceType The resource type (patients, encounter, observation, practitioners, location, organization)
+     * @return void
+     */
+    protected function updateSatuSehatDashboard(string $resourceType): void
+    {
+        try {
+            if (!config('elasticsearch.enabled', false)) {
+                return;
+            }
+
+            $dashboardService = app(SatuSehatDashboardService::class);
+            $dashboardService->incrementSyncedCount($resourceType);
+
+        } catch (\Throwable $e) {
+            Log::channel('elasticsearch')->error('Failed to update Satu Sehat dashboard', [
+                'error' => $e->getMessage(),
+                'resource_type' => $resourceType
+            ]);
         }
     }
 }

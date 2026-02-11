@@ -66,7 +66,10 @@ class SendOrganizationToSatuSehatJob implements ShouldQueue
             }
 
             // Update Elasticsearch dashboard metrics
-            $this->updateDashboardWorkspaceIntegration('location');
+            $this->updateDashboardWorkspaceIntegration('organization');
+
+            // Update Satu Sehat dashboard (increment satuSehatCount)
+            $this->updateSatuSehatDashboard('organization');
 
             Log::channel('satu-sehat')->info("Organization sent to Satu Sehat successfully", [
                 'organization_id' => $this->ogranizationId,

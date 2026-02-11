@@ -96,6 +96,9 @@ class SendEncounterToSatuSehatJob implements ShouldQueue
             $this->updateDashboardWorkspaceIntegration('encounter');
             $this->updateDashboardPatientIntegration((string) $this->patientId, 'encounter');
 
+            // Update Satu Sehat dashboard (increment satuSehatCount)
+            $this->updateSatuSehatDashboard('encounter');
+
             Log::channel('satu-sehat')->info("Encounter sent to Satu Sehat successfully", [
                 'visit_registration_id' => $this->visitRegistrationId,
                 'patient_id' => $this->patientId,

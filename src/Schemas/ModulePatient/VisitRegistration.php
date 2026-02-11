@@ -13,9 +13,12 @@ use Illuminate\Support\Facades\Log;
 use Projects\WellmedBackbone\Jobs\SendEncounterToSatuSehatJob;
 use Hanafalah\MicroTenant\Facades\MicroTenant;
 use Projects\WellmedBackbone\Services\DashboardMetricsService;
+use Projects\WellmedBackbone\Schemas\Concerns\HasSatuSehatDashboard;
 
 class VisitRegistration extends SchemasVisitRegistration implements ModulePatientVisitRegistration
 {
+    use HasSatuSehatDashboard;
+
     protected function afterVisitRegistrationCreated(Model &$visit_registration_model, VisitRegistrationData &$visit_registration_dto): self
     {
         parent::afterVisitRegistrationCreated($visit_registration_model, $visit_registration_dto);
@@ -28,6 +31,8 @@ class VisitRegistration extends SchemasVisitRegistration implements ModulePatien
         if ($this->is_recently_created){
             $this->updateDashboardStatistics($visit_registration_model,'trends');
             // $this->updateDashboardStatistics($visit_registration_model,'queue-service');
+            // Increment wellMedCount for Satu Sehat dashboard
+            $this->incrementSatuSehatWellMedCount('encounter');
         }
 
         if (!isset($visit_registration_model->ihs_number)) {

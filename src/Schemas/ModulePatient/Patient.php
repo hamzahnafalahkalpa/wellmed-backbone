@@ -11,9 +11,12 @@ use Illuminate\Database\Eloquent\Model;
 use Projects\WellmedBackbone\Jobs\SendPatientToSatuSehatJob;
 use Projects\WellmedBackbone\Services\DashboardMetricsService;
 use Hanafalah\MicroTenant\Facades\MicroTenant;
+use Projects\WellmedBackbone\Schemas\Concerns\HasSatuSehatDashboard;
 
 class Patient extends SchemasPatient implements ModulePatientPatient
 {
+    use HasSatuSehatDashboard;
+
     /**
      * Hook executed after a patient is created.
      * Handles integration data, Satu Sehat payload preparation, and async sync dispatch.
@@ -25,6 +28,8 @@ class Patient extends SchemasPatient implements ModulePatientPatient
         // Update dashboard statistics for new patient
         if ($this->is_recently_created) {
             $this->updateDashboardStatistics($patient);
+            // Increment wellMedCount for Satu Sehat dashboard
+            $this->incrementSatuSehatWellMedCount('patients');
         }
 
         if (!isset($patient->prop_card_identity['ihs_number'])){
