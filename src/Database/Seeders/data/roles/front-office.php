@@ -3,6 +3,7 @@
 return [
     'api.patient-emr.index',
     'api.patient-emr.patient.*',
+    'api.patient-emr.visit-registration.*',
     'api.patient-emr.referral.*',
     'api.patient-emr.letter-queue.*',
     // 'api.patient-management.reservation.*',
