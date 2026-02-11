@@ -37,15 +37,6 @@ return [
         'resource' => 'Resources',
         'view' => 'Resources/Views',
     ],
-    "packages" => [
-        /*--------------------------------------------------------------------------
-        * Note: The contents of the packages are started with the class base name,
-        * then followed by config and others. You can be used to override default package config
-        * "module-user" => [
-        *       "config" => []
-        * ]
-        *------------------------------------------------------------------------*/
-    ],
     "app" => [
         "impersonate" => [
             "storage"   => [
