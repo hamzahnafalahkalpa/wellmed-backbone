@@ -860,6 +860,35 @@ trait HasDashboardMetricsDefaults
             $periodType
         );
 
+        // Update queue services with previous period data
+        $document['queue_services'] = $this->getQueueServicesWithPreviousData(
+            $document['queue_services'],
+            $previousData['queue_services'] ?? [],
+            $periodType
+        );
+
+        // Update diagnosis treatment with previous period data
+        $document['diagnosis_treatment'] = $this->getDiagnosisTreatmentWithPreviousData(
+            $document['diagnosis_treatment'],
+            $previousData['diagnosis_treatment'] ?? [],
+            $periodType
+        );
+
+        // Update workspace integrations with previous period data
+        $document['workspace_integrations'] = $this->getWorkspaceIntegrationsWithPreviousData(
+            $document['workspace_integrations'],
+            $previousData['workspace_integrations'] ?? [],
+            $periodType
+        );
+
+        // Update trends with previous period data
+        $document['trends'] = $this->getTrendsWithPreviousData(
+            $document['trends'],
+            $previousData['trends'] ?? [],
+            $periodType,
+            $timestamp
+        );
+
         return $document;
     }
 
@@ -999,6 +1028,115 @@ trait HasDashboardMetricsDefaults
         }
 
         return $currentItems;
+    }
+
+    /**
+     * Populate queue services with previous period data.
+     *
+     * Queue services are real-time data, but we store previous period
+     * for comparison purposes (e.g., compare today's queue vs yesterday's).
+     */
+    protected function getQueueServicesWithPreviousData(array $currentServices, array $previousServices, string $periodType): array
+    {
+        // If no current services, return previous as reference
+        if (empty($currentServices) && !empty($previousServices)) {
+            return [
+                'current' => [],
+                'previous' => $previousServices,
+            ];
+        }
+
+        // If we have current services, add previous for comparison
+        if (!empty($previousServices)) {
+            return [
+                'current' => $currentServices,
+                'previous' => $previousServices,
+            ];
+        }
+
+        return [
+            'current' => $currentServices,
+            'previous' => [],
+        ];
+    }
+
+    /**
+     * Populate diagnosis treatment with previous period data.
+     *
+     * Diagnosis treatment data shows distribution of diagnoses/treatments.
+     * Previous data helps identify trends in disease patterns.
+     */
+    protected function getDiagnosisTreatmentWithPreviousData(array $currentData, array $previousData, string $periodType): array
+    {
+        // If no current data, return previous as reference
+        if (empty($currentData) && !empty($previousData)) {
+            return [
+                'current' => [],
+                'previous' => $previousData,
+            ];
+        }
+
+        // If we have current data, add previous for comparison
+        if (!empty($previousData)) {
+            return [
+                'current' => $currentData,
+                'previous' => $previousData,
+            ];
+        }
+
+        return [
+            'current' => $currentData,
+            'previous' => [],
+        ];
+    }
+
+    /**
+     * Populate workspace integrations with previous period data.
+     *
+     * Tracks sync progress changes between periods.
+     */
+    protected function getWorkspaceIntegrationsWithPreviousData(array $currentIntegrations, array $previousIntegrations, string $periodType): array
+    {
+        // If no current data, use previous as baseline
+        if (empty($currentIntegrations) || !isset($currentIntegrations['syncs'])) {
+            $default = $this->getDefaultWorkspaceIntegrations($periodType);
+
+            if (!empty($previousIntegrations)) {
+                $default['previous'] = $previousIntegrations;
+            }
+
+            return $default;
+        }
+
+        // Add previous data for comparison
+        $currentIntegrations['previous'] = $previousIntegrations;
+
+        return $currentIntegrations;
+    }
+
+    /**
+     * Populate trends with previous period data.
+     *
+     * Trends show historical data, but we also store the previous period's
+     * trend data for meta-comparison (trend of trends).
+     */
+    protected function getTrendsWithPreviousData(array $currentTrends, array $previousTrends, string $periodType, Carbon $timestamp): array
+    {
+        // If no current trends, generate default with previous reference
+        if (empty($currentTrends) || !isset($currentTrends['dataset'])) {
+            $default = $this->getDefaultTrends($periodType, $timestamp);
+
+            if (!empty($previousTrends)) {
+                $default['previous'] = $previousTrends;
+            }
+
+            return $default;
+        }
+
+        // Add previous period trends for comparison
+        $currentTrends['previous'] = $previousTrends;
+
+        return $currentTrends;
     }
 
     /**
