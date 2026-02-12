@@ -2,7 +2,7 @@
 
 namespace Projects\WellmedBackbone\Services\Concerns;
 
-trait incrementNewOmzetHasBilling
+trait HasBilling
 {
     /**
      * Increment new omzet when billing paid.

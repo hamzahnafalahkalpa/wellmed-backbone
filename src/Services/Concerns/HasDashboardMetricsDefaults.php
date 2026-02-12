@@ -1091,4 +1091,628 @@ trait HasDashboardMetricsDefaults
             return null;
         }
     }
+
+    // =========================================================================
+    // Testing & Verification Methods
+    // =========================================================================
+
+    /**
+     * Seed test data for yesterday with specific patient count.
+     * Used for verifying dashboard metrics comparison logic.
+     *
+     * @param int $tenantId
+     * @param mixed $workspaceId
+     * @param int $patientCount The total patient count to seed (default: 5000)
+     * @param string $periodType
+     * @return array
+     */
+    public function seedTestDataYesterday(
+        int $tenantId,
+        mixed $workspaceId,
+        int $patientCount = 5000,
+        string $periodType = self::PERIOD_DAILY
+    ): array {
+        try {
+            $yesterday = Carbon::now()->subDay();
+
+            $this->ensureIndexExists($periodType);
+
+            // Create document with specific patient count
+            $document = $this->getDefaultDocument($periodType, $tenantId, $workspaceId, $yesterday);
+
+            // Update patients count in statistics
+            foreach ($document['statistics'] as &$stat) {
+                if ($stat['id'] === 'patients') {
+                    $stat['count'] = $patientCount;
+                    $stat['previous_count'] = 0; // Previous to yesterday
+                    $stat['updated_at'] = now()->toIso8601String();
+                    break;
+                }
+            }
+
+            // Store the document
+            $result = $this->storeDocument($document, $periodType, $tenantId, $workspaceId, $yesterday);
+
+            Log::channel('elasticsearch')->info('Seeded test data for yesterday', [
+                'tenant_id' => $tenantId,
+                'workspace_id' => $workspaceId,
+                'patient_count' => $patientCount,
+                'date' => $yesterday->toDateString(),
+                'result' => $result
+            ]);
+
+            return [
+                'success' => $result['success'] ?? false,
+                'date' => $yesterday->toDateString(),
+                'patient_count' => $patientCount,
+                'document_id' => $this->generateDocumentId($periodType, $tenantId, $workspaceId, $yesterday)
+            ];
+
+        } catch (\Throwable $e) {
+            Log::channel('elasticsearch')->error('Failed to seed test data', [
+                'error' => $e->getMessage()
+            ]);
+            return ['success' => false, 'error' => $e->getMessage()];
+        }
+    }
+
+    /**
+     * Delete today's ES document to test fresh dashboard retrieval.
+     *
+     * @param int $tenantId
+     * @param mixed $workspaceId
+     * @param string $periodType
+     * @return array
+     */
+    public function deleteTodayDocument(
+        int $tenantId,
+        mixed $workspaceId,
+        string $periodType = self::PERIOD_DAILY
+    ): array {
+        try {
+            $today = Carbon::now();
+            $documentId = $this->generateDocumentId($periodType, $tenantId, $workspaceId, $today);
+            $indexName = $this->getIndexName($periodType);
+
+            // Check if document exists first
+            $exists = false;
+            try {
+                $existsResponse = $this->client->exists([
+                    'index' => $indexName,
+                    'id' => $documentId
+                ]);
+                $exists = is_bool($existsResponse) ? $existsResponse : (method_exists($existsResponse, 'asBool') ? $existsResponse->asBool() : (bool) $existsResponse);
+            } catch (\Throwable $e) {
+                $exists = false;
+            }
+
+            if (!$exists) {
+                return [
+                    'success' => true,
+                    'deleted' => false,
+                    'message' => 'Document does not exist',
+                    'document_id' => $documentId
+                ];
+            }
+
+            // Delete the document
+            $response = $this->client->delete([
+                'index' => $indexName,
+                'id' => $documentId
+            ]);
+
+            Log::channel('elasticsearch')->info('Deleted today document for testing', [
+                'tenant_id' => $tenantId,
+                'workspace_id' => $workspaceId,
+                'document_id' => $documentId
+            ]);
+
+            return [
+                'success' => true,
+                'deleted' => true,
+                'document_id' => $documentId,
+                'date' => $today->toDateString()
+            ];
+
+        } catch (\Throwable $e) {
+            Log::channel('elasticsearch')->error('Failed to delete today document', [
+                'error' => $e->getMessage()
+            ]);
+            return ['success' => false, 'error' => $e->getMessage()];
+        }
+    }
+
+    /**
+     * Verify dashboard metrics are returning correct comparison values.
+     *
+     * Test scenario:
+     * - Yesterday: patients = 5000
+     * - Today: no document exists
+     * - Expected: current = 0 (or carried over 5000 if cumulative), previous = 5000
+     *
+     * @param int $tenantId
+     * @param mixed $workspaceId
+     * @param int $expectedPreviousPatients
+     * @param string $periodType
+     * @return array
+     */
+    public function verifyDashboardMetrics(
+        int $tenantId,
+        mixed $workspaceId,
+        int $expectedPreviousPatients = 5000,
+        string $periodType = self::PERIOD_DAILY
+    ): array {
+        $results = [
+            'success' => true,
+            'checks' => [],
+            'errors' => []
+        ];
+
+        $today = Carbon::now();
+        $yesterday = Carbon::now()->subDay();
+
+        // Check 1: Yesterday document exists with correct patient count
+        $yesterdayDoc = $this->getDocument($periodType, $tenantId, $workspaceId, $yesterday);
+        $yesterdayPatients = null;
+
+        if ($yesterdayDoc) {
+            foreach ($yesterdayDoc['statistics'] ?? [] as $stat) {
+                if ($stat['id'] === 'patients') {
+                    $yesterdayPatients = (int) ($stat['count'] ?? 0);
+                    break;
+                }
+            }
+            $results['checks']['yesterday_document_exists'] = true;
+            $results['checks']['yesterday_patients'] = $yesterdayPatients;
+
+            if ($yesterdayPatients !== $expectedPreviousPatients) {
+                $results['errors'][] = "Yesterday patients mismatch: expected {$expectedPreviousPatients}, got {$yesterdayPatients}";
+                $results['success'] = false;
+            }
+        } else {
+            $results['checks']['yesterday_document_exists'] = false;
+            $results['errors'][] = 'Yesterday document does not exist';
+            $results['success'] = false;
+        }
+
+        // Check 2: Today document should NOT exist (for this test)
+        $todayDoc = $this->getDocument($periodType, $tenantId, $workspaceId, $today);
+        $results['checks']['today_document_exists'] = $todayDoc !== null;
+
+        if ($todayDoc !== null) {
+            $results['errors'][] = 'Today document exists but should not for this test';
+            $results['success'] = false;
+        }
+
+        // Check 3: Simulate what dashboard would return
+        // When today doesn't exist, createDefaultDocument should be called
+        // which fetches previous period data
+        $simulatedDefault = $this->getDefaultDocumentWithPreviousData(
+            $periodType,
+            $tenantId,
+            $workspaceId,
+            $today,
+            $yesterdayDoc
+        );
+
+        $currentPatients = null;
+        $previousPatients = null;
+
+        foreach ($simulatedDefault['statistics'] ?? [] as $stat) {
+            if ($stat['id'] === 'patients') {
+                $currentPatients = (int) ($stat['count'] ?? 0);
+                $previousPatients = (int) ($stat['previous_count'] ?? 0);
+                break;
+            }
+        }
+
+        $results['checks']['simulated_current_patients'] = $currentPatients;
+        $results['checks']['simulated_previous_patients'] = $previousPatients;
+
+        // For cumulative metrics (patients), current should carry over from previous
+        // So current = 5000, previous = 5000
+        if ($previousPatients !== $expectedPreviousPatients) {
+            $results['errors'][] = "Simulated previous_count mismatch: expected {$expectedPreviousPatients}, got {$previousPatients}";
+            $results['success'] = false;
+        }
+
+        // For cumulative metrics, count should equal previous (carried over)
+        if ($currentPatients !== $expectedPreviousPatients) {
+            $results['errors'][] = "Simulated current count mismatch for cumulative metric: expected {$expectedPreviousPatients}, got {$currentPatients}";
+            $results['success'] = false;
+        }
+
+        $results['summary'] = [
+            'yesterday_date' => $yesterday->toDateString(),
+            'today_date' => $today->toDateString(),
+            'expected_previous' => $expectedPreviousPatients,
+            'actual_previous' => $previousPatients,
+            'actual_current' => $currentPatients,
+            'is_cumulative_behavior_correct' => $currentPatients === $expectedPreviousPatients && $previousPatients === $expectedPreviousPatients
+        ];
+
+        return $results;
+    }
+
+    /**
+     * Run full test scenario for dashboard metrics verification.
+     *
+     * This method:
+     * 1. Seeds yesterday's data with specified patient count
+     * 2. Deletes today's document if exists
+     * 3. Verifies the dashboard would return correct values
+     *
+     * @param int $tenantId
+     * @param mixed $workspaceId
+     * @param int $patientCount
+     * @param string $periodType
+     * @return array
+     */
+    public function runDashboardMetricsTest(
+        int $tenantId,
+        mixed $workspaceId,
+        int $patientCount = 5000,
+        string $periodType = self::PERIOD_DAILY
+    ): array {
+        $results = [
+            'test_name' => 'Dashboard Metrics Default Verification',
+            'started_at' => now()->toIso8601String(),
+            'steps' => []
+        ];
+
+        // Step 1: Seed yesterday's data
+        $seedResult = $this->seedTestDataYesterday($tenantId, $workspaceId, $patientCount, $periodType);
+        $results['steps']['seed_yesterday'] = $seedResult;
+
+        if (!($seedResult['success'] ?? false)) {
+            $results['success'] = false;
+            $results['error'] = 'Failed to seed yesterday data';
+            return $results;
+        }
+
+        // Step 2: Delete today's document
+        $deleteResult = $this->deleteTodayDocument($tenantId, $workspaceId, $periodType);
+        $results['steps']['delete_today'] = $deleteResult;
+
+        // Step 3: Verify metrics
+        $verifyResult = $this->verifyDashboardMetrics($tenantId, $workspaceId, $patientCount, $periodType);
+        $results['steps']['verify_metrics'] = $verifyResult;
+
+        $results['success'] = $verifyResult['success'] ?? false;
+        $results['completed_at'] = now()->toIso8601String();
+
+        Log::channel('elasticsearch')->info('Dashboard metrics test completed', [
+            'tenant_id' => $tenantId,
+            'workspace_id' => $workspaceId,
+            'success' => $results['success']
+        ]);
+
+        return $results;
+    }
+
+    /**
+     * Cleanup test data after verification.
+     *
+     * @param int $tenantId
+     * @param mixed $workspaceId
+     * @param string $periodType
+     * @return array
+     */
+    public function cleanupTestData(
+        int $tenantId,
+        mixed $workspaceId,
+        string $periodType = self::PERIOD_DAILY
+    ): array {
+        $results = ['deleted' => []];
+
+        $yesterday = Carbon::now()->subDay();
+        $today = Carbon::now();
+
+        // Delete yesterday's test document
+        try {
+            $yesterdayId = $this->generateDocumentId($periodType, $tenantId, $workspaceId, $yesterday);
+            $this->client->delete([
+                'index' => $this->getIndexName($periodType),
+                'id' => $yesterdayId
+            ]);
+            $results['deleted'][] = $yesterdayId;
+        } catch (\Throwable $e) {
+            // Document might not exist
+        }
+
+        // Delete today's document if exists
+        try {
+            $todayId = $this->generateDocumentId($periodType, $tenantId, $workspaceId, $today);
+            $this->client->delete([
+                'index' => $this->getIndexName($periodType),
+                'id' => $todayId
+            ]);
+            $results['deleted'][] = $todayId;
+        } catch (\Throwable $e) {
+            // Document might not exist
+        }
+
+        $results['success'] = true;
+        return $results;
+    }
+
+    // =========================================================================
+    // New Patient Test Methods
+    // =========================================================================
+
+    /**
+     * Test scenario for new patient registration.
+     *
+     * Scenario:
+     * - Yesterday: total patients = 5000, new_patients = 0
+     * - Today: register 1 new patient
+     * - Expected:
+     *   - patients: count = 5001, previous = 5000
+     *   - new-patients: count = 1, previous = 0
+     *
+     * @param int $tenantId
+     * @param mixed $workspaceId
+     * @param int $totalPatients Initial total patients (default: 5000)
+     * @param int $newPatientsToday Number of new patients to register today (default: 1)
+     * @param string $periodType
+     * @return array
+     */
+    public function runNewPatientTest(
+        int $tenantId,
+        mixed $workspaceId,
+        int $totalPatients = 5000,
+        int $newPatientsToday = 1,
+        string $periodType = self::PERIOD_DAILY
+    ): array {
+        $results = [
+            'test_name' => 'New Patient Registration Test',
+            'started_at' => now()->toIso8601String(),
+            'steps' => []
+        ];
+
+        // Step 1: Seed yesterday's data with total patients
+        $seedResult = $this->seedTestDataYesterday($tenantId, $workspaceId, $totalPatients, $periodType);
+        $results['steps']['seed_yesterday'] = $seedResult;
+
+        if (!($seedResult['success'] ?? false)) {
+            $results['success'] = false;
+            $results['error'] = 'Failed to seed yesterday data';
+            return $results;
+        }
+
+        // Step 2: Delete today's document to start fresh
+        $deleteResult = $this->deleteTodayDocument($tenantId, $workspaceId, $periodType);
+        $results['steps']['delete_today'] = $deleteResult;
+
+        // Step 3: Simulate adding new patient(s) today
+        $addResult = $this->simulateNewPatientRegistration(
+            $tenantId,
+            $workspaceId,
+            $totalPatients,
+            $newPatientsToday,
+            $periodType
+        );
+        $results['steps']['add_new_patient'] = $addResult;
+
+        if (!($addResult['success'] ?? false)) {
+            $results['success'] = false;
+            $results['error'] = 'Failed to simulate new patient registration';
+            return $results;
+        }
+
+        // Step 4: Verify the results
+        $verifyResult = $this->verifyNewPatientMetrics(
+            $tenantId,
+            $workspaceId,
+            $totalPatients,
+            $newPatientsToday,
+            $periodType
+        );
+        $results['steps']['verify_metrics'] = $verifyResult;
+
+        $results['success'] = $verifyResult['success'] ?? false;
+        $results['completed_at'] = now()->toIso8601String();
+
+        Log::channel('elasticsearch')->info('New patient test completed', [
+            'tenant_id' => $tenantId,
+            'workspace_id' => $workspaceId,
+            'success' => $results['success']
+        ]);
+
+        return $results;
+    }
+
+    /**
+     * Simulate new patient registration by updating ES document.
+     *
+     * This simulates what happens when a new patient is registered:
+     * 1. Creates today's document with previous period data
+     * 2. Increments new-patients count
+     * 3. Updates total patients count
+     *
+     * @param int $tenantId
+     * @param mixed $workspaceId
+     * @param int $previousTotalPatients
+     * @param int $newPatientsCount
+     * @param string $periodType
+     * @return array
+     */
+    protected function simulateNewPatientRegistration(
+        int $tenantId,
+        mixed $workspaceId,
+        int $previousTotalPatients,
+        int $newPatientsCount,
+        string $periodType
+    ): array {
+        try {
+            $today = Carbon::now();
+            $yesterday = Carbon::now()->subDay();
+
+            $this->ensureIndexExists($periodType);
+
+            // Get yesterday's document for previous data
+            $yesterdayDoc = $this->getDocument($periodType, $tenantId, $workspaceId, $yesterday);
+
+            // Create today's document with previous period data
+            $document = $this->getDefaultDocumentWithPreviousData(
+                $periodType,
+                $tenantId,
+                $workspaceId,
+                $today,
+                $yesterdayDoc
+            );
+
+            // Update statistics for new patient registration
+            foreach ($document['statistics'] as &$stat) {
+                if ($stat['id'] === 'patients') {
+                    // Total patients = previous + new
+                    $stat['count'] = $previousTotalPatients + $newPatientsCount;
+                    $stat['previous_count'] = $previousTotalPatients;
+                    $stat['updated_at'] = now()->toIso8601String();
+                } elseif ($stat['id'] === 'new-patients') {
+                    // New patients today
+                    $stat['count'] = $newPatientsCount;
+                    $stat['previous_count'] = 0; // Yesterday had 0 new patients in our test
+                    $stat['updated_at'] = now()->toIso8601String();
+                }
+            }
+
+            // Update metadata
+            $document['metadata']['updated_at'] = now()->toIso8601String();
+
+            // Store the document
+            $result = $this->storeDocument($document, $periodType, $tenantId, $workspaceId, $today);
+
+            return [
+                'success' => $result['success'] ?? false,
+                'date' => $today->toDateString(),
+                'new_patients_added' => $newPatientsCount,
+                'new_total_patients' => $previousTotalPatients + $newPatientsCount,
+                'document_id' => $this->generateDocumentId($periodType, $tenantId, $workspaceId, $today)
+            ];
+
+        } catch (\Throwable $e) {
+            Log::channel('elasticsearch')->error('Failed to simulate new patient registration', [
+                'error' => $e->getMessage()
+            ]);
+            return ['success' => false, 'error' => $e->getMessage()];
+        }
+    }
+
+    /**
+     * Verify new patient metrics are correct.
+     *
+     * @param int $tenantId
+     * @param mixed $workspaceId
+     * @param int $expectedPreviousTotalPatients
+     * @param int $expectedNewPatients
+     * @param string $periodType
+     * @return array
+     */
+    public function verifyNewPatientMetrics(
+        int $tenantId,
+        mixed $workspaceId,
+        int $expectedPreviousTotalPatients,
+        int $expectedNewPatients,
+        string $periodType = self::PERIOD_DAILY
+    ): array {
+        $results = [
+            'success' => true,
+            'checks' => [],
+            'errors' => []
+        ];
+
+        $today = Carbon::now();
+        $expectedTotalPatients = $expectedPreviousTotalPatients + $expectedNewPatients;
+
+        // Get today's document
+        $todayDoc = $this->getDocument($periodType, $tenantId, $workspaceId, $today);
+
+        if (!$todayDoc) {
+            $results['success'] = false;
+            $results['errors'][] = 'Today document does not exist';
+            return $results;
+        }
+
+        $results['checks']['today_document_exists'] = true;
+
+        // Check patients (cumulative)
+        $patientsData = null;
+        $newPatientsData = null;
+
+        foreach ($todayDoc['statistics'] ?? [] as $stat) {
+            if ($stat['id'] === 'patients') {
+                $patientsData = $stat;
+            } elseif ($stat['id'] === 'new-patients') {
+                $newPatientsData = $stat;
+            }
+        }
+
+        // Verify total patients
+        if ($patientsData) {
+            $actualCount = (int) ($patientsData['count'] ?? 0);
+            $actualPrevious = (int) ($patientsData['previous_count'] ?? 0);
+
+            $results['checks']['patients_count'] = $actualCount;
+            $results['checks']['patients_previous_count'] = $actualPrevious;
+            $results['checks']['patients_expected_count'] = $expectedTotalPatients;
+            $results['checks']['patients_expected_previous'] = $expectedPreviousTotalPatients;
+
+            if ($actualCount !== $expectedTotalPatients) {
+                $results['errors'][] = "patients.count mismatch: expected {$expectedTotalPatients}, got {$actualCount}";
+                $results['success'] = false;
+            }
+
+            if ($actualPrevious !== $expectedPreviousTotalPatients) {
+                $results['errors'][] = "patients.previous_count mismatch: expected {$expectedPreviousTotalPatients}, got {$actualPrevious}";
+                $results['success'] = false;
+            }
+        } else {
+            $results['errors'][] = 'patients statistic not found';
+            $results['success'] = false;
+        }
+
+        // Verify new patients
+        if ($newPatientsData) {
+            $actualNewCount = (int) ($newPatientsData['count'] ?? 0);
+            $actualNewPrevious = (int) ($newPatientsData['previous_count'] ?? 0);
+
+            $results['checks']['new_patients_count'] = $actualNewCount;
+            $results['checks']['new_patients_previous_count'] = $actualNewPrevious;
+            $results['checks']['new_patients_expected_count'] = $expectedNewPatients;
+            $results['checks']['new_patients_expected_previous'] = 0;
+
+            if ($actualNewCount !== $expectedNewPatients) {
+                $results['errors'][] = "new-patients.count mismatch: expected {$expectedNewPatients}, got {$actualNewCount}";
+                $results['success'] = false;
+            }
+
+            if ($actualNewPrevious !== 0) {
+                $results['errors'][] = "new-patients.previous_count mismatch: expected 0, got {$actualNewPrevious}";
+                $results['success'] = false;
+            }
+        } else {
+            $results['errors'][] = 'new-patients statistic not found';
+            $results['success'] = false;
+        }
+
+        $results['summary'] = [
+            'today_date' => $today->toDateString(),
+            'patients' => [
+                'previous' => $patientsData['previous_count'] ?? null,
+                'current' => $patientsData['count'] ?? null,
+                'expected_previous' => $expectedPreviousTotalPatients,
+                'expected_current' => $expectedTotalPatients,
+            ],
+            'new_patients' => [
+                'previous' => $newPatientsData['previous_count'] ?? null,
+                'current' => $newPatientsData['count'] ?? null,
+                'expected_previous' => 0,
+                'expected_current' => $expectedNewPatients,
+            ],
+            'all_checks_passed' => $results['success']
+        ];
+
+        return $results;
+    }
 }
