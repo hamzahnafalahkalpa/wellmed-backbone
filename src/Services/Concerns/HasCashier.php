@@ -71,12 +71,12 @@ trait HasCashier
      * @param mixed $workspaceId
      * @return array Results for each period type
      */
-    public function incrementNewPending(?int $tenantId = null, mixed $workspaceId = null): array
+    public function incrementNewPending(int $amount = 1,?int $tenantId = null, mixed $workspaceId = null): array
     {
         $results = [];
         $periodTypes = $this->getPeriodTypes();
         foreach ($periodTypes as $periodType) {
-            $results[$periodType] = $this->incrementCashier('pending', $periodType, $tenantId, $workspaceId);
+            $results[$periodType] = $this->incrementCashier('pending', $periodType, $tenantId, $workspaceId, $amount);
         }
         return $results;
     }

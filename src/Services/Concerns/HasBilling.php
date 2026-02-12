@@ -2,7 +2,7 @@
 
 namespace Projects\WellmedBackbone\Services\Concerns;
 
-trait HasBilling
+trait incrementNewOmzetHasBilling
 {
     /**
      * Increment new omzet when billing paid.
@@ -31,7 +31,7 @@ trait HasBilling
      * @param mixed $workspaceId
      * @return array Results for each period type
      */
-    public function incrementNewTotalBilling(int $amount, ?int $tenantId = null, mixed $workspaceId = null): array
+    public function incrementNewTotalBilling(int $amount = 1, ?int $tenantId = null, mixed $workspaceId = null): array
     {
         $results = [];
         $periodTypes = $this->getPeriodTypes();
@@ -50,12 +50,12 @@ trait HasBilling
      * @param mixed $workspaceId
      * @return array Results for each period type
      */
-    public function incrementNewUnpaidBilling(?int $tenantId = null, mixed $workspaceId = null): array
+    public function incrementNewUnpaidBilling(int $amount,?int $tenantId = null, mixed $workspaceId = null): array
     {
         $results = [];
         $periodTypes = $this->getPeriodTypes();
         foreach ($periodTypes as $periodType) {
-            $results[$periodType] = $this->incrementBilling('unpaid-billing', $periodType, $tenantId, $workspaceId);
+            $results[$periodType] = $this->incrementBilling('unpaid-billing', $periodType, $tenantId, $workspaceId, $amount);
         }
         return $results;
     }

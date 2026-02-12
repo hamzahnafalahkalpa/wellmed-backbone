@@ -99,7 +99,7 @@ class VisitExamination extends SchemasVisitExamination implements ModulePatientV
                     }
                     $dashboardService->incrementNewUnpaid($debt);
                     if ($debt > 0){
-                        $dashboardService->incrementNewPending();
+                        $dashboardService->incrementNewPending(1);
                     }
                 break;
                 case 'diagnose'         : 

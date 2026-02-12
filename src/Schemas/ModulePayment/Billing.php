@@ -15,15 +15,19 @@ class Billing extends SchemasBilling implements ContractBilling
         parent::afterBillingCreated($billing, $billing_dto);
         
         if ($this->is_recently_created) {
-            // $this->updateDashboardStatistics($billing,'pending-transaction');
+            $this->updateDashboardStatistics($billing,'total-billing');
         }
         return $this;
+    }
+
+    protected function isPaid(Model $billing): bool{
+        return $this->is_reporting && $billing->amount == $billing->money_paid;
     }
 
     protected function afterBillingReported(Model &$billing, BillingData &$billing_dto): self{
         parent::afterBillingCreated($billing,$billing_dto);
         // Update dashboard statistics for new billing
-        if ($this->is_reporting && $billing->amount == $billing->money_paid){
+        if ($this->isPaid($billing)){
             $this->updateDashboardStatistics($billing,'omzet');
         }
         return $this;
@@ -43,12 +47,21 @@ class Billing extends SchemasBilling implements ContractBilling
             switch ($type) {
                 case 'omzet': 
                     $dashboardService->incrementNewOmzet($billing->amount);
+                    $dashboardService->incrementNewUnpaid(-$billing->amount);
+                    if (!$this->is_recently_created){
+                        $dashboardService->incrementNewUnpaidBilling(-$billing->amount);
+                        $dashboardService->incrementNewTotalBilling(-1);
+                    }
+                    $dashboardService->incrementNewPaidBilling($billing->amount);
+                    $dashboardService->incrementNewPending(-1);
                 break;
-                case 'pending-transaction': 
-                    // $dashboardService->incrementNewPending();
+                case 'total-billing': 
+                    if (!$this->is_recently_created){
+                        $dashboardService->incrementNewTotalBilling(1);
+                        $dashboardService->incrementNewUnpaidBilling($billing->amount);
+                    }
                 break;
             }
-
             Log::channel('elasticsearch')->info('Dashboard statistics updated for new billing', [
                 'billing_id' => $billing->getKey(),
             ]);
