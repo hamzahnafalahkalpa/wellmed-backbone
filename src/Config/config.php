@@ -65,7 +65,9 @@ return [
         Commands\ElasticsearchIndexCommand::class,
         Commands\GetElasticsearchIndexCommand::class,
         Commands\DeleteElasticsearchIndexCommand::class,
-        Commands\FlushDashboardMetricsCommand::class
+        Commands\FlushDashboardMetricsCommand::class,
+        Commands\FlushElasticsearchIndicesCommand::class,
+        Commands\MigratePatientIntegrationIndicesCommand::class,
     ],
     "encodings" => [
     ],

@@ -9,12 +9,15 @@ class CommandServiceProvider extends ServiceProvider
 {
     protected $__commands = [
         Commands\AddTenantCommand::class,
+        Commands\DeleteElasticsearchIndexCommand::class,
         Commands\FlushDashboardMetricsCommand::class,
+        Commands\FlushElasticsearchIndicesCommand::class,
         Commands\GenerateCommand::class,
         Commands\ImpersonateCacheCommand::class,
         Commands\ImpersonateMigrateCommand::class,
         Commands\InstallMakeCommand::class,
         Commands\MigrateCommand::class,
+        Commands\MigratePatientIntegrationIndicesCommand::class,
         Commands\ModelMakeCommand::class,
         Commands\SeedCommand::class
     ];

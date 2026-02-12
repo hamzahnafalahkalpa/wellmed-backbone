@@ -4,7 +4,7 @@ namespace Projects\WellmedBackbone\Jobs\Concerns;
 
 use Illuminate\Support\Facades\Log;
 use Projects\WellmedBackbone\Services\DashboardMetricsService;
-use Projects\WellmedBackbone\Services\PatientDashboardMetricsService;
+use Projects\WellmedBackbone\Services\PatientSatuSehatIntegrationService;
 use Projects\WellmedBackbone\Services\SatuSehatDashboardService;
 
 /**
@@ -423,17 +423,18 @@ trait HasSatuSehatIntegration
      *
      * @param string $patientId
      * @param string $syncFlag
+     * @param bool $success Whether the sync was successful
      * @return void
      */
-    protected function updateDashboardPatientIntegration(string $patientId, string $syncFlag): void
+    protected function updateDashboardPatientIntegration(string $patientId, string $syncFlag, bool $success = true): void
     {
         try {
             if (!config('elasticsearch.enabled', false)) {
                 return;
             }
 
-            $patientService = app(PatientDashboardMetricsService::class);
-            $patientService->incrementPatientSyncCounter($patientId, $syncFlag);
+            $patientService = app(PatientSatuSehatIntegrationService::class);
+            $patientService->incrementSyncCounter($patientId, $syncFlag, $success);
 
         } catch (\Throwable $e) {
             Log::channel('elasticsearch')->error('Failed to update dashboard patient integration', [

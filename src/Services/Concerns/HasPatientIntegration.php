@@ -9,6 +9,12 @@ use Illuminate\Support\Facades\Log;
  *
  * Handles patient-level integration tracking for external services like Satu Sehat.
  * Tracks sync status, progress, and integration health for individual patients.
+ *
+ * Retention Policy:
+ * - This trait creates per-patient daily indices which can cause index bloat
+ * - Configure retention in config/elasticsearch.php under 'retention.indices.patient-dashboard-metrics'
+ * - Default retention: 2 days (today + yesterday)
+ * - Flush command: php artisan wellmed-backbone:flush-elasticsearch-indices --type=patient-dashboard-metrics
  */
 trait HasPatientIntegration
 {
@@ -19,6 +25,49 @@ trait HasPatientIntegration
     public const SYNC_STATUS_IN_PROGRESS = 'in_progress';
     public const SYNC_STATUS_COMPLETED = 'completed';
     public const SYNC_STATUS_FAILED = 'failed';
+
+    /**
+     * Index type identifier for retention policy lookup.
+     */
+    protected static string $retentionIndexType = 'patient-dashboard-metrics';
+
+    /**
+     * Get retention configuration for this trait's indices.
+     *
+     * @return array
+     */
+    public static function getRetentionConfig(): array
+    {
+        return config('elasticsearch.retention.indices.' . static::$retentionIndexType, [
+            'retention_days' => 2,
+            'flushable' => true,
+            'flush_documents' => true,
+            'flush_indices' => true,
+            'description' => 'Per-patient daily dashboard metrics',
+        ]);
+    }
+
+    /**
+     * Check if this trait's indices are flushable.
+     *
+     * @return bool
+     */
+    public static function isFlushable(): bool
+    {
+        $config = static::getRetentionConfig();
+        return $config['flushable'] ?? true;
+    }
+
+    /**
+     * Get retention days for this trait's indices.
+     *
+     * @return int
+     */
+    public static function getRetentionDays(): int
+    {
+        $config = static::getRetentionConfig();
+        return $config['retention_days'] ?? 2;
+    }
 
     /**
      * Update patient sync status for Satu Sehat patient registration.

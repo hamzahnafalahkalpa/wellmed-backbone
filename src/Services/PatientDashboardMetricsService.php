@@ -9,8 +9,21 @@ use Projects\WellmedBackbone\Services\Concerns\HasPatientIntegration;
 /**
  * Patient Dashboard Metrics Service
  *
- * Handles storage and retrieval of patient-level dashboard metrics data in Elasticsearch.
- * Only supports daily aggregations with patient_id as prefix in the index.
+ * @deprecated Use PatientSatuSehatIntegrationService instead.
+ *
+ * This service is DEPRECATED because it creates one index per patient per day,
+ * causing massive index bloat (100k patients = 100k+ indices).
+ *
+ * Migration path:
+ * 1. Run: php artisan wellmed-backbone:migrate-patient-integration-indices --force
+ * 2. Update code to use PatientSatuSehatIntegrationService
+ *
+ * New service benefits:
+ * - Single index per tenant (not per patient)
+ * - No time-based retention needed
+ * - Data persists as current state
+ *
+ * @see PatientSatuSehatIntegrationService
  */
 class PatientDashboardMetricsService
 {
