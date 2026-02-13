@@ -18,6 +18,7 @@ class ElasticsearchIndexCommand extends EnvironmentCommand
                                 {--chunk=100 : Chunk}
                                 {--from=0 : Start from ?}
                                 {--limit=0 : The limitation}
+                                {--reindex : Flush existing data and reindex from scratch}
                                 {--app= : The type of the application}
                                 {--group= : The type of the group}
                                 {--tenant= : The type of the tenant}
@@ -25,6 +26,8 @@ class ElasticsearchIndexCommand extends EnvironmentCommand
                                 {--group_id= : The id of the group}
                                 {--tenant_id= : The id of the tenant}
                             ';
+    protected $description = 'Index Elasticsearch documents with optional reindexing (multi-tenant)';
+
     public function handle(): void
     {
         $this->findApplication(function($project){
@@ -36,6 +39,23 @@ class ElasticsearchIndexCommand extends EnvironmentCommand
                     "tenant"     => $this->__tenant
                 ]);
                 MicroTenant::tenantImpersonate($this->__tenant);
+
+                // Handle reindex: flush existing data first
+                if ($this->option('reindex')) {
+                    $this->warn('🔄 Reindex mode: Flushing existing data first...');
+                    $this->newLine();
+
+                    $this->call('elasticsearch:delete-index', [
+                        'model' => $this->argument('model'),
+                        '--flush' => true,
+                        '--force' => true
+                    ]);
+
+                    $this->newLine();
+                    $this->info('✅ Existing data flushed. Starting fresh indexing...');
+                    $this->newLine();
+                }
+
                 $this->call('elasticsearch:index',[
                     'model' => $this->argument('model'),
                     '--chunk' => $this->option('chunk'),
