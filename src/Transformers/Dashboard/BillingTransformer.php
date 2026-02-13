@@ -15,10 +15,10 @@ class BillingTransformer extends BaseDashboardMetricResource
     /**
      * Get billing definitions for the given period type.
      *
-     * @param string $periodType The period type
+     * @param ?string $periodType The period type
      * @return array<string, array> Map of metric ID to presentation data
      */
-    protected function getDefinitions(string $periodType): array
+    protected function getDefinitions(?string $periodType = null): array
     {
         $changeLabel = DashboardMetricsConfig::getChangeLabel($periodType);
 

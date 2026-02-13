@@ -94,6 +94,10 @@ trait HasDashboardMetricsDefaults
             'target' => 0, // Default target (will be calculated based on previous period)
             'previous_current' => 0, // Previous period's current value for comparison
             'previous_target' => 0,
+            "percentage" => 0,
+            "remaining" => 0,
+            "growth" => 0,
+            "growth_percentage" => 0
         ];
     }
 
@@ -820,7 +824,6 @@ trait HasDashboardMetricsDefaults
         ?array $previousData
     ): array {
         $document = $this->getDefaultDocument($periodType, $tenantId, $workspaceId, $timestamp);
-
         if (empty($previousData)) {
             return $document;
         }
@@ -888,7 +891,6 @@ trait HasDashboardMetricsDefaults
             $periodType,
             $timestamp
         );
-
         return $document;
     }
 
@@ -954,7 +956,6 @@ trait HasDashboardMetricsDefaults
 
         // Current period starts at 0
         $currentStats['current'] = 0;
-
         return $currentStats;
     }
 

@@ -10,7 +10,7 @@ use Projects\WellmedBackbone\Config\Dashboard\DashboardMetricsConfig;
  *
  * Output is always an indexed array (not associative) for FE consumption.
  */
-class StatisticTransformer extends BaseDashboardMetricResource
+class MotivationalStatusTransformer extends BaseDashboardMetricResource
 {
     /**
      * Get statistics definitions for the given period type.
@@ -20,19 +20,6 @@ class StatisticTransformer extends BaseDashboardMetricResource
      */
     protected function getDefinitions(?string $periodType = null): array
     {
-        $changeLabel = DashboardMetricsConfig::getChangeLabel($periodType);
-
-        return DashboardMetricsConfig::getStatistics($changeLabel);
-    }
-
-    /**
-     * Get change label based on period type.
-     *
-     * @param string $periodType The period type
-     * @return string The change label (Indonesian)
-     */
-    protected function getChangeLabel(string $periodType): string
-    {
-        return DashboardMetricsConfig::getChangeLabel($periodType);
+        return DashboardMetricsConfig::getMotivationalStatus();
     }
 }

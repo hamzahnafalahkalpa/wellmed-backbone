@@ -11,6 +11,16 @@ namespace Projects\WellmedBackbone\Config\Dashboard;
 class DashboardMetricsConfig
 {
     /**
+     * Get motivational status metric definitions.
+     *
+     * @return array<string, array> Map of metric ID to presentation data
+     */
+    public static function getMotivationalStatus(): array{
+        return [
+        ];
+    }
+
+    /**
      * Get statistics metric definitions.
      *
      * @param string $changeLabel The change label based on period
