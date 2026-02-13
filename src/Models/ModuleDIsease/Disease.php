@@ -22,7 +22,8 @@ class Disease extends ModuleDiseaseDisease{
             'name',
             'local_name',
             'code',
-            'flag'
+            'flag',
+            'tenant_id'
         ],
         'hydrate' => false,
     ];
@@ -35,11 +36,10 @@ class Disease extends ModuleDiseaseDisease{
      */
     public function getStaticIndexName(): string
     {
-        // $prefix = config('elasticsearch.prefix', '');
         $separator = config('elasticsearch.separator', '.');
         $indexName = config('app.env').$separator.$this->elastic_config['index_name'];
 
-        return $prefix ? $prefix . $separator . $indexName : $indexName;
+        return $indexName;
     }
 
     public function whenTenantCreation(){
