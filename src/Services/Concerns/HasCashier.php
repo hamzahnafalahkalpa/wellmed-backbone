@@ -2,6 +2,7 @@
 
 namespace Projects\WellmedBackbone\Services\Concerns;
 
+use Illuminate\Support\Facades\Log;
 use Illuminate\Database\Eloquent\Model;
 
 trait HasCashier

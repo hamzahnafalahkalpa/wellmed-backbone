@@ -9,7 +9,8 @@ class ShowPatient extends ViewPatient
     public function toArray(\Illuminate\Http\Request $request): array
     {
         $arr = [
-            'patient_satu_sehat_lists' => $this->patient_satu_sehat_lists
+            'patient_satu_sehat_lists' => $this->patient_satu_sehat_lists,
+            'integration' => $this->integration
         ];
         $show = $this->resolveNow(new PatientShowPatient($this));
         $arr = $this->mergeArray(parent::toArray($request), $show, $arr);

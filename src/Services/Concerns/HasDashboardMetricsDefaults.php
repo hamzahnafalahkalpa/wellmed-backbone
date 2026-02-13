@@ -91,7 +91,7 @@ trait HasDashboardMetricsDefaults
     {
         return [
             'current' => 0,
-            'target' => 10, // Default target
+            'target' => 0, // Default target (will be calculated based on previous period)
             'previous_current' => 0, // Previous period's current value for comparison
             'previous_target' => 0,
         ];
@@ -949,7 +949,7 @@ trait HasDashboardMetricsDefaults
         } else {
             // Default target based on previous new patients
             $previousPatients = $this->findStatisticValueById($previousStatistics, 'new-patients');
-            $currentStats['target'] = $previousPatients > 0 ? (int) ceil($previousPatients * 1.1) : 10;
+            $currentStats['target'] = $previousPatients > 0 ? (int) ceil($previousPatients * 1.1) : 0;
         }
 
         // Current period starts at 0
@@ -1182,13 +1182,11 @@ trait HasDashboardMetricsDefaults
 
             $indexName = $this->getIndexName($periodType);
             $documentId = $this->generateDocumentId($periodType, $tenantId, $workspaceId, $timestamp);
-
             $response = $this->client->index([
                 'index' => $indexName,
                 'id' => $documentId,
                 'body' => $data
             ]);
-
             $responseArray = $response->asArray();
 
             // Log to elasticsearch_logs table (dashboard updates same record)

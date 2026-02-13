@@ -19,6 +19,7 @@ class PatientSeeder extends Seeder
         //     \DB::unprepared($sql);
         // }
 
+        config(['module-patient.satu-sehat.enable' => false]);
         $faker = \Faker\Factory::create('id_ID');
 
         $umum = app(config('database.models.Wallet'))

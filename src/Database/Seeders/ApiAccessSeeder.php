@@ -20,11 +20,11 @@ class ApiAccessSeeder extends Seeder{
                     // ->where('reference_id',(string) $workspace->getKey())
                     // ->first();
         $api_access = app(config('database.models.ApiAccess'))
-                        ->where('app_code',1)
+                        ->where('app_code',2)
                         ->first();
         if (!isset($api_access)){
             $exitCode = Artisan::call('helper:generate', [
-                '--app-code'       => 1,
+                '--app-code'       => 2,
                 '--algorithm'      => 'HS256',
                 // '--reference-id'   => $workspace->getKey(),
                 // '--reference-type' => $workspace->getMorphClass(),

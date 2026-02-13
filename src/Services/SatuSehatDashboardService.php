@@ -30,7 +30,9 @@ class SatuSehatDashboardService
 
     public function __construct()
     {
-        if (config('elasticsearch.enable',false)) $this->client = app('elasticsearch');
+        if (config('elasticsearch.enabled', false)) {
+            $this->client = app('elasticsearch');
+        }
     }
 
     /**
@@ -88,6 +90,14 @@ class SatuSehatDashboardService
     public function getCurrentDashboard(?int $tenantId = null, mixed $workspaceId = null): array
     {
         try {
+            if (!$this->client) {
+                return [
+                    'success' => false,
+                    'error' => 'Elasticsearch client not available',
+                    'data' => $this->mergeWithPresentationData($this->getDefaultDashboardData($tenantId ?? 0, $workspaceId))
+                ];
+            }
+
             $tenantId = $tenantId ?? tenancy()->tenant->getKey();
             $workspaceId = $workspaceId ?? tenancy()->tenant->reference?->getKey();
 
@@ -210,6 +220,14 @@ class SatuSehatDashboardService
     public function getMonthlySnapshot(?int $tenantId = null, mixed $workspaceId = null, string $month): array
     {
         try {
+            if (!$this->client) {
+                return [
+                    'success' => false,
+                    'error' => 'Elasticsearch client not available',
+                    'data' => null
+                ];
+            }
+
             $tenantId = $tenantId ?? tenancy()->tenant->getKey();
             $workspaceId = $workspaceId ?? tenancy()->tenant->reference?->getKey();
 
@@ -266,6 +284,13 @@ class SatuSehatDashboardService
     public function storeMonthlySnapshot(string $month, ?int $tenantId = null, mixed $workspaceId = null): array
     {
         try {
+            if (!$this->client) {
+                return [
+                    'success' => false,
+                    'error' => 'Elasticsearch client not available'
+                ];
+            }
+
             $tenantId = $tenantId ?? tenancy()->tenant->getKey();
             $workspaceId = $workspaceId ?? tenancy()->tenant->reference?->getKey();
 
@@ -353,6 +378,14 @@ class SatuSehatDashboardService
     public function getAvailableSnapshots(?int $tenantId = null, mixed $workspaceId = null, int $limit = 12): array
     {
         try {
+            if (!$this->client) {
+                return [
+                    'success' => false,
+                    'error' => 'Elasticsearch client not available',
+                    'data' => []
+                ];
+            }
+
             $tenantId = $tenantId ?? tenancy()->tenant->getKey();
             $workspaceId = $workspaceId ?? tenancy()->tenant->reference?->getKey();
 
@@ -415,6 +448,13 @@ class SatuSehatDashboardService
     public function store(array $data, ?int $tenantId = null, mixed $workspaceId = null): array
     {
         try {
+            if (!$this->client) {
+                return [
+                    'success' => false,
+                    'error' => 'Elasticsearch client not available'
+                ];
+            }
+
             $tenantId = $tenantId ?? tenancy()->tenant->getKey();
             $workspaceId = $workspaceId ?? tenancy()->tenant->reference?->getKey();
 
@@ -925,6 +965,13 @@ class SatuSehatDashboardService
     protected function ensureIndexExists(string $indexName): bool
     {
         try {
+            if (!$this->client) {
+                Log::channel('elasticsearch')->warning('Elasticsearch client not available, skipping index check', [
+                    'index' => $indexName
+                ]);
+                return false;
+            }
+
             $exists = $this->client->indices()->exists(['index' => $indexName]);
 
             if (!$exists) {
@@ -979,6 +1026,13 @@ class SatuSehatDashboardService
     public function delete(?int $tenantId = null, mixed $workspaceId = null): array
     {
         try {
+            if (!$this->client) {
+                return [
+                    'success' => false,
+                    'error' => 'Elasticsearch client not available'
+                ];
+            }
+
             $tenantId = $tenantId ?? tenancy()->tenant->getKey();
             $workspaceId = $workspaceId ?? tenancy()->tenant->reference?->getKey();
 

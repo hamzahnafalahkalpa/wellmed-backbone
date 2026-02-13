@@ -1,6 +1,7 @@
 <?php
 
 namespace Projects\WellmedBackbone\Services\Concerns;
+use Illuminate\Support\Facades\Log;
 
 trait HasStatistic
 {

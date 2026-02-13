@@ -2,6 +2,7 @@
 
 namespace Projects\WellmedBackbone\Services\Concerns;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Log;
 
 trait HasQueueService{
     private $polyclinic_colors = [

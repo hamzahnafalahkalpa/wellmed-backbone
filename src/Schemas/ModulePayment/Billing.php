@@ -47,6 +47,7 @@ class Billing extends SchemasBilling implements ContractBilling
             switch ($type) {
                 case 'omzet': 
                     $dashboardService->incrementNewOmzet($billing->amount);
+                    $dashboardService->incrementNewTotalRevenue($billing->amount);
                     $dashboardService->incrementNewUnpaid(-$billing->amount);
                     if (!$this->is_recently_created){
                         $dashboardService->incrementNewUnpaidBilling(-$billing->amount);

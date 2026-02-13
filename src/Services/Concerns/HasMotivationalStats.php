@@ -2,6 +2,8 @@
 
 namespace Projects\WellmedBackbone\Services\Concerns;
 
+use Illuminate\Support\Facades\Log;
+
 trait HasMotivationalStats{
     /**
      * Increment new unsigned visit when visit exam created.
@@ -38,10 +40,19 @@ trait HasMotivationalStats{
             $workspaceId = $workspaceId ?? tenancy()->tenant->reference?->getKey();
             $timestamp = now();
 
+            Log::channel('elasticsearch')->info('incrementMotivationalData called', [
+                'period_type' => $periodType,
+                'tenant_id' => $tenantId,
+                'workspace_id' => $workspaceId,
+            ]);
+
             // Get or create current document
             $currentData = $this->getOrCreateCurrentPeriod($periodType, $tenantId, $workspaceId, $timestamp);
-
             if (!isset($currentData['motivational_stats'])) {
+                Log::channel('elasticsearch')->warning('motivational_stats not found in document', [
+                    'period_type' => $periodType,
+                    'has_keys' => array_keys($currentData),
+                ]);
                 return [
                     'success' => false,
                     'error' => "Motivational stats not found"
@@ -50,6 +61,12 @@ trait HasMotivationalStats{
 
             $currentCount = $currentData['motivational_stats']['current'] ?? 0;
             $currentData['motivational_stats']['current'] = $count = $currentCount + $increment;
+
+            Log::channel('elasticsearch')->info('incrementMotivationalData incremented', [
+                'period_type' => $periodType,
+                'previous_count' => $currentCount,
+                'new_count' => $count,
+            ]);
 
             $previousData = $this->getPreviousPeriodData($periodType, $tenantId, $workspaceId, $timestamp);
             $previousCount = (!isset($previousData)) ? 0 : $previousData['motivational_stats']['current'] ?? 0;
@@ -72,15 +89,23 @@ trait HasMotivationalStats{
 
             // Update metadata
             $currentData['metadata']['updated_at'] = now()->toIso8601String();
-
             // Store updated document
             $result = $this->storeCurrentPeriod($currentData, $periodType, $tenantId, $workspaceId, $timestamp);
 
+            Log::channel('elasticsearch')->info('incrementMotivationalData stored', [
+                'period_type' => $periodType,
+                'result' => $result,
+                'motivational_stats' => $currentData['motivational_stats'],
+            ]);
+
             return $result;
         } catch (\Throwable $e) {
-            Log::channel('elasticsearch')->error('Failed to increment pending_item', [
+            Log::channel('elasticsearch')->error('Failed to increment motivational_stats', [
                 'error' => $e->getMessage(),
-                'period_type' => $periodType
+                'trace' => $e->getTraceAsString(),
+                'period_type' => $periodType,
+                'tenant_id' => $tenantId ?? null,
+                'workspace_id' => $workspaceId ?? null,
             ]);
 
             return [

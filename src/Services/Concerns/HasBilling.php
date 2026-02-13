@@ -1,6 +1,7 @@
 <?php
 
 namespace Projects\WellmedBackbone\Services\Concerns;
+use Illuminate\Support\Facades\Log;
 
 trait HasBilling
 {
@@ -12,12 +13,12 @@ trait HasBilling
      * @param mixed $workspaceId
      * @return array Results for each period type
      */
-    public function incrementNewTotalRevenue(?int $tenantId = null, mixed $workspaceId = null): array
+    public function incrementNewTotalRevenue(int $amount, ?int $tenantId = null, mixed $workspaceId = null): array
     {
         $results = [];
         $periodTypes = $this->getPeriodTypes();
         foreach ($periodTypes as $periodType) {
-            $results[$periodType] = $this->incrementBilling('total-revenue', $periodType, $tenantId, $workspaceId);
+            $results[$periodType] = $this->incrementBilling('total-revenue', $periodType, $tenantId, $workspaceId, $amount);
         }
         return $results;
     }
