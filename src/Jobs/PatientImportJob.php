@@ -66,10 +66,11 @@ class PatientImportJob implements ShouldQueue, ShouldBeUnique
             'import_id' => $importId,
         ]);
 
-        MicroTenant::tenantImpersonate($this->data['tenant_id']);
+        $tenantId = $this->data['tenant_id'] ?? null;
+        MicroTenant::tenantImpersonate($tenantId);
 
-        // Create single importer instance
-        $importer = new PatientImport($importId);
+        // Create single importer instance with tenant_id for chunk job serialization
+        $importer = new PatientImport($importId, $tenantId);
 
         foreach ($paths as $index => $path) {
             try {

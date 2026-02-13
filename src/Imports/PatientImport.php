@@ -4,14 +4,16 @@ namespace Projects\WellmedBackbone\Imports;
 
 use App\Middlewares\EncodingWrapper;
 use Hanafalah\LaravelSupport\Concerns\Support\HasRequestData;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Maatwebsite\Excel\Concerns\{
     ToCollection,
     WithChunkReading,
     WithHeadingRow,
-    WithMultipleSheets
+    RemembersChunkOffset
 };
 use PhpOffice\PhpSpreadsheet\Shared\Date;
 
@@ -19,28 +21,22 @@ class PatientImport implements
     ToCollection,
     WithChunkReading,
     WithHeadingRow,
-    WithMultipleSheets
+    ShouldQueue
 {
-    use HasRequestData;
+    use HasRequestData, RemembersChunkOffset;
 
     protected string $importId;
-    protected int $chunkNumber = 0;
-    protected int $processedRows = 0;
-
-    public function __construct(?string $importId = null)
-    {
-        $this->importId = $importId ?? uniqid('patient_import_', true);
-    }
 
     /**
-     * Only process the first sheet (index 0)
-     * This prevents duplicate processing when Excel file has multiple sheets
+     * Tenant ID for multi-tenant context restoration in queued chunks.
+     * This gets serialized with the job and restored in each chunk.
      */
-    public function sheets(): array
+    protected ?int $tenantId = null;
+
+    public function __construct(?string $importId = null, ?int $tenantId = null)
     {
-        return [
-            0 => $this, // Only process sheet at index 0
-        ];
+        $this->importId = $importId ?? uniqid('patient_import_', true);
+        $this->tenantId = $tenantId;
     }
 
     public function chunkSize(): int
@@ -50,15 +46,24 @@ class PatientImport implements
 
     public function collection(Collection $rows)
     {
-        $this->chunkNumber++;
-        $chunkStartRow = $this->processedRows + 2; // +2 because row 1 is header
+        // Use RemembersChunkOffset trait for accurate row tracking across queued chunks
+        // With WithHeadingRow, getChunkOffset() returns the 1-based Excel row number
+        // (e.g., 2 for first data row since row 1 is the header)
+        $chunkStartRow = $this->getChunkOffset();
 
         Log::channel('import')->info('=== CHUNK START ===', [
             'import_id' => $this->importId,
-            'chunk_number' => $this->chunkNumber,
+            'chunk_offset' => $this->getChunkOffset(),
             'chunk_rows' => $rows->count(),
             'chunk_start_row' => $chunkStartRow,
+            'tenant_id' => $this->tenantId,
         ]);
+
+        // CRITICAL: Restore tenant context for each queued chunk
+        // Each chunk runs as a separate job and loses the tenant context
+        if ($this->tenantId) {
+            \Hanafalah\MicroTenant\Facades\MicroTenant::tenantImpersonate($this->tenantId);
+        }
 
         // Load encoding counter from DB at the start of each chunk
         // This ensures we have the latest counter value (persisted from previous chunk)
@@ -139,8 +144,7 @@ class PatientImport implements
                 request()->replace([]);
                 DB::transaction(function () use ($row, $firstName, $lastName, $rowNumber, $emrValue, $nikValue) {
                     $nik = $nikValue;
-                    app(config('app.contracts.Patient'))->prepareStorePatient(
-                        $this->requestDTO(config('app.contracts.PatientData'), [
+                    $create = [
                             'id' => null,
                             'card_identity' => [
                                 'old_mr'     => $emrValue,
@@ -167,7 +171,22 @@ class PatientImport implements
                                     'passport' => $row['passport'] ?? null,
                                 ],
                             ],
-                        ])
+                        ];
+                    if (isset($row['patient_occupation'])){
+                        $create['patient_occupation'] = [
+                            'id' => null,
+                            'name' => $row['patient_occupation']
+                        ];
+                    }
+                    if (isset($row['allergy']) || isset($row['old_visit_summary'])){
+                        $old_visit = [
+                            'allergy' => $row['allergy'] ?? null,
+                            'emr' => $row['old_visit_summary'] ?? null,
+                        ];
+                        $create['old_visit'] = $old_visit;
+                    }
+                    app(config('app.contracts.Patient'))->prepareStorePatient(
+                        $this->requestDTO(config('app.contracts.PatientData'), $create)
                     );
 
                     Log::channel('import')->info('Patient imported', [
@@ -176,6 +195,15 @@ class PatientImport implements
                     ]);
                 });
 
+            } catch (\Illuminate\Database\UniqueConstraintViolationException $e) {
+                // Race condition: another process inserted this record between our check and insert
+                // This is expected behavior with concurrent imports, log as warning not error
+                Log::channel('import')->warning('Patient already exists (race condition)', [
+                    'row' => $rowNumber,
+                    'name' => $row['nama'] ?? 'unknown',
+                    'no_emr' => $emrValue,
+                    'nik' => $nikValue,
+                ]);
             } catch (\Throwable $e) {
                 Log::channel('import')->error('Failed import patient', [
                     'row' => $rowNumber,
@@ -185,17 +213,14 @@ class PatientImport implements
             }
         }
 
-        // Update processed rows counter for next chunk
-        $this->processedRows += $rows->count();
-
         // CRITICAL: Persist encoding counter to database AFTER each chunk
         // This ensures the next chunk will load the correct counter value
         app(EncodingWrapper::class)->setup();
 
         Log::channel('import')->info('=== CHUNK END ===', [
             'import_id' => $this->importId,
-            'chunk_number' => $this->chunkNumber,
-            'total_processed_rows' => $this->processedRows,
+            'chunk_offset' => $this->getChunkOffset(),
+            'rows_in_chunk' => $rows->count(),
         ]);
     }
 
