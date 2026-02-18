@@ -791,15 +791,48 @@ trait HasDashboardMetricsDefaults
     protected function fetchPreviousPeriodData(string $periodType, int $tenantId, mixed $workspaceId, Carbon $currentTimestamp): ?array
     {
         try {
-            $previousTimestamp = match ($periodType) {
-                self::PERIOD_DAILY => $currentTimestamp->copy()->subDay(),
-                self::PERIOD_WEEKLY => $currentTimestamp->copy()->subWeek(),
-                self::PERIOD_MONTHLY => $currentTimestamp->copy()->subMonth(),
-                self::PERIOD_YEARLY => $currentTimestamp->copy()->subYear(),
-                default => $currentTimestamp->copy()->subDay()
+            // Determine how many periods to look back (fallback limit)
+            $maxLookback = match ($periodType) {
+                self::PERIOD_DAILY => 7,      // Look back up to 7 days
+                self::PERIOD_WEEKLY => 4,     // Look back up to 4 weeks
+                self::PERIOD_MONTHLY => 12,   // Look back up to 12 months
+                self::PERIOD_YEARLY => 5,     // Look back up to 5 years
+                default => 7
             };
 
-            return $this->getDocument($periodType, $tenantId, $workspaceId, $previousTimestamp);
+            // Try to find previous period data, with fallback for missing data
+            $timestamp = $currentTimestamp->copy();
+            for ($i = 1; $i <= $maxLookback; $i++) {
+                // Move to previous period
+                $timestamp = match ($periodType) {
+                    self::PERIOD_DAILY => $timestamp->copy()->subDay(),
+                    self::PERIOD_WEEKLY => $timestamp->copy()->subWeek(),
+                    self::PERIOD_MONTHLY => $timestamp->copy()->subMonth(),
+                    self::PERIOD_YEARLY => $timestamp->copy()->subYear(),
+                    default => $timestamp->copy()->subDay()
+                };
+
+                // Try to fetch document for this timestamp
+                $document = $this->getDocument($periodType, $tenantId, $workspaceId, $timestamp);
+                if ($document) {
+                    if ($i > 1) {
+                        Log::channel('elasticsearch')->debug('Found previous period data with fallback', [
+                            'periods_back' => $i,
+                            'period_type' => $periodType,
+                            'found_date' => $timestamp->format('Y-m-d')
+                        ]);
+                    }
+                    return $document;
+                }
+            }
+
+            // No data found within lookback window
+            Log::channel('elasticsearch')->debug('No previous period data found within lookback window', [
+                'max_lookback' => $maxLookback,
+                'period_type' => $periodType,
+                'current_date' => $currentTimestamp->format('Y-m-d')
+            ]);
+            return null;
         } catch (\Throwable $e) {
             Log::channel('elasticsearch')->debug('Could not fetch previous period data', [
                 'error' => $e->getMessage(),
