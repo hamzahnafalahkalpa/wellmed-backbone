@@ -245,7 +245,7 @@ class WellmedBackboneServiceProvider extends WellmedBackboneEnvironment
             return;
         }
 
-        $hosts = config('app.elasticsearch.hosts', 'localhost:9200');
+        $hosts = config('elasticsearch.hosts', ['localhost:9200']);
         if (!isset($hosts)) {
             return;
         }
@@ -256,8 +256,8 @@ class WellmedBackboneServiceProvider extends WellmedBackboneEnvironment
                 return ClientBuilder::create()
                     ->setHosts(is_array($hosts) ? $hosts : [$hosts])
                     ->setApiKey(
-                        config('app.elasticsearch.username', 'elastic'),
-                        config('app.elasticsearch.password', 'password')
+                        config('elasticsearch.username', 'elastic'),
+                        config('elasticsearch.password', 'password')
                     )
                     ->setSSLVerification(env('ELASTICSEARCH_SSL_VERIFY', false) === 'true')
                     ->setRetries(2)
@@ -274,16 +274,13 @@ class WellmedBackboneServiceProvider extends WellmedBackboneEnvironment
             // Eager initialization: create client and check indexes NOW
             // This adds ~300-400ms to boot time but ensures indexes exist
             $client = $this->app->make('elasticsearch');
-            config(['app.elasticsearch.client' => $client]);
 
             // Index creation - only run once during initial boot
-            foreach (config('app.elasticsearch.indexes', []) as $index_key => $index_config) {
-                $full_index_name =
-                    config('elasticsearch.prefix', 'development')
-                    . config('elasticsearch.separator', '.')
-                    . $index_config['name'];
+            $prefix = config('elasticsearch.prefix', config('app.env', 'development'));
+            $separator = config('elasticsearch.separator', '.');
 
-                config(['app.elasticsearch.indexes.' . $index_key . '.full_name' => $full_index_name]);
+            foreach (config('elasticsearch.indices', []) as $index_key => $index_config) {
+                $full_index_name = $prefix . $separator . $index_config['name'];
 
                 try {
                     if (!$client->indices()->exists(['index' => $full_index_name])->asBool()) {

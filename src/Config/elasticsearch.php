@@ -5,6 +5,67 @@ use Hanafalah\LaravelSupport\Jobs\ElasticJob;
 return [
     /*
     |--------------------------------------------------------------------------
+    | Index Definitions
+    |--------------------------------------------------------------------------
+    |
+    | Define all indices used in the application for reporting and searching.
+    |
+    */
+    'indices' => [
+        // Location/Master Data
+        'country' => [
+            'name' => 'country',
+        ],
+        'province' => [
+            'name' => 'province',
+        ],
+        'district' => [
+            'name' => 'district',
+        ],
+        'subdistrict' => [
+            'name' => 'subdistrict',
+        ],
+        'village' => [
+            'name' => 'village',
+        ],
+        'disease' => [
+            'name' => 'disease',
+        ],
+
+        // Patient & Visit Data
+        'patient' => [
+            'name' => 'patient',
+        ],
+        'patient_illness' => [
+            'name' => 'patient_illness',
+        ],
+        'visit_patient' => [
+            'name' => 'visit_patient',
+        ],
+        'visit_registration' => [
+            'name' => 'visit_registration',
+        ],
+        'visit_examination' => [
+            'name' => 'visit_examination',
+        ],
+
+        // Billing & Financial Data
+        'billing' => [
+            'name' => 'billing',
+        ],
+        'invoice' => [
+            'name' => 'invoice',
+        ],
+        'refund' => [
+            'name' => 'refund',
+        ],
+        'wallet_transaction' => [
+            'name' => 'wallet_transaction',
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Index Retention Policy
     |--------------------------------------------------------------------------
     |

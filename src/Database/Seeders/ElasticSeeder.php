@@ -14,32 +14,39 @@ class ElasticSeeder extends Seeder
     {
         echo "[DEBUG] Booting ".class_basename($this)."\n";
 
-        $client = config('app.elasticsearch.client');
-        $indexes = config('app.elasticsearch.indexes');
+        $client = app('elasticsearch');
+        $indices = config('elasticsearch.indices');
+        $prefix = config('elasticsearch.prefix', config('app.env', 'development'));
+        $separator = config('elasticsearch.separator', '.');
+
         $bulks = [
             'body' => []
         ];
-        $this->syncData($indexes, 'Country', $bulks)
-             ->syncData($indexes, 'Province', $bulks)
-             ->syncData($indexes, 'District', $bulks)
-             ->syncData($indexes, 'Subdistrict', $bulks)
-             ->syncData($indexes, 'Village', $bulks);
+        $this->syncData($indices, $prefix, $separator, 'Country', $bulks)
+             ->syncData($indices, $prefix, $separator, 'Province', $bulks)
+             ->syncData($indices, $prefix, $separator, 'District', $bulks)
+             ->syncData($indices, $prefix, $separator, 'Subdistrict', $bulks)
+             ->syncData($indices, $prefix, $separator, 'Village', $bulks);
         $results = $client->bulk($bulks);
     }
 
-    private function syncData(array $indexes, string $model, array &$bulks): self{
+    private function syncData(array $indices, string $prefix, string $separator, string $model, array &$bulks): self{
         $datas = app(config('database.models.'.$model))->get();
+        $indexKey = Str::lower($model);
+        $indexName = $indices[$indexKey]['name'] ?? $indexKey;
+        $fullIndexName = $prefix . $separator . $indexName;
+
         foreach ($datas as $data) {
             $resource = $data->toViewApi()->resolve();
             try {
                 $bulks['body'][] = [
                     'index' => [
-                        '_index' => $indexes[Str::lower($model)]['full_name'],
+                        '_index' => $fullIndexName,
                         '_id'    => $data->getKey(),
                     ]
                 ];
             } catch (\Throwable $th) {
-                // dd(Str::lower($model), $indexes[Str::lower($model)]);
+                // dd($indexKey, $fullIndexName);
                 //throw $th;
             }
 

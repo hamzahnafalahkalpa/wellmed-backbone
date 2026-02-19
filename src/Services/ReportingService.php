@@ -60,9 +60,9 @@ class ReportingService
      */
     public function getIndexName(string $indexType): string
     {
-        $prefix = config('app.elasticsearch.index_prefix', config('app.env', 'development'));
-        $separator = config('app.elasticsearch.index_separator', '.');
-        $indexConfig = config("app.elasticsearch.indexes.{$indexType}", ['name' => $indexType]);
+        $prefix = config('elasticsearch.prefix', config('app.env', 'development'));
+        $separator = config('elasticsearch.separator', '.');
+        $indexConfig = config("elasticsearch.indices.{$indexType}", ['name' => $indexType]);
 
         return $prefix . $separator . ($indexConfig['name'] ?? $indexType);
     }
