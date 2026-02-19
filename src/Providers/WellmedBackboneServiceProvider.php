@@ -55,7 +55,7 @@ class WellmedBackboneServiceProvider extends WellmedBackboneEnvironment
                 $cacheExists = $this->hasValidSetupCache($projectName);
                 $timings['cache_check'] = round((microtime(true) - $t) * 1000, 2);
 
-                if ($cacheExists) {
+                if (false && $cacheExists) {
                     // Register providers first (they will set their morphMaps)
                     $t = microtime(true);
                     $this->registerProvidersFromCache($config['packages'], $projectName);
@@ -67,6 +67,7 @@ class WellmedBackboneServiceProvider extends WellmedBackboneEnvironment
 
                     // Then apply cached setup LAST to override with project-level models
                     $t = microtime(true);
+
                     $this->loadFromSetupCache($projectName, $config);
                     $timings['load_cache'] = round((microtime(true) - $t) * 1000, 2);
                 } else {
@@ -121,12 +122,13 @@ class WellmedBackboneServiceProvider extends WellmedBackboneEnvironment
                 $timings['rabbitmq'] = round((microtime(true) - $t) * 1000, 2);
 
                 $timings['total'] = round((microtime(true) - $bootStart) * 1000, 2);
-
+                
                 // Log timing if enabled
                 if (env('SETUP_PROFILE_BOOT', false)) {
                     \Log::info('[BootProfile] WellmedBackbone timing', $timings);
                 }
             } catch (\Throwable $th) {
+                dd($th->getMessage());
                 \Log::error('WellmedBackbone boot error: ' . $th->getMessage(), [
                     'exception' => $th,
                     'trace' => $th->getTraceAsString()

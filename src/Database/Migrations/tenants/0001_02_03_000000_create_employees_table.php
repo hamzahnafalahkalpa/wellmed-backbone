@@ -11,6 +11,7 @@ use Hanafalah\ModuleEmployee\Models\EmployeeType\EmployeeType;
 use Hanafalah\ModulePeople\Models\People\People;
 use Hanafalah\ModuleProfession\Models\Occupation\Occupation;
 use Hanafalah\ModuleProfession\Models\Profession\Profession;
+use Hanafalah\ModuleUser\Models\User\User;
 
 return new class extends Migration
 {
@@ -31,6 +32,7 @@ return new class extends Migration
         $table_name = $this->__table->getTable();
         $this->isNotTableExists(function() use ($table_name){
             Schema::create($table_name, function (Blueprint $table) {
+                $user          = app(config('database.models.User', User::class));
                 $people        = app(config('database.models.People', People::class));
                 $profession    = app(config('database.models.Profession', Profession::class));
                 $occupation    = app(config('database.models.Occupation', Occupation::class));
@@ -44,6 +46,8 @@ return new class extends Migration
                 $table->foreignIdFor($people::class)
                     ->nullable(false)->index()
                     ->cascadeOnUpdate()->restrictOnDelete();
+
+                $table->foreignIdFor($user::class)->nullable()->index();
 
                 $table->foreignIdFor($employee_type::class)->nullable(true)
                     ->constrained($employee_type->getTable(), 'id', 'emp_fk')

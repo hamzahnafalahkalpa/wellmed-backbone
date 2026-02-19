@@ -9,8 +9,6 @@ return new class extends Migration
 {
     use Hanafalah\MicroTenant\Concerns\Tenant\NowYouSeeMe;
 
-    
-
     public function __construct()
     {
         $this->__table = app(config('database.models.ModelHasVoucher', \Hanafalah\ModulePayment\Models\Price\ModelHasVoucher::class));

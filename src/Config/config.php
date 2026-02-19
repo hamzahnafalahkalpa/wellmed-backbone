@@ -124,6 +124,7 @@ return [
         'wellmed-plus/ms-plus-emr'              => ['repository' => 'hamzahnafalahkalpa/ms-plus-emr','provider' => 'WellmedPlus\\MsPlusEmr\\MsPlusEmrServiceProvider'],
         'wellmed-plus/ms-plus-hr'               => ['repository' => 'hamzahnafalahkalpa/ms-plus-hr','provider' => 'WellmedPlus\\MsPlusHr\\MsPlusHrServiceProvider'],
         'wellmed-plus/ms-plus-point-of-sale'    => ['repository' => 'hamzahnafalahkalpa/ms-plus-point-of-sale','provider' => 'WellmedPlus\\MsPlusPointOfSale\\MsPlusPointOfSaleServiceProvider'],
-        'wellmed-plus/ms-plus-scm'              => ['repository' => 'hamzahnafalahkalpa/ms-plus-scm','provider' => 'WellmedPlus\\MsPlusScm\\MsPlusScmServiceProvider']
+        'wellmed-plus/ms-plus-scm'              => ['repository' => 'hamzahnafalahkalpa/ms-plus-scm','provider' => 'WellmedPlus\\MsPlusScm\\MsPlusScmServiceProvider'],
+        'hanafalah/module-notification'         => ['repository' => 'hamzahnafalahkalpa/module-notification','provider' => 'Hanafalah\\ModuleNotification\\ModuleNotificationServiceProvider']
     ]
 ];
