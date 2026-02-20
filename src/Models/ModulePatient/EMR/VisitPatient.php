@@ -22,6 +22,7 @@ class VisitPatient extends EMRVisitPatient
         // Props-based fields
         'payer_name'          => 'string',
         'warehouse_name'      => 'string',
+        'practitioner_evaluation_name' => 'string'
     ];
 
     /**
