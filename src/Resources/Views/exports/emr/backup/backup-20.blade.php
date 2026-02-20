@@ -25,64 +25,6 @@
         }
 
         /* ============================================
-           STREAM MODE (Browser View) - Better Margins
-           Only applies when NOT generating PDF
-           ============================================ */
-        @media screen and (min-width: 1px) {
-            body:not(.pdf-mode) {
-                background: #e5e7eb;
-                padding: 20px;
-            }
-            body:not(.pdf-mode) .rpt-wrap {
-                max-width: 210mm;
-                margin: 0 auto;
-                padding: 25mm 15mm 20mm 15mm;
-                background: #fff;
-                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-                border-radius: 4px;
-            }
-            body:not(.pdf-mode) .pdf-header,
-            body:not(.pdf-mode) .pdf-footer {
-                position: relative;
-                top: auto;
-                bottom: auto;
-            }
-            body:not(.pdf-mode) .pdf-header {
-                margin-bottom: 15px;
-                padding-bottom: 10px;
-            }
-            body:not(.pdf-mode) .pdf-footer {
-                margin-top: 20px;
-                padding-top: 10px;
-            }
-        }
-
-        /* ============================================
-           PDF MODE - Explicit styles for DomPDF generation
-           ============================================ */
-        body.pdf-mode {
-            background: #fff;
-            padding: 0;
-        }
-        body.pdf-mode .rpt-wrap {
-            max-width: 100%;
-            margin: 0;
-            padding: 0;
-        }
-        body.pdf-mode .pdf-header {
-            position: fixed;
-            top: -18mm;
-            left: 0;
-            right: 0;
-        }
-        body.pdf-mode .pdf-footer {
-            position: fixed;
-            bottom: -14mm;
-            left: 0;
-            right: 0;
-        }
-
-        /* ============================================
            CONTAINER
            ============================================ */
         .rpt-wrap {
@@ -772,53 +714,6 @@
             margin-top: 2px;
         }
 
-        /* Physical Examination Annotations */
-        .rpt-phys-annotations {
-            margin-top: 4px;
-            text-align: left;
-            font-size: 7px;
-        }
-
-        .rpt-phys-annotation-item {
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 2px;
-            padding: 3px 5px;
-            margin-bottom: 2px;
-        }
-
-        .rpt-phys-annotation-header {
-            display: block;
-            font-weight: 600;
-            color: #334155;
-            margin-bottom: 1px;
-        }
-
-        .rpt-phys-annotation-anatomy {
-            color: #0369a1;
-            font-size: 7px;
-        }
-
-        .rpt-phys-annotation-condition {
-            color: #dc2626;
-            font-weight: 600;
-            font-size: 7px;
-        }
-
-        .rpt-phys-annotation-coords {
-            font-size: 6px;
-            color: #94a3b8;
-            font-style: italic;
-        }
-
-        .rpt-phys-no-annotation {
-            font-size: 6px;
-            color: #94a3b8;
-            font-style: italic;
-            text-align: center;
-            padding: 4px;
-        }
-
         /* ============================================
            PAGE BREAK
            ============================================ */
@@ -835,61 +730,9 @@
         .mb-4 { margin-bottom: 4px; }
         .mb-5 { margin-bottom: 5px; }
         .mt-4 { margin-top: 4px; }
-
-        /* ============================================
-           PRINT MODE ENHANCEMENTS (Browser Print)
-           ============================================ */
-        @media print {
-            body {
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
-                background: #fff !important;
-                padding: 0 !important;
-            }
-            .rpt-wrap {
-                max-width: 100% !important;
-                margin: 0 !important;
-                padding: 0 !important;
-                box-shadow: none !important;
-                border-radius: 0 !important;
-            }
-            .pdf-header {
-                position: fixed !important;
-                top: 0 !important;
-                left: 0 !important;
-                right: 0 !important;
-                margin-bottom: 0 !important;
-            }
-            .pdf-footer {
-                position: fixed !important;
-                bottom: 0 !important;
-                left: 0 !important;
-                right: 0 !important;
-                margin-top: 0 !important;
-            }
-            .rpt-section {
-                margin-bottom: 8px;
-            }
-            .rpt-info-box,
-            .rpt-allergy-box,
-            .rpt-visit-card {
-                margin-bottom: 8px;
-            }
-        }
-
-        /* ============================================
-           RESPONSIVE PHYSICAL EXAM GRID
-           ============================================ */
-        @media screen and (max-width: 600px) {
-            .rpt-phys-grid td {
-                display: block;
-                width: 100%;
-                padding: 5px 0;
-            }
-        }
     </style>
 </head>
-<body class="{{ $pdf_mode ?? false ? 'pdf-mode' : 'stream-mode' }}">
+<body>
     <!-- ============================================
          FIXED PDF HEADER
          ============================================ -->
@@ -931,24 +774,13 @@
                 @endif
                 <td class="rpt-header-content">
                     <h1>{{ $workspace['name'] ?? 'KLINIK KESEHATAN' }}</h1>
-                    @if(isset($workspace['address']) && $workspace['address'])
-                    <div style="font-size: 7px; color: #666;">{{ $workspace['address'] }}</div>
-                    @endif
-                    @if((isset($workspace['phone']) && $workspace['phone']) || (isset($workspace['email']) && $workspace['email']))
-                    <div style="font-size: 7px; color: #666;">
-                        @if(isset($workspace['phone']) && $workspace['phone'])Telp: {{ $workspace['phone'] }}@endif
-                        @if(isset($workspace['phone']) && $workspace['phone'] && isset($workspace['email']) && $workspace['email']) | @endif
-                        @if(isset($workspace['email']) && $workspace['email'])Email: {{ $workspace['email'] }}@endif
-                    </div>
-                    @endif
-                    <div class="rpt-subtitle" style="margin-top: 3px;">Hasil Pemeriksaan Medis</div>
+                    <div class="rpt-subtitle">Hasil Pemeriksaan Medis</div>
                     <div class="rpt-meta">
                         <table class="rpt-meta-table">
                             <tr>
-                                <td>No. Kunjungan: <strong>{{ $visit_registration['visit_registration_code'] ?? '-' }}</strong></td>
+                                <td>No. RM: <strong>{{ $visit_registration['visit_registration_code'] ?? '-' }}</strong></td>
                                 <td>Tanggal: <strong>{{ $visit_registration['visit_date'] ?? now()->format('d F Y') }}</strong></td>
                                 <td>Layanan: <strong>{{ $visit_registration['medic_service']['name'] ?? '-' }}</strong></td>
-                                <td>Status: <strong>{{ $visit_registration['status'] ?? '-' }}</strong></td>
                             </tr>
                         </table>
                     </div>
@@ -966,20 +798,13 @@
             <tr>
                 <td>
                     <div class="rpt-info-row"><span class="rpt-info-lbl">Nama</span><span class="rpt-info-val">: <strong>{{ $patient['name'] ?? '-' }}</strong></span></div>
-                    <div class="rpt-info-row"><span class="rpt-info-lbl">Tgl Lahir</span><span class="rpt-info-val">: {{ $patient['date_of_birth'] ?? '-' }} @if(isset($patient['age']) && $patient['age'])({{ $patient['age'] }} Thn)@endif</span></div>
+                    <div class="rpt-info-row"><span class="rpt-info-lbl">Tgl Lahir</span><span class="rpt-info-val">: {{ $patient['date_of_birth'] ?? '-' }} @if(isset($patient['age']))({{ $patient['age'] }} Thn)@endif</span></div>
                     <div class="rpt-info-row"><span class="rpt-info-lbl">Jenis Kelamin</span><span class="rpt-info-val">: {{ $patient['gender'] ?? '-' }}</span></div>
-                    <div class="rpt-info-row"><span class="rpt-info-lbl">Gol. Darah</span><span class="rpt-info-val">: {{ $patient['blood_type'] ?? '-' }}</span></div>
                 </td>
                 <td>
                     <div class="rpt-info-row"><span class="rpt-info-lbl">No. RM</span><span class="rpt-info-val">: <strong>{{ $patient['medical_record_number'] ?? '-' }}</strong></span></div>
                     <div class="rpt-info-row"><span class="rpt-info-lbl">NIK</span><span class="rpt-info-val">: {{ $patient['nik'] ?? '-' }}</span></div>
                     <div class="rpt-info-row"><span class="rpt-info-lbl">No. IHS</span><span class="rpt-info-val">: {{ $patient['ihs_number'] ?? '-' }}</span></div>
-                    <div class="rpt-info-row"><span class="rpt-info-lbl">No. Telp</span><span class="rpt-info-val">: {{ $patient['phone'] ?? '-' }}</span></div>
-                </td>
-            </tr>
-            <tr>
-                <td colspan="2">
-                    <div class="rpt-info-row"><span class="rpt-info-lbl">Tipe Pasien</span><span class="rpt-info-val">: <span class="rpt-tag rpt-tag-green">{{ $patient['patient_type'] ?? '-' }}</span></span></div>
                 </td>
             </tr>
         </table>
@@ -1170,34 +995,8 @@
                             @if(isset($exam['image_url']) && $exam['image_url'])
                             <img src="{{ $exam['image_url'] }}" alt="{{ $exam['label'] ?? 'Physical Exam' }}" class="rpt-phys-img">
                             @endif
-
-                            <!-- Annotations Detail -->
-                            @if(isset($exam['has_annotations']) && $exam['has_annotations'] && isset($exam['data']) && count($exam['data']) > 0)
-                            <div class="rpt-phys-annotations">
-                                @foreach($exam['data'] as $annotation)
-                                <div class="rpt-phys-annotation-item">
-                                    <span class="rpt-phys-annotation-anatomy">{{ $annotation['anatomy']['name'] ?? 'Area' }}</span>
-                                    @if(isset($annotation['condition']) && $annotation['condition'])
-                                    <span class="rpt-phys-annotation-condition"> → {{ $annotation['condition'] }}</span>
-                                    @endif
-                                    @if(isset($annotation['coodinates']) && count($annotation['coodinates']) > 0)
-                                    <div class="rpt-phys-annotation-coords">
-                                        @foreach($annotation['coodinates'] as $idx => $coord)
-                                        @if(isset($coord['coodinate']))
-                                        Titik {{ $idx + 1 }}: ({{ number_format($coord['coodinate']['x'] ?? 0, 1) }}, {{ number_format($coord['coodinate']['y'] ?? 0, 1) }})
-                                        @if(isset($coord['condition']) && $coord['condition'])
-                                         - {{ $coord['condition'] }}
-                                        @endif
-                                        @if(!$loop->last) | @endif
-                                        @endif
-                                        @endforeach
-                                    </div>
-                                    @endif
-                                </div>
-                                @endforeach
-                            </div>
-                            @elseif(!isset($exam['has_annotations']) || !$exam['has_annotations'])
-                            <div class="rpt-phys-no-annotation">Tidak ada anotasi</div>
+                            @if(isset($exam['has_annotations']) && $exam['has_annotations'])
+                            <div class="rpt-phys-note">* Terdapat anotasi</div>
                             @endif
                         </div>
                     </td>
@@ -1265,23 +1064,13 @@
         <div class="rpt-sec-body">
             @foreach($treatments as $treatment)
             <div class="rpt-treatment-row">
-                <table class="rpt-treatment-table">
-                    <tr>
-                        <td style="width: auto;">
-                            <span class="rpt-treatment-name">{{ $treatment['name'] ?? '-' }}</span>
-                            <span class="rpt-treatment-qty">x{{ $treatment['qty'] ?? '1' }}</span>
-                        </td>
-                        @if(isset($treatment['result']) && $treatment['result'] && $treatment['result'] != '-')
-                        <td style="width: 80px; text-align: right;">
-                            <span class="rpt-tag rpt-tag-green">{{ $treatment['result'] }}</span>
-                        </td>
-                        @endif
-                    </tr>
-                </table>
-                @if(isset($treatment['note']) && $treatment['note'] && $treatment['note'] != '-')
-                <div style="font-size: 7px; color: #666; padding-left: 10px; margin-top: 1px; font-style: italic;">
-                    {{ Str::limit($treatment['note'], 200) }}
-                </div>
+                <span class="rpt-treatment-name">{{ $treatment['name'] ?? '-' }}</span>
+                <span class="rpt-treatment-qty">x{{ $treatment['qty'] ?? '1' }}</span>
+                @if(isset($treatment['result']) && $treatment['result'] != '-')
+                <span class="rpt-treatment-result" style="float:right;">{{ $treatment['result'] }}</span>
+                @endif
+                @if(isset($treatment['note']) && $treatment['note'] != '-')
+                <span style="font-size: 7px; color: #666;"> - {{ $treatment['note'] }}</span>
                 @endif
             </div>
             @endforeach
@@ -1300,24 +1089,17 @@
                 <tr>
                     @if(isset($history_illnesses) && count($history_illnesses) > 0)
                     <td>
-                        <span class="rpt-hist-label">Riwayat Penyakit Pribadi:</span>
+                        <span class="rpt-hist-label">Pribadi:</span>
                         @foreach($history_illnesses as $illness)
-                        <div class="rpt-hist-row">
-                            <span class="rpt-tag rpt-tag-blue">{{ $illness['code'] ?? '-' }}</span>
-                            <span style="font-size: 7px; color: #333;">{{ $illness['name'] ?? '-' }}</span>
-                        </div>
+                        <span class="rpt-tag rpt-tag-blue">{{ $illness['code'] ?? '-' }}</span>
                         @endforeach
                     </td>
                     @endif
                     @if(isset($family_illnesses) && count($family_illnesses) > 0)
                     <td>
-                        <span class="rpt-hist-label">Riwayat Penyakit Keluarga:</span>
+                        <span class="rpt-hist-label">Keluarga:</span>
                         @foreach($family_illnesses as $illness)
-                        <div class="rpt-hist-row">
-                            <span class="rpt-tag rpt-tag-purple">{{ $illness['code'] ?? '-' }}</span>
-                            <span style="font-size: 7px; color: #333;">{{ $illness['name'] ?? '-' }}</span>
-                            <span style="font-size: 6px; color: #888;">({{ $illness['family_name'] ?? '-' }})</span>
-                        </div>
+                        <span class="rpt-tag rpt-tag-purple">{{ $illness['code'] ?? '-' }} ({{ $illness['family_name'] ?? '-' }})</span>
                         @endforeach
                     </td>
                     @endif

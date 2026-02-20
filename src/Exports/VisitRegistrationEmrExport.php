@@ -240,7 +240,8 @@ class VisitRegistrationEmrExport
         // Get EMR data from examination summary
         $emr = $visitRegistration->examinationSummary?->emr ?? [];
 
-        return [
+        $response = [
+            'pdf_mode' => true, // Flag for PDF generation mode
             'workspace' => $this->transformWorkspace($workspaceData),
             'visit_registration' => $this->transformVisitRegistration($visitRegistration),
             'patient' => $this->transformPatient($visitRegistration),
@@ -258,6 +259,7 @@ class VisitRegistrationEmrExport
             'family_illnesses' => $this->transformFamilyIllnesses($emr),
             'physical_examinations' => $this->transformPhysicalExaminations($emr),
         ];
+        return $response;
     }
 
     /**
