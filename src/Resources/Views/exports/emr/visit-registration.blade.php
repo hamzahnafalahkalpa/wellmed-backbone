@@ -758,12 +758,37 @@
             border-radius: 2px;
         }
 
+        .rpt-phys-img-container {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+        }
+
         .rpt-phys-img {
             max-width: 100%;
             max-height: 180px;
             border: 1px solid #ddd;
             border-radius: 2px;
             background: #fff;
+            display: block;
+            margin: 0 auto;
+        }
+
+        .rpt-phys-dot {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background: #22c55e;
+            border: 2px solid #fff;
+            border-radius: 50%;
+            margin-left: -6px;
+            margin-top: -6px;
+            text-align: center;
+            line-height: 8px;
+            font-size: 7px;
+            font-weight: 700;
+            color: #fff;
+            z-index: 10;
         }
 
         .rpt-phys-note {
@@ -1168,30 +1193,34 @@
                         <div class="rpt-phys-card">
                             <div class="rpt-phys-label">{{ $exam['label'] ?? 'Pemeriksaan' }}</div>
                             @if(isset($exam['image_url']) && $exam['image_url'])
-                            <img src="{{ $exam['image_url'] }}" alt="{{ $exam['label'] ?? 'Physical Exam' }}" class="rpt-phys-img">
+                            <div class="rpt-phys-img-container">
+                                <img src="{{ $exam['image_url'] }}" alt="{{ $exam['label'] ?? 'Physical Exam' }}" class="rpt-phys-img">
+                                {{-- Render green dots at coordinates --}}
+                                @if(isset($exam['data']) && count($exam['data']) > 0)
+                                    @foreach($exam['data'] as $annotationIdx => $annotation)
+                                        @if(isset($annotation['coodinates']) && count($annotation['coodinates']) > 0)
+                                            @foreach($annotation['coodinates'] as $coord)
+                                                @if(isset($coord['coodinate']) && isset($coord['coodinate']['x']) && isset($coord['coodinate']['y']))
+                                                <div class="rpt-phys-dot"
+                                                     style="left: {{ $coord['coodinate']['x'] }}%; top: {{ $coord['coodinate']['y'] }}%;"
+                                                     title="{{ $annotation['condition'] ?? $annotation['anatomy']['name'] ?? 'Point' }}">{{ $annotationIdx + 1 }}</div>
+                                                @endif
+                                            @endforeach
+                                        @endif
+                                    @endforeach
+                                @endif
+                            </div>
                             @endif
 
-                            <!-- Annotations Detail -->
+                            <!-- Annotations Detail Legend -->
                             @if(isset($exam['has_annotations']) && $exam['has_annotations'] && isset($exam['data']) && count($exam['data']) > 0)
                             <div class="rpt-phys-annotations">
-                                @foreach($exam['data'] as $annotation)
+                                @foreach($exam['data'] as $annotationIdx => $annotation)
                                 <div class="rpt-phys-annotation-item">
+                                    <span style="display: inline-block; width: 14px; height: 14px; background: #22c55e; color: #fff; font-size: 8px; font-weight: 700; text-align: center; line-height: 14px; border-radius: 50%; margin-right: 4px;">{{ $annotationIdx + 1 }}</span>
                                     <span class="rpt-phys-annotation-anatomy">{{ $annotation['anatomy']['name'] ?? 'Area' }}</span>
                                     @if(isset($annotation['condition']) && $annotation['condition'])
                                     <span class="rpt-phys-annotation-condition"> → {{ $annotation['condition'] }}</span>
-                                    @endif
-                                    @if(isset($annotation['coodinates']) && count($annotation['coodinates']) > 0)
-                                    <div class="rpt-phys-annotation-coords">
-                                        @foreach($annotation['coodinates'] as $idx => $coord)
-                                        @if(isset($coord['coodinate']))
-                                        Titik {{ $idx + 1 }}: ({{ number_format($coord['coodinate']['x'] ?? 0, 1) }}, {{ number_format($coord['coodinate']['y'] ?? 0, 1) }})
-                                        @if(isset($coord['condition']) && $coord['condition'])
-                                         - {{ $coord['condition'] }}
-                                        @endif
-                                        @if(!$loop->last) | @endif
-                                        @endif
-                                        @endforeach
-                                    </div>
                                     @endif
                                 </div>
                                 @endforeach
