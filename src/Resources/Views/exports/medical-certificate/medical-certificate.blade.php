@@ -250,11 +250,20 @@ tfoot { display: table-footer-group; }
 
 @section('content')
 @php
-    $documentNumber = $document_number ?? 'SKM/' . date('Ymd') . '/' . str_pad(rand(1,9999), 4, '0', STR_PAD_LEFT);
-    $patientAge = $patient->people?->dob ? \Carbon\Carbon::parse($patient->people->dob)->age : null;
+    $documentNumber = $document_number ?? '';
+    $parseDate = function($date) {
+        if (!$date) return null;
+        if ($date instanceof \Carbon\Carbon) return $date;
+        if (preg_match('/^\d{2}\/\d{2}\/\d{4}$/', $date)) {
+            return \Carbon\Carbon::createFromFormat('d/m/Y', $date);
+        }
+        return \Carbon\Carbon::parse($date);
+    };
+    $dobCarbon = $parseDate($patient->people?->dob);
+    $patientAge = $dobCarbon?->age;
     $patientGender = $patient->people?->gender ?? null;
-    $genderText = $patientGender === 'male' ? 'Laki-laki' : ($patientGender === 'female' ? 'Perempuan' : '-');
-    $examDate = $visit_examination?->created_at ? \Carbon\Carbon::parse($visit_examination->created_at) : now();
+    $genderText = $patientGender === 'Male' ? 'Laki-laki' : ($patientGender === 'Female' ? 'Perempuan' : '-');
+    $examDate = $parseDate($visit_examination?->created_at) ?? now();
 @endphp
 
 <div class="watermark">SURAT KETERANGAN</div>
@@ -280,9 +289,9 @@ tfoot { display: table-footer-group; }
             </p>
         </div>
         <div>
-            <div class="qr-code">
-                <span>QR Code<br>Verifikasi</span>
-            </div>
+            {{-- <div class="qr-code"> --}}
+                {{-- <span>QR Code<br>Verifikasi</span> --}}
+            {{-- </div> --}}
         </div>
     </div>
 </header>

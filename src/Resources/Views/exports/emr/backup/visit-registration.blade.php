@@ -720,11 +720,13 @@
     <div class="rpt-header">
         <table class="rpt-header-table">
             <tr>
-                @if(isset($workspace['logo']) && $workspace['logo'])
                 <td class="rpt-header-logo">
-                    <img src="{{ $workspace['logo'] }}" alt="Logo">
+                    @if(isset($workspace['logo']) && $workspace['logo'])
+                        <img src="{{ $workspace['logo'] }}" alt="Logo">
+                    @else
+                        <img src="{!! backbone_asset('/assets/kalpa-logo.png') !!}" alt="Logo Kalpa">
+                    @endif
                 </td>
-                @endif
                 <td class="rpt-header-content">
                     <h1>{{ $workspace['name'] ?? 'KLINIK KESEHATAN' }}</h1>
                     <div class="rpt-subtitle">Hasil Pemeriksaan Medis</div>

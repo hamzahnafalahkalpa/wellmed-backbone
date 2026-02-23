@@ -4,10 +4,19 @@
 
 @section('document-content')
 @php
-    $patientAge = $patient->people?->dob ? \Carbon\Carbon::parse($patient->people->dob)->age : null;
+    $parseDate = function($date) {
+        if (!$date) return null;
+        if ($date instanceof \Carbon\Carbon) return $date;
+        if (preg_match('/^\d{2}\/\d{2}\/\d{4}$/', $date)) {
+            return \Carbon\Carbon::createFromFormat('d/m/Y', $date);
+        }
+        return \Carbon\Carbon::parse($date);
+    };
+    $dobCarbon = $parseDate($patient->people?->dob);
+    $patientAge = $dobCarbon?->age;
     $patientGender = $patient->people?->gender ?? null;
-    $genderText = $patientGender === 'male' ? 'Laki-laki' : ($patientGender === 'female' ? 'Perempuan' : '-');
-    $examDate = $visit_examination?->created_at ? \Carbon\Carbon::parse($visit_examination->created_at) : now();
+    $genderText = $patientGender === 'Male' ? 'Laki-laki' : ($patientGender === 'Female' ? 'Perempuan' : '-');
+    $examDate = $parseDate($visit_examination?->created_at) ?? now();
 
     // Get vital signs from assessment if available
     $vitalSigns = $assessment?->exam?->forms?->vital_signs ?? null;
@@ -51,7 +60,7 @@
     </tr>
     <tr>
         <th>Tempat/Tanggal Lahir</th>
-        <td>{{ ($patient->people?->birth_place ?? '-') . ', ' . ($patient->people?->dob ? \Carbon\Carbon::parse($patient->people->dob)->isoFormat('D MMMM Y') : '-') }}</td>
+        <td>{{ ($patient->people?->birth_place ?? '-') . ', ' . ($dobCarbon ? $dobCarbon->isoFormat('D MMMM Y') : '-') }}</td>
     </tr>
     <tr>
         <th>Umur</th>

@@ -128,11 +128,15 @@ tfoot { display: table-footer-group; }
 <header>
     <div class="header-grid" style="align-items: center;">
         <div class="col-span-3 text-left font-bold">
-            <h2 style="margin:0; font-family: 'Aptos'">PT KALPA INOVASI DIGITAL</h2>
+            <h2 style="margin:0; font-family: 'Aptos'">{{ strtoupper($workspace->name ?? 'PT KALPA INOVASI DIGITAL') }}</h2>
         </div>
         <div class="col-span-3 header-logo">
             <div class="block text-right rounded-[5px] overflow-hidden ml-auto" style="height:auto;">
-                <img src="{!! backbone_asset('/assets/kalpa-logo.png') !!}" height="40" alt="Logo">
+                @if($workspace?->setting?->logo)
+                    <img src="{{ $workspace->setting->logo }}" height="40" alt="Logo">
+                @else
+                    <img src="{!! backbone_asset('/assets/kalpa-logo.png') !!}" height="40" alt="Logo">
+                @endif
             </div>
         </div>
     </div>

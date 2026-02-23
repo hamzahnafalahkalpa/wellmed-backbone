@@ -4,11 +4,19 @@
 
 @section('document-content')
 @php
-    $patientAge = $patient->people?->dob ? \Carbon\Carbon::parse($patient->people->dob)->age : null;
+    $parseDate = function($date) {
+        if (!$date) return null;
+        if ($date instanceof \Carbon\Carbon) return $date;
+        if (preg_match('/^\d{2}\/\d{2}\/\d{4}$/', $date)) {
+            return \Carbon\Carbon::createFromFormat('d/m/Y', $date);
+        }
+        return \Carbon\Carbon::parse($date);
+    };
+    $dobCarbon = $parseDate($patient->people?->dob);
+    $patientAge = $dobCarbon?->age;
     $patientGender = $patient->people?->gender ?? null;
-    $genderText = $patientGender === 'male' ? 'Laki-laki' : ($patientGender === 'female' ? 'Perempuan' : '-');
-    $examDate = $visit_examination?->created_at ? \Carbon\Carbon::parse($visit_examination->created_at) : now();
-
+    $genderText = $patientGender === 'Male' ? 'Laki-laki' : ($patientGender === 'Female' ? 'Perempuan' : '-');
+    $examDate = $parseDate($visit_examination?->created_at) ?? now();
     // Get vital signs from assessment if available
     $vitalSigns = $assessment?->exam?->forms?->vital_signs ?? null;
     $bloodPressure = $vitalSigns?->blood_pressure ?? '-';
@@ -17,6 +25,7 @@
     $respiratoryRate = $vitalSigns?->respiratory_rate ?? '-';
     $weight = $vitalSigns?->weight ?? '-';
     $height = $vitalSigns?->height ?? '-';
+    $doctor = $visit_registration->practitioner_evaluation;
 @endphp
 
 <div class="content-text">
@@ -36,7 +45,7 @@
     </tr>
     <tr>
         <th>Tempat/Tanggal Lahir</th>
-        <td>{{ ($patient->people?->birth_place ?? '-') . ', ' . ($patient->people?->dob ? \Carbon\Carbon::parse($patient->people->dob)->isoFormat('D MMMM Y') : '-') }}</td>
+        <td>{{ ($patient->people?->birth_place ?? '-') . ', ' . ($dobCarbon ? $dobCarbon->isoFormat('D MMMM Y') : '-') }}</td>
     </tr>
     <tr>
         <th>Umur</th>
@@ -200,13 +209,13 @@
                 <strong>Dokter Pemeriksa,</strong>
                 <div class="signature-box"></div>
                 <div class="signature-name">
-                    {{ $doctor?->name ?? $visit_examination?->doctor?->name ?? '(...................................)' }}
+                    {{ $doctor?->name ?? '(...................................)' }}
                 </div>
-                <div style="font-size: 10px;">
+                {{-- <div style="font-size: 10px;">
                     @if($doctor?->sip_number ?? $visit_examination?->doctor?->sip_number)
                         SIP: {{ $doctor?->sip_number ?? $visit_examination?->doctor?->sip_number }}
                     @endif
-                </div>
+                </div> --}}
                 <div class="stamp-area">
                     <span>Stempel<br>Klinik</span>
                 </div>
