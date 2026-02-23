@@ -14,6 +14,9 @@ return [
         'REFERRAL'               => ['label'=>'REFERRAL','name'=>'Kode Rujukan'],
         'INVOICE'                => ['label'=>'INVOICE','name'=>'Kode Invoice'],
         'MEDICAL_RECORD'         => ['label'=>'MEDICAL_RECORD','name'=>'Rekam Medis'],
-        'ITEM_CODE'              => ['label'=>'ITEM_CODE','name'=>'Kode Item']
+        'ITEM_CODE'              => ['label'=>'ITEM_CODE','name'=>'Kode Item'],
+        'HEALTH_CERTIFICATE_CODE'   => ['label'=>'HEALTH_CERTIFICATE_CODE','name'=>'Surat Sehat'],
+        'ACCEPTENCE_TREATMENT_CODE' => ['label'=>'ACCEPTENCE_TREATMENT_CODE','name'=>'Persetujuan Tindakan Medis'],
+        'DECLINE_TREATMENT_CODE'    => ['label'=>'DECLINE_TREATMENT_CODE','name'=>'Penolakan Tindakan Medis'],
     ],
 ];
