@@ -248,7 +248,7 @@ class VisitRegistrationEmrExport
             'visit_registration' => $this->transformVisitRegistration($visitRegistration),
             'patient' => $this->transformPatient($visitRegistration),
             'practitioner' => $this->transformPractitioner($visitRegistration),
-            'soap' => $this->transformSoap($soap_model,$emr)
+            'soap' => $this->transformSoap($soap_model,$emr),
         ];
         return $response;
     }
