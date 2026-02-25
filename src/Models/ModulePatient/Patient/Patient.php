@@ -10,6 +10,40 @@ class Patient extends PatientPatient
 {
     use HasConsument;
 
+    public function getFilterCasts(): array{
+        return collect($this->getCasts())
+            ->except([
+                'patient_occupation_name',
+                'payer_id',
+                'patient_type_name',
+                'payer_name',
+                'first_name',
+                'last_name'
+            ])
+            ->toArray();
+    }
+
+    public function getCustomFilterOptions(string $filter_name): array{
+        $result = [];
+        switch ($filter_name) {
+            case 'patient_occupation_id':
+                $result = $this->PatientOccupationModel()->get()
+                        ->map(fn ($item) => [
+                            'value' => $item->id,
+                            'label' => $item->name,
+                        ])->toArray();
+            break;
+            case 'patient_type_id':
+                $result = $this->PatientTypeModel()->get()
+                        ->map(fn ($item) => [
+                            'value' => $item->id,
+                            'label' => $item->name,
+                        ])->toArray();
+            break;
+        }
+        return $result;
+    }
+
     /**
      * Elasticsearch configuration
      *
