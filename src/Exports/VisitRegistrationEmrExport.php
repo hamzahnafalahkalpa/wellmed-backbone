@@ -6,6 +6,7 @@ use Hanafalah\LaravelSupport\Jobs\ProcessExportJob;
 use Hanafalah\LaravelSupport\Models\Export\Export;
 use Hanafalah\MicroTenant\Facades\MicroTenant;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Database\Eloquent\Model;
 use Carbon\Carbon;
@@ -239,25 +240,15 @@ class VisitRegistrationEmrExport
 
         // Get EMR data from examination summary
         $emr = $visitRegistration->examinationSummary?->emr ?? [];
-
+        $soap_model = app(config('database.models.Soap'));
+        $soap_model = $soap_model->with($soap_model->showUsingRelation())->first();
         $response = [
             'pdf_mode' => true, // Flag for PDF generation mode
             'workspace' => $this->transformWorkspace($workspaceData),
             'visit_registration' => $this->transformVisitRegistration($visitRegistration),
             'patient' => $this->transformPatient($visitRegistration),
             'practitioner' => $this->transformPractitioner($visitRegistration),
-            'vital_signs' => $this->transformVitalSigns($emr),
-            'anthropometry' => $this->transformAnthropometry($emr),
-            'pain_scale' => $this->transformPainScale($emr),
-            'symptoms' => $this->transformSymptoms($emr),
-            'allergies' => $this->transformAllergies($emr),
-            'soap' => $this->transformSoap($emr),
-            'diagnoses' => $this->transformDiagnoses($emr),
-            'prescriptions' => $this->transformPrescriptions($emr),
-            'treatments' => $this->transformTreatments($emr),
-            'history_illnesses' => $this->transformHistoryIllnesses($emr),
-            'family_illnesses' => $this->transformFamilyIllnesses($emr),
-            'physical_examinations' => $this->transformPhysicalExaminations($emr),
+            'soap' => $this->transformSoap($soap_model,$emr)
         ];
         return $response;
     }
@@ -483,17 +474,32 @@ class VisitRegistrationEmrExport
         })->toArray();
     }
 
+
+
     /**
      * Transform SOAP notes.
      */
-    protected function transformSoap(array $emr): array
+    protected function transformSoap(Model $soap_model,array $emr): array
     {
-        return [
-            'subjective' => $emr['SubjectNote']['exam']['note'] ?? null,
-            'objective' => $emr['ObjectNote']['exam']['note'] ?? null,
-            'assessment' => $emr['AssessmentNote']['exam']['note'] ?? null,
-            'plan' => $emr['PlanNote']['exam']['note'] ?? null,
-        ];
+        $template = [];
+        $emr_keys = array_keys($emr);
+        foreach ($soap_model->getRelations() as $key => $relations){
+            $single_key = Str::singular($key);
+            $uc_single_key = Str::ucfirst($single_key);
+            $first_letter = $uc_single_key[0];
+            $template[$key] = [
+                'label' => $first_letter,
+                'name' => $uc_single_key,
+                'forms' => []
+            ];
+            foreach ($relations as $screeningHasForm) {
+                $form = $screeningHasForm->prop_form;
+                if (in_array($form['label'],$emr_keys)){
+                    $template[$key]['forms'][$form['label']] = $emr[$form['label']];
+                }
+            }
+        }
+        return $template;
     }
 
     /**
