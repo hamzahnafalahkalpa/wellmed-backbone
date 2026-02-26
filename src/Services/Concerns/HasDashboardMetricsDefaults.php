@@ -923,10 +923,18 @@ trait HasDashboardMetricsDefaults
             $periodType
         );
 
-        // DO NOT store 'previous' data in ES for these fields to avoid mapping conflicts
-        // Previous data will be populated at response formatting time in Gateway
-        // Keep queue_services, diagnosis_treatment, workspace_integrations, and trends
-        // as their default/empty values without 'previous' field
+        // Copy trends from previous data but update to new period
+        // DO NOT add 'previous' field to avoid mapping conflicts
+        if (!empty($previousData['trends'])) {
+            $document['trends'] = $this->copyTrendsForNewPeriod(
+                $previousData['trends'],
+                $periodType,
+                $timestamp
+            );
+        }
+
+        // DO NOT store 'previous' data in ES for queue_services, diagnosis_treatment, workspace_integrations
+        // to avoid mapping conflicts. These will be populated at response formatting time in Gateway
 
         return $document;
     }
@@ -1175,6 +1183,100 @@ trait HasDashboardMetricsDefaults
         $currentTrends['previous'] = $previousTrends;
 
         return $currentTrends;
+    }
+
+    /**
+     * Copy trends from previous period and update to new period.
+     * This creates a shifted trend window (e.g., 19-25 Feb becomes 20-26 Feb)
+     *
+     * @param array $previousTrends
+     * @param string $periodType
+     * @param Carbon $timestamp
+     * @return array
+     */
+    protected function copyTrendsForNewPeriod(array $previousTrends, string $periodType, Carbon $timestamp): array
+    {
+        $count = $this->getPeriodCount($periodType);
+        $newTrends = $previousTrends;
+
+        // Generate new date range for the trend
+        $dates = [];
+        for ($i = $count - 1; $i >= 0; $i--) {
+            $periodTimestamp = match ($periodType) {
+                self::PERIOD_DAILY => $timestamp->copy()->subDays($i),
+                self::PERIOD_WEEKLY => $timestamp->copy()->subWeeks($i),
+                self::PERIOD_MONTHLY => $timestamp->copy()->subMonths($i),
+                self::PERIOD_YEARLY => $timestamp->copy()->subYears($i),
+                default => $timestamp->copy()->subDays($i)
+            };
+
+            $dates[] = [
+                'key' => $periodTimestamp->format('Y-m-d'),
+                'label' => $this->getTrendPeriodLabel($periodType, $periodTimestamp)
+            ];
+        }
+
+        // Update services data with new date range
+        if (isset($newTrends['services']) && is_array($newTrends['services'])) {
+            foreach ($newTrends['services'] as &$service) {
+                if (isset($service['data']) && is_array($service['data'])) {
+                    // Shift the data: remove first item, shift all left, add new item with count 0
+                    $oldData = $service['data'];
+                    $newData = [];
+
+                    // Take items from index 1 to end (skip first/oldest)
+                    for ($i = 1; $i < count($oldData) && $i < $count; $i++) {
+                        $newData[] = [
+                            'key' => $dates[$i - 1]['key'],
+                            'label' => $dates[$i - 1]['label'],
+                            'count' => $oldData[$i]['count'] ?? 0
+                        ];
+                    }
+
+                    // Add today with count 0
+                    $newData[] = [
+                        'key' => $dates[$count - 1]['key'],
+                        'label' => $dates[$count - 1]['label'],
+                        'count' => 0
+                    ];
+
+                    $service['data'] = $newData;
+                }
+            }
+        }
+
+        // Update dataset.source with new labels and shifted values
+        if (isset($newTrends['dataset']['source']) && is_array($newTrends['dataset']['source'])) {
+            $source = &$newTrends['dataset']['source'];
+
+            // Update header row (labels)
+            if (isset($source[0]) && is_array($source[0])) {
+                $source[0] = ['Kunjungan'];
+                foreach ($dates as $date) {
+                    $source[0][] = $date['label'];
+                }
+            }
+
+            // Update data rows (shift values left, add 0 for today)
+            for ($i = 1; $i < count($source); $i++) {
+                if (is_array($source[$i]) && count($source[$i]) > 1) {
+                    $serviceName = $source[$i][0]; // First element is service name
+                    $newRow = [$serviceName];
+
+                    // Shift data left (skip index 1, start from index 2)
+                    for ($j = 2; $j < count($source[$i]) && ($j - 1) < $count; $j++) {
+                        $newRow[] = $source[$i][$j];
+                    }
+
+                    // Add 0 for today (convert to string to match type)
+                    $newRow[] = "0";
+
+                    $source[$i] = $newRow;
+                }
+            }
+        }
+
+        return $newTrends;
     }
 
     /**
