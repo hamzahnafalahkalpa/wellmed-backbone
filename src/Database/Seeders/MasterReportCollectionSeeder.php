@@ -5,7 +5,6 @@ namespace Projects\WellmedBackbone\Database\Seeders;
 use Hanafalah\LaravelSupport\Concerns\Support\HasRequestData;
 use Illuminate\Database\Seeder;
 
-
 class MasterReportCollectionSeeder extends Seeder
 {
     use HasRequestData;
@@ -156,8 +155,8 @@ class MasterReportCollectionSeeder extends Seeder
                     ["key" => "invoice_code", "label" => "Kode Invoice"],
                     ["key" => "billing.billing_code", "label" => "Kode Billing"],
                     ["key" => "billing.has_transaction.consument.name", "label" => "Nama Pasien"],
-                    ["key" => "debt", "label" => "Total Pembayaran"],
-                    ["key" => "paid", "label" => "Dibayar"],
+                    ["key" => "payment_history.amount", "label" => "Total Pembayaran"],
+                    ["key" => "payment_history.paid", "label" => "Dibayar"],
                     ["key" => "payer.name", "label" => "Payer"],
                     ["key" => "author.name", "label" => "Pembuat"],
                     ["key" => "paid_at", "label" => "Tanggal Bayar"],
@@ -260,6 +259,7 @@ class MasterReportCollectionSeeder extends Seeder
                 ],
                 "columns" => [
                     ["key" => "name", "label" => "Nama Diagnosis"],
+                    ["key" => "reference.exam.diagnose_type", "label" => "Jenis Diagnosa"],
                     ["key" => "disease.code", "label" => "Kode ICD"],
                     ["key" => "disease.name", "label" => "Nama Penyakit"],
                     ["key" => "classification_disease.code", "label" => "Kode Klasifikasi"],
