@@ -15,7 +15,10 @@ class FlushDashboardMetricsCommand extends Command
                             {--date= : Specific date (YYYY-MM-DD), defaults to today}
                             {--tenant_id= : Tenant ID for multi-tenant context}
                             {--workspace_id= : Workspace ID}
-                            {--dry-run : Preview data without indexing}';
+                            {--dry-run : Preview data without indexing}
+                            {--delete-indices : Delete all dashboard indices for the tenant}
+                            {--generate-default : Generate default document for the specified date}
+                            {--with-random-data : Populate document with random test data}';
 
     protected $description = 'Aggregate and flush dashboard metrics to Elasticsearch';
 
@@ -48,6 +51,8 @@ class FlushDashboardMetricsCommand extends Command
             MicroTenant::tenantImpersonate($tenantId);
         }
         $dryRun = $this->option('dry-run');
+        $deleteIndices = $this->option('delete-indices');
+        $generateDefault = $this->option('generate-default');
 
         if (!$tenantId || !$workspaceId) {
             $this->error('Both --tenant_id and --workspace_id options are required');
@@ -55,6 +60,16 @@ class FlushDashboardMetricsCommand extends Command
         }
 
         $tenantId = (int) $tenantId;
+
+        // Handle delete indices option
+        if ($deleteIndices) {
+            return $this->handleDeleteIndices($tenantId);
+        }
+
+        // Handle generate default document option
+        if ($generateDefault) {
+            return $this->handleGenerateDefault($period, $date, $tenantId, $workspaceId);
+        }
 
         $this->info("Aggregating dashboard metrics for {$period} on {$date->format('Y-m-d')}");
         $this->info("   Tenant ID: {$tenantId}");
@@ -178,5 +193,135 @@ class FlushDashboardMetricsCommand extends Command
     {
         // TODO: Implement actual queries for diagnosis/treatment
         return [];
+    }
+
+    /**
+     * Handle generation of default document for specific date
+     *
+     * @param string $period
+     * @param Carbon $date
+     * @param int $tenantId
+     * @param mixed $workspaceId
+     * @return int
+     */
+    protected function handleGenerateDefault(string $period, Carbon $date, int $tenantId, mixed $workspaceId): int
+    {
+        try {
+            $withRandomData = $this->option('with-random-data');
+
+            $this->info("Generating default dashboard document for {$date->format('Y-m-d')}");
+            $this->info("   Period: {$period}");
+            $this->info("   Tenant ID: {$tenantId}");
+            $this->info("   Workspace ID: {$workspaceId}");
+            if ($withRandomData) {
+                $this->info("   With Random Data: Yes");
+            }
+
+            if ($withRandomData) {
+                // Generate document with random data
+                $result = $this->service->generateDocumentWithRandomData($period, $tenantId, $workspaceId, $date);
+            } else {
+                // Create default document
+                $result = $this->service->generateDefaultDocument($period, $tenantId, $workspaceId, $date);
+            }
+
+            if ($result['success'] ?? false) {
+                if ($result['already_exists'] ?? false) {
+                    $this->warn("   Document already exists for this date.");
+                } else {
+                    $this->info("   Successfully created document.");
+                    $this->info("   Document ID: " . ($result['id'] ?? 'N/A'));
+                    if ($withRandomData) {
+                        $this->info("   Populated with random test data.");
+                    }
+                }
+                return Command::SUCCESS;
+            } else {
+                $this->error("   Failed to create document: " . ($result['error'] ?? 'Unknown error'));
+                return Command::FAILURE;
+            }
+
+        } catch (\Exception $e) {
+            $this->error("[FAIL] Error generating default document: {$e->getMessage()}");
+            Log::error('Failed to generate default dashboard document', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'date' => $date->format('Y-m-d'),
+                'tenant_id' => $tenantId,
+            ]);
+            return Command::FAILURE;
+        }
+    }
+
+    /**
+     * Handle deletion of all dashboard indices with specific pattern
+     *
+     * @param int $tenantId
+     * @return int
+     */
+    protected function handleDeleteIndices(int $tenantId): int
+    {
+        try {
+            $client = app('elasticsearch');
+            $prefix = config('elasticsearch.prefix', 'development');
+            $separator = config('elasticsearch.separator', '.');
+
+            // Pattern: {prefix}.{tenant_id}.dashboard-*
+            $pattern = "{$prefix}{$separator}dashboard-*";
+
+            $this->info("Searching for indices matching pattern: {$pattern}");
+
+            // Get all indices matching the pattern
+            $response = $client->cat()->indices([
+                'index' => $pattern,
+                'format' => 'json'
+            ]);
+
+            // Convert response to array
+            $indices = $response->asArray();
+
+            if (empty($indices)) {
+                $this->warn("No indices found matching pattern: {$pattern}");
+                return Command::SUCCESS;
+            }
+
+            $indexNames = array_column($indices, 'index');
+            $this->info("Found " . count($indexNames) . " indices to delete:");
+
+            foreach ($indexNames as $indexName) {
+                $this->line("  - {$indexName}");
+            }
+
+            // Confirm deletion
+            if (!$this->confirm("Are you sure you want to delete these " . count($indexNames) . " indices?", false)) {
+                $this->info("Deletion cancelled.");
+                return Command::SUCCESS;
+            }
+
+            // Delete indices
+            $deletedCount = 0;
+            foreach ($indexNames as $indexName) {
+                try {
+                    $client->indices()->delete(['index' => $indexName]);
+                    $this->info("   Deleted: {$indexName}");
+                    $deletedCount++;
+                } catch (\Exception $e) {
+                    $this->error("   Failed to delete {$indexName}: " . $e->getMessage());
+                }
+            }
+
+            $this->info("\n[OK] Successfully deleted {$deletedCount} out of " . count($indexNames) . " indices.");
+
+            return Command::SUCCESS;
+
+        } catch (\Exception $e) {
+            $this->error("[FAIL] Error deleting indices: {$e->getMessage()}");
+            Log::error('Failed to delete dashboard indices', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'tenant_id' => $tenantId,
+            ]);
+            return Command::FAILURE;
+        }
     }
 }

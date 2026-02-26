@@ -506,6 +506,9 @@ trait HasDashboardMetricsDefaults
      */
     protected function generateDocumentId(string $periodType, int $tenantId, mixed $workspaceId, Carbon $timestamp): string
     {
+        // TEMPORARY: Subtract 1 day for testing
+        // $timestamp = $timestamp->copy()->subDay();
+
         $periodKey = match ($periodType) {
             self::PERIOD_DAILY => $timestamp->format('Y-m-d'),
             self::PERIOD_WEEKLY => $timestamp->format('Y') . '-W' . $timestamp->format('W'),
@@ -513,7 +516,16 @@ trait HasDashboardMetricsDefaults
             self::PERIOD_YEARLY => $timestamp->format('Y'),
             default => $timestamp->format('Y-m-d')
         };
-        return "{$periodType}_{$tenantId}_{$workspaceId}_{$periodKey}";
+
+        $documentId = "{$periodType}_{$tenantId}_{$workspaceId}_{$periodKey}";
+
+        Log::channel('elasticsearch')->debug('Generated document ID', [
+            'document_id' => $documentId,
+            'timestamp' => $timestamp->format('Y-m-d H:i:s'),
+            'period_type' => $periodType
+        ]);
+
+        return $documentId;
     }
 
     /**
@@ -521,6 +533,9 @@ trait HasDashboardMetricsDefaults
      */
     protected function getDefaultDocument(string $periodType, int $tenantId, mixed $workspaceId, Carbon $timestamp): array
     {
+        // TEMPORARY: Subtract 1 day for testing to match document ID
+        // $adjustedTimestamp = $timestamp->copy()->subDay();
+
         return [
             'tenant_id' => $tenantId,
             'workspace_id' => $workspaceId,
@@ -744,11 +759,23 @@ trait HasDashboardMetricsDefaults
         try {
             $documentId = $this->generateDocumentId($periodType, $tenantId, $workspaceId, $timestamp);
 
+            Log::channel('elasticsearch')->info('Creating default document', [
+                'document_id' => $documentId,
+                'requested_date' => $timestamp->format('Y-m-d'),
+                'tenant_id' => $tenantId,
+                'workspace_id' => $workspaceId
+            ]);
+
             // Fetch previous period data for intelligent defaults
             $previousData = $this->fetchPreviousPeriodData($periodType, $tenantId, $workspaceId, $timestamp);
 
             // Create document with previous period data for comparison
             $document = $this->getDefaultDocumentWithPreviousData($periodType, $tenantId, $workspaceId, $timestamp, $previousData);
+
+            Log::channel('elasticsearch')->info('Document content before create', [
+                'document_date' => $document['date'],
+                'document_timestamp' => $document['timestamp']
+            ]);
 
             $response = $this->client->index([
                 'index' => $this->getIndexName($periodType),
@@ -896,34 +923,11 @@ trait HasDashboardMetricsDefaults
             $periodType
         );
 
-        // Update queue services with previous period data
-        $document['queue_services'] = $this->getQueueServicesWithPreviousData(
-            $document['queue_services'],
-            $previousData['queue_services'] ?? [],
-            $periodType
-        );
+        // DO NOT store 'previous' data in ES for these fields to avoid mapping conflicts
+        // Previous data will be populated at response formatting time in Gateway
+        // Keep queue_services, diagnosis_treatment, workspace_integrations, and trends
+        // as their default/empty values without 'previous' field
 
-        // Update diagnosis treatment with previous period data
-        $document['diagnosis_treatment'] = $this->getDiagnosisTreatmentWithPreviousData(
-            $document['diagnosis_treatment'],
-            $previousData['diagnosis_treatment'] ?? [],
-            $periodType
-        );
-
-        // Update workspace integrations with previous period data
-        $document['workspace_integrations'] = $this->getWorkspaceIntegrationsWithPreviousData(
-            $document['workspace_integrations'],
-            $previousData['workspace_integrations'] ?? [],
-            $periodType
-        );
-
-        // Update trends with previous period data
-        $document['trends'] = $this->getTrendsWithPreviousData(
-            $document['trends'],
-            $previousData['trends'] ?? [],
-            $periodType,
-            $timestamp
-        );
         return $document;
     }
 

@@ -36,6 +36,324 @@ class DashboardMetricsService
     }
 
     /**
+     * Create default document for a specific date.
+     * Public wrapper for createDefaultDocument.
+     *
+     * @param string $periodType
+     * @param int $tenantId
+     * @param mixed $workspaceId
+     * @param Carbon $timestamp
+     * @return array
+     */
+    public function generateDefaultDocument(string $periodType, int $tenantId, mixed $workspaceId, Carbon $timestamp): array
+    {
+        return $this->createDefaultDocument($periodType, $tenantId, $workspaceId, $timestamp);
+    }
+
+    /**
+     * Generate document with random test data for testing purposes.
+     *
+     * @param string $periodType
+     * @param int $tenantId
+     * @param mixed $workspaceId
+     * @param Carbon $timestamp
+     * @return array
+     */
+    public function generateDocumentWithRandomData(string $periodType, int $tenantId, mixed $workspaceId, Carbon $timestamp): array
+    {
+        try {
+            $documentId = $this->generateDocumentId($periodType, $tenantId, $workspaceId, $timestamp);
+
+            $this->ensureIndexExists($periodType);
+
+            // Get base document structure
+            $document = $this->getDefaultDocument($periodType, $tenantId, $workspaceId, $timestamp);
+
+            // Populate with random data
+            $document['statistics'] = $this->generateRandomStatistics();
+            $document['motivational_stats'] = $this->generateRandomMotivationalStats();
+            $document['pending_items'] = $this->generateRandomPendingItems();
+            $document['cashier'] = $this->generateRandomCashier();
+            $document['billing'] = $this->generateRandomBilling();
+            $document['trends'] = $this->generateRandomTrends($periodType, $timestamp);
+
+            // Store document
+            $response = $this->client->index([
+                'index' => $this->getIndexName($periodType),
+                'id' => $documentId,
+                'body' => $document,
+                'op_type' => 'create'
+            ]);
+
+            Log::channel('elasticsearch')->info('Created dashboard document with random data', [
+                'document_id' => $documentId,
+                'tenant_id' => $tenantId,
+                'workspace_id' => $workspaceId,
+                'date' => $timestamp->format('Y-m-d')
+            ]);
+
+            return ['success' => true, 'id' => $response['_id'] ?? null];
+
+        } catch (\Throwable $e) {
+            if (str_contains($e->getMessage(), 'version_conflict_engine_exception') ||
+                str_contains($e->getMessage(), 'document already exists')) {
+                return ['success' => true, 'already_exists' => true];
+            }
+
+            Log::channel('elasticsearch')->error('Failed to create document with random data', [
+                'error' => $e->getMessage(),
+                'tenant_id' => $tenantId
+            ]);
+
+            return ['success' => false, 'error' => $e->getMessage()];
+        }
+    }
+
+    /**
+     * Generate random statistics data
+     */
+    protected function generateRandomStatistics(): array
+    {
+        $now = now()->toIso8601String();
+        return [
+            [
+                'id' => 'patients',
+                'count' => rand(80, 120),
+                'previous_count' => rand(70, 110),
+                'is_cumulative' => true,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ],
+            [
+                'id' => 'new-patients',
+                'count' => rand(0, 5),
+                'previous_count' => rand(0, 5),
+                'is_cumulative' => false,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ],
+            [
+                'id' => 'revenue',
+                'count' => rand(500000, 2000000),
+                'previous_count' => rand(500000, 2000000),
+                'is_cumulative' => false,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ],
+            [
+                'id' => 'treatment',
+                'count' => rand(10, 50),
+                'previous_count' => rand(10, 50),
+                'is_cumulative' => false,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ]
+        ];
+    }
+
+    /**
+     * Generate random motivational stats data
+     */
+    protected function generateRandomMotivationalStats(): array
+    {
+        $current = rand(1, 10);
+        $target = rand(5, 15);
+        $previousCurrent = rand(1, 10);
+
+        return [
+            'current' => $current,
+            'target' => $target,
+            'previous_current' => $previousCurrent,
+            'previous_target' => $target,
+            'percentage' => $target > 0 ? round(($current / $target) * 100) : 0,
+            'remaining' => max(0, $target - $current),
+            'growth' => $current - $previousCurrent,
+            'growth_percentage' => $previousCurrent > 0 ? round((($current - $previousCurrent) / $previousCurrent) * 100) : 0
+        ];
+    }
+
+    /**
+     * Generate random pending items data
+     */
+    protected function generateRandomPendingItems(): array
+    {
+        $now = now()->toIso8601String();
+        return [
+            [
+                'id' => 'unsigned-visits',
+                'count' => rand(0, 5),
+                'previous_count' => rand(0, 5),
+                'created_at' => $now,
+                'updated_at' => $now,
+            ],
+            [
+                'id' => 'unsynced-patients',
+                'count' => rand(0, 10),
+                'previous_count' => rand(0, 10),
+                'created_at' => $now,
+                'updated_at' => $now,
+            ],
+            [
+                'id' => 'incomplete-diagnosis',
+                'count' => rand(0, 3),
+                'previous_count' => rand(0, 3),
+                'created_at' => $now,
+                'updated_at' => $now,
+            ]
+        ];
+    }
+
+    /**
+     * Generate random cashier data
+     */
+    protected function generateRandomCashier(): array
+    {
+        $now = now()->toIso8601String();
+        return [
+            [
+                'id' => 'revenue',
+                'count' => rand(1000000, 5000000),
+                'previous_count' => rand(1000000, 5000000),
+                'created_at' => $now,
+                'updated_at' => $now,
+            ],
+            [
+                'id' => 'unpaid',
+                'count' => rand(100000, 500000),
+                'previous_count' => rand(100000, 500000),
+                'created_at' => $now,
+                'updated_at' => $now,
+            ],
+            [
+                'id' => 'total-transactions',
+                'count' => rand(10, 50),
+                'previous_count' => rand(10, 50),
+                'created_at' => $now,
+                'updated_at' => $now,
+            ],
+            [
+                'id' => 'pending',
+                'count' => rand(0, 5),
+                'previous_count' => rand(0, 5),
+                'created_at' => $now,
+                'updated_at' => $now,
+            ]
+        ];
+    }
+
+    /**
+     * Generate random billing data
+     */
+    protected function generateRandomBilling(): array
+    {
+        $now = now()->toIso8601String();
+        return [
+            [
+                'id' => 'total-billing',
+                'count' => rand(20, 100),
+                'previous_count' => rand(20, 100),
+                'created_at' => $now,
+                'updated_at' => $now,
+            ],
+            [
+                'id' => 'unpaid-billing',
+                'count' => rand(0, 10),
+                'previous_count' => rand(0, 10),
+                'created_at' => $now,
+                'updated_at' => $now,
+            ],
+            [
+                'id' => 'paid-billing',
+                'count' => rand(10, 90),
+                'previous_count' => rand(10, 90),
+                'created_at' => $now,
+                'updated_at' => $now,
+            ],
+            [
+                'id' => 'total-revenue',
+                'count' => rand(2000000, 10000000),
+                'previous_count' => rand(2000000, 10000000),
+                'created_at' => $now,
+                'updated_at' => $now,
+            ]
+        ];
+    }
+
+    /**
+     * Generate random trends data
+     */
+    protected function generateRandomTrends(string $periodType, Carbon $timestamp): array
+    {
+        $services = ['Umum', 'Gigi', 'Anak', 'Kebidanan'];
+        $count = $this->getPeriodCount($periodType);
+
+        $servicesData = [];
+        $datasetSource = [];
+
+        // Generate labels for x-axis
+        $labels = ['Kunjungan'];
+        $dates = [];
+
+        for ($i = $count - 1; $i >= 0; $i--) {
+            $periodTimestamp = match ($periodType) {
+                self::PERIOD_DAILY => $timestamp->copy()->subDays($i),
+                self::PERIOD_WEEKLY => $timestamp->copy()->subWeeks($i),
+                self::PERIOD_MONTHLY => $timestamp->copy()->subMonths($i),
+                self::PERIOD_YEARLY => $timestamp->copy()->subYears($i),
+                default => $timestamp->copy()->subDays($i)
+            };
+
+            $dates[] = [
+                'timestamp' => $periodTimestamp,
+                'key' => $periodTimestamp->format('Y-m-d'),
+                'label' => $this->getTrendPeriodLabel($periodType, $periodTimestamp)
+            ];
+
+            $labels[] = $this->getTrendPeriodLabel($periodType, $periodTimestamp);
+        }
+        $datasetSource[] = $labels;
+
+        // Generate data for each service
+        foreach ($services as $service) {
+            $data = [];
+            $serviceData = [strtoupper($service)];
+
+            foreach ($dates as $dateInfo) {
+                $count = rand(0, 20);
+
+                $data[] = [
+                    'key' => $dateInfo['key'],
+                    'label' => $dateInfo['label'],
+                    'count' => $count
+                ];
+
+                // Convert to string to avoid ES mapping conflict (mixed type array)
+                $serviceData[] = (string) $count;
+            }
+
+            $servicesData[] = [
+                'service' => $service,
+                'service_label' => strtoupper($service),
+                'data' => $data
+            ];
+
+            $datasetSource[] = $serviceData;
+        }
+
+        return [
+            'services' => $servicesData,
+            'dataset' => [
+                'source' => $datasetSource
+            ],
+            'title' => 'Tren Kunjungan per Poliklinik',
+            'subtitle' => $this->getTrendSubtitle($periodType),
+            'chart_type' => 'line',
+            'series_layout' => 'row',
+            'period_type' => $periodType
+        ];
+    }
+
+    /**
      * Get or create current period document.
      */
     protected function getOrCreateCurrentPeriod(string $periodType, int $tenantId, mixed $workspaceId, Carbon $timestamp): array
