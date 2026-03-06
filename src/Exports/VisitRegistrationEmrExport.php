@@ -77,6 +77,26 @@ class VisitRegistrationEmrExport
     }
 
     /**
+     * Generate HTML only for debugging (no PDF conversion).
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function generateHtml(): \Illuminate\Http\Response
+    {
+        // Get the visit registration model from schema
+        $visitRegistration = $this->schema->entityData();
+        if (!$visitRegistration) {
+            throw new \Exception('Visit registration not found');
+        }
+
+        // Load all necessary data directly from visit registration
+        $data = $this->loadDataFromVisitRegistration($visitRegistration);
+
+        // Return HTML directly for debugging
+        return response()->view('wellmed::exports.emr.visit-registration', $data);
+    }
+
+    /**
      * Generate the PDF export synchronously and return as response.
      * This method does not store the file to S3 or create export records.
      *
