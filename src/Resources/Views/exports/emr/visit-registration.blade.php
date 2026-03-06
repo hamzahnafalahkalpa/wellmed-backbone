@@ -175,7 +175,9 @@
         .exam-tbl td { padding: 6px 10px; font-size: 10.5px; background-color: #fff; }
         .exam-tbl td:first-child { width: 42%; color: #5a6a80; background-color: #f7f9fc; }
         .edot        { display: inline-block; width: 5px; height: 5px; border-radius: 3px; background-color: #d04040; margin-right: 5px; vertical-align: middle; }
-        .phys-img    { max-width: 100%; max-height: 185px; border: 1px solid #dde3ec; border-radius: 3px; }
+        .phys-img-container { position: relative; display: inline-block; max-width: 100%; }
+        .phys-img    { max-width: 100%; max-height: 185px; border: 1px solid #dde3ec; border-radius: 3px; display: block; }
+        .phys-svg-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
         .anno-cond   { font-size: 10px; color: #5a6a80; font-style: italic; margin-top: 1px; padding-left: 12px; }
 
         /* ── DIAGNOSES ────────────────────────────────────────────── */
@@ -639,16 +641,55 @@
                         <tr>
                             @if($exam['image_url'])
                             <td style="width:42%; vertical-align:top; padding:0; padding-right:8px;">
-                                <img src="{{ $exam['image_url'] }}" alt="{{ $exam['label'] }}" class="phys-img">
+                                <div class="phys-img-container">
+                                    <img src="{{ $exam['image_url'] }}" alt="{{ $exam['label'] }}" class="phys-img">
+                                    <svg class="phys-svg-overlay" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="none">
+                                        @foreach($exam['data'] as $annoIndex => $anno)
+                                            @if(!empty($anno['coodinates']) && is_array($anno['coodinates']))
+                                                @php
+                                                    // Generate unique color for each annotation
+                                                    $colors = ['#d04040', '#2a8a7a', '#c47a20', '#053046', '#8b5cf6', '#ec4899', '#14b8a6', '#f59e0b'];
+                                                    $color = $colors[$annoIndex % count($colors)];
+                                                @endphp
+                                                @foreach($anno['coodinates'] as $coord)
+                                                    @if(isset($coord['x']) && isset($coord['y']))
+                                                        {{-- Convert coordinates to percentage (0-100) for SVG viewBox --}}
+                                                        <circle
+                                                            cx="{{ $coord['x'] }}"
+                                                            cy="{{ $coord['y'] }}"
+                                                            r="1.5"
+                                                            fill="{{ $color }}"
+                                                            stroke="#ffffff"
+                                                            stroke-width="0.5"
+                                                            opacity="0.85"
+                                                        />
+                                                    @endif
+                                                @endforeach
+                                            @endif
+                                        @endforeach
+                                    </svg>
+                                </div>
                             </td>
                             @endif
                             <td style="vertical-align:top; padding:0;">
                                 <div style="border:1px solid #dde3ec; border-radius:4px;">
                                     <table class="exam-tbl">
-                                        @foreach($exam['data'] as $anno)
+                                        @foreach($exam['data'] as $annoIndex => $anno)
+                                        @php
+                                            $colors = ['#d04040', '#2a8a7a', '#c47a20', '#053046', '#8b5cf6', '#ec4899', '#14b8a6', '#f59e0b'];
+                                            $color = $colors[$annoIndex % count($colors)];
+                                        @endphp
                                         <tr>
-                                            <td>{{ $anno['anatomy']['name'] ?? '-' }} @if(!empty($anno['coodinates']))<span style="font-size:9px; color:#9aa5b4;">({{ count($anno['coodinates']) }} titik)</span>@endif</td>
-                                            <td><span class="edot"></span>{{ $anno['condition'] ?? '-' }}</td>
+                                            <td>
+                                                @if(!empty($anno['coodinates']))
+                                                <span class="edot" style="background-color: {{ $color }};"></span>
+                                                @endif
+                                                {{ $anno['anatomy']['name'] ?? '-' }}
+                                                @if(!empty($anno['coodinates']))
+                                                <span style="font-size:9px; color:#9aa5b4;">({{ count($anno['coodinates']) }} titik)</span>
+                                                @endif
+                                            </td>
+                                            <td>{{ $anno['condition'] ?? '-' }}</td>
                                         </tr>
                                         @endforeach
                                     </table>
