@@ -175,9 +175,9 @@
         .exam-tbl td { padding: 6px 10px; font-size: 10.5px; background-color: #fff; }
         .exam-tbl td:first-child { width: 42%; color: #5a6a80; background-color: #f7f9fc; }
         .edot        { display: inline-block; width: 5px; height: 5px; border-radius: 3px; background-color: #d04040; margin-right: 5px; vertical-align: middle; }
-        .phys-img-container { position: relative; display: inline-block; max-width: 100%; }
-        .phys-img    { max-width: 100%; max-height: 185px; border: 1px solid #dde3ec; border-radius: 3px; display: block; }
-        .phys-svg-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
+        .phys-img-container { position: relative; display: block; width: 100%; }
+        .phys-img    { width: 100%; height: auto; max-height: 185px; border: 1px solid #dde3ec; border-radius: 3px; display: block; object-fit: contain; }
+        .phys-svg-overlay { position: absolute; top: 1px; left: 1px; right: 1px; bottom: 1px; pointer-events: none; }
         .anno-cond   { font-size: 10px; color: #5a6a80; font-style: italic; margin-top: 1px; padding-left: 12px; }
 
         /* ── DIAGNOSES ────────────────────────────────────────────── */
@@ -642,26 +642,43 @@
                             @if($exam['image_url'])
                             <td style="width:42%; vertical-align:top; padding:0; padding-right:8px;">
                                 <div class="phys-img-container">
-                                    <img src="{{ $exam['image_url'] }}" alt="{{ $exam['label'] }}" class="phys-img">
-                                    <svg class="phys-svg-overlay" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="none">
+                                    <img src="{{ $exam['image_url'] }}" alt="{{ $exam['label'] }}" class="phys-img" id="phys-img-{{ $exam['type'] }}">
+                                    @php
+                                        // Calculate viewBox dimensions based on all coordinates
+                                        $maxX = 100;
+                                        $maxY = 100;
+                                        foreach($exam['data'] as $anno) {
+                                            if(!empty($anno['coodinates']) && is_array($anno['coodinates'])) {
+                                                foreach($anno['coodinates'] as $coord) {
+                                                    if(isset($coord['x'])) $maxX = max($maxX, $coord['x']);
+                                                    if(isset($coord['y'])) $maxY = max($maxY, $coord['y']);
+                                                }
+                                            }
+                                        }
+                                        // Add 10% padding
+                                        $viewBoxWidth = $maxX * 1.1;
+                                        $viewBoxHeight = $maxY * 1.1;
+                                    @endphp
+                                    <svg class="phys-svg-overlay" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {{ $viewBoxWidth }} {{ $viewBoxHeight }}" preserveAspectRatio="xMidYMid meet">
                                         @foreach($exam['data'] as $annoIndex => $anno)
                                             @if(!empty($anno['coodinates']) && is_array($anno['coodinates']))
                                                 @php
                                                     // Generate unique color for each annotation
                                                     $colors = ['#d04040', '#2a8a7a', '#c47a20', '#053046', '#8b5cf6', '#ec4899', '#14b8a6', '#f59e0b'];
                                                     $color = $colors[$annoIndex % count($colors)];
+                                                    // Calculate radius based on viewBox size
+                                                    $radius = max(3, $viewBoxWidth * 0.008);
                                                 @endphp
                                                 @foreach($anno['coodinates'] as $coord)
                                                     @if(isset($coord['x']) && isset($coord['y']))
-                                                        {{-- Convert coordinates to percentage (0-100) for SVG viewBox --}}
                                                         <circle
                                                             cx="{{ $coord['x'] }}"
                                                             cy="{{ $coord['y'] }}"
-                                                            r="1.5"
+                                                            r="{{ $radius }}"
                                                             fill="{{ $color }}"
                                                             stroke="#ffffff"
-                                                            stroke-width="0.5"
-                                                            opacity="0.85"
+                                                            stroke-width="{{ max(1, $radius * 0.3) }}"
+                                                            opacity="0.9"
                                                         />
                                                     @endif
                                                 @endforeach
