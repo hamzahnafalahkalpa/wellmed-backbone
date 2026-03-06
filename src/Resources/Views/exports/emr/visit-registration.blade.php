@@ -3,1386 +3,843 @@
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-    <title>EMR - {{ $visit_registration['visit_registration_code'] ?? 'N/A' }}</title>
+    <title>EMR - {{ $data['visit_registration']['visit_registration_code'] ?? 'N/A' }}</title>
     <style type="text/css">
         @page {
-            size: A4;
-            margin: 22mm 12mm 18mm 12mm;
+            size: letter;
+            margin: 22mm 20mm 20mm 20mm;
         }
 
-        *, *::before, *::after {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
-            font-family: 'DejaVu Sans', Arial, Helvetica, sans-serif;
-            font-size: 8px;
-            line-height: 1.3;
-            color: #333;
-            background: #fff;
+            font-family: 'DejaVu Sans', Arial, sans-serif;
+            font-size: 11px;
+            line-height: 1.5;
+            color: #2e3c52;
+            margin: 5px 5px;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
         }
 
-        /* ============================================
-           STREAM MODE (Browser View) - Better Margins
-           Only applies when NOT generating PDF
-           ============================================ */
-        @media screen and (min-width: 1px) {
-            body:not(.pdf-mode) {
-                background: #e5e7eb;
-                padding: 20px;
-            }
-            body:not(.pdf-mode) .rpt-wrap {
-                max-width: 210mm;
-                margin: 0 auto;
-                padding: 25mm 15mm 20mm 15mm;
-                background: #fff;
-                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-                border-radius: 4px;
-            }
-            body:not(.pdf-mode) .pdf-header,
-            body:not(.pdf-mode) .pdf-footer {
-                position: relative;
-                top: auto;
-                bottom: auto;
-            }
-            body:not(.pdf-mode) .pdf-header {
-                margin-bottom: 15px;
-                padding-bottom: 10px;
-            }
-            body:not(.pdf-mode) .pdf-footer {
-                margin-top: 20px;
-                padding-top: 10px;
-            }
-        }
-
-        /* ============================================
-           PDF MODE - Explicit styles for DomPDF generation
-           ============================================ */
-        body.pdf-mode {
-            background: #fff;
-            padding: 0;
-        }
-        body.pdf-mode .rpt-wrap {
-            max-width: 100%;
-            margin: 0;
-            padding: 0;
-        }
-        body.pdf-mode .pdf-header {
+        /* ── FIXED PAGE HEADER / FOOTER ──────────────────────────── */
+        .phdr {
             position: fixed;
-            top: -18mm;
-            left: 0;
-            right: 0;
-        }
-        body.pdf-mode .pdf-footer {
-            position: fixed;
-            bottom: -14mm;
-            left: 0;
-            right: 0;
-        }
-
-        /* ============================================
-           CONTAINER
-           ============================================ */
-        .rpt-wrap {
-            max-width: 100%;
-            margin: 0;
-            padding: 0;
-        }
-
-        /* ============================================
-           FIXED HEADER/FOOTER FOR PDF
-           ============================================ */
-        .pdf-header {
-            position: fixed;
-            top: -18mm;
-            left: 0;
-            right: 0;
-            height: 14mm;
-            font-size: 7px;
-            color: #666;
-            border-bottom: 1px solid #ddd;
-            padding-bottom: 2mm;
-        }
-
-        .pdf-header-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        .pdf-header-table td {
-            vertical-align: bottom;
-            padding: 0;
-        }
-
-        .pdf-footer {
-            position: fixed;
-            bottom: -14mm;
-            left: 0;
-            right: 0;
+            top: -17mm; left: 0; right: 0;
             height: 10mm;
-            font-size: 7px;
-            color: #888;
-            border-top: 1px solid #ddd;
-            padding-top: 2mm;
+            border-bottom: 0.5pt solid #dde3ec;
+            padding-bottom: 2pt;
         }
+        .phdr table { width: 100%; border-collapse: collapse; }
+        .phdr td    { font-size: 7px; color: #9aa5b4; vertical-align: bottom; padding: 0; }
 
-        .pdf-footer-table {
-            width: 100%;
-            border-collapse: collapse;
+        .pftr {
+            position: fixed;
+            bottom: -12mm; left: 0; right: 0;
+            height: 9mm;
+            border-top: 0.5pt solid #dde3ec;
+            padding-top: 2pt;
         }
+        .pftr table { width: 100%; border-collapse: collapse; }
+        .pftr td    { font-size: 7px; color: #9aa5b4; padding: 0; }
 
-        .pdf-footer-table td {
-            padding: 0;
-        }
+        /* ── DOCUMENT HEADER ──────────────────────────────────────── */
+        .doc-header    { background-color: #053046; padding: 18px 20px 14px; }
+        .dh-clinic     { font-size: 17px; font-weight: 700; color: #eae1b7; letter-spacing: 0.1px; }
+        .dh-sub        { font-size: 9px; color: #9db8c4; text-transform: uppercase; letter-spacing: 0.14em; margin-top: 2px; }
+        .dh-rm-lbl     { font-size: 8px; color: #9db8c4; letter-spacing: 0.13em; text-transform: uppercase; }
+        .dh-rm-num     { font-size: 13px; font-weight: 700; color: #eae1b7; letter-spacing: 0.06em; margin-top: 1px; }
+        .dh-rm-date    { font-size: 9.5px; color: #9db8c4; margin-top: 2px; }
+        .dh-divider    { height: 1px; background-color: #1a5470; margin: 10px 0; }
+        .dh-pf-lbl     { font-size: 8px; color: #9db8c4; text-transform: uppercase; letter-spacing: 0.13em; margin-bottom: 2px; }
+        .dh-pf-val     { font-size: 11.5px; color: #d4c99a; font-weight: 600; }
+        .dh-pf-val-lg  { font-size: 15px; color: #eae1b7; font-weight: 700; }
 
-        /* ============================================
-           HEADER - Document Header
-           ============================================ */
-        .rpt-header {
-            text-align: center;
-            margin-bottom: 6px;
-            padding-bottom: 5px;
-            border-bottom: 2px double #003049;
-        }
-
-        .rpt-header-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        .rpt-header-logo {
-            width: 50px;
-            vertical-align: middle;
-        }
-
-        .rpt-header-logo img {
-            max-width: 45px;
-            max-height: 45px;
-        }
-
-        .rpt-header-content {
-            vertical-align: middle;
-        }
-
-        .rpt-header h1 {
-            font-size: 12px;
-            color: #003049;
-            text-transform: uppercase;
-            letter-spacing: 0.3px;
-            margin-bottom: 0;
-        }
-
-        .rpt-subtitle {
-            font-size: 9px;
-            color: #555;
-        }
-
-        .rpt-meta {
-            margin-top: 3px;
-            font-size: 8px;
-            color: #777;
-        }
-
-        .rpt-meta-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        .rpt-meta-table td {
-            text-align: center;
-            padding: 0 6px;
-        }
-
-        /* ============================================
-           INFO BOX - Patient Information
-           ============================================ */
-        .rpt-info-box {
-            background: #f0f7ff;
-            border: 1px solid #c7dff0;
-            border-radius: 3px;
-            padding: 4px 8px;
-            margin-bottom: 5px;
-        }
-
-        .rpt-info-box h3 {
-            font-size: 8px;
-            color: #003049;
-            margin-bottom: 3px;
-            padding-left: 6px;
-            border-left: 2px solid #003049;
-        }
-
-        .rpt-info-grid {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        .rpt-info-grid td {
-            width: 50%;
-            vertical-align: top;
-            padding: 0;
-        }
-
-        .rpt-info-row {
-            font-size: 8px;
-            line-height: 1.4;
-        }
-
-        .rpt-info-lbl {
-            display: inline-block;
-            font-weight: 600;
-            color: #556070;
-            min-width: 70px;
-        }
-
-        .rpt-info-val {
-            color: #333;
-        }
-
-        /* ============================================
-           ALLERGY ALERT
-           ============================================ */
-        .rpt-allergy-box {
-            background: #fef2f2;
-            border: 1px solid #f87171;
-            border-radius: 3px;
-            padding: 4px 8px;
-            margin-bottom: 5px;
-        }
-
-        .rpt-allergy-header {
-            color: #991b1b;
-            font-weight: bold;
-            font-size: 8px;
-            margin-bottom: 2px;
-        }
-
-        .rpt-allergy-row {
-            padding: 1px 0;
-        }
-
-        .rpt-allergy-name {
-            font-weight: 600;
-            font-size: 8px;
-            color: #991b1b;
-        }
-
-        .rpt-allergy-sub {
-            font-size: 7px;
-            color: #666;
-        }
-
-        /* ============================================
-           SECTION STYLING
-           ============================================ */
-        .rpt-section {
-            margin-bottom: 5px;
-            page-break-inside: avoid;
-        }
-
-        .rpt-sec-title {
-            background: #003049;
-            color: #fff;
-            padding: 2px 6px;
-            font-size: 8px;
-            font-weight: 600;
-            border-radius: 2px 2px 0 0;
-        }
-
-        .rpt-sec-body {
-            border: 1px solid #d0d5dd;
-            border-top: none;
-            padding: 4px;
-            border-radius: 0 0 2px 2px;
-        }
-
-        /* ============================================
-           SOAP NOTES - Compact 2x2 Grid
-           ============================================ */
-        .rpt-soap-grid {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        .rpt-soap-grid td {
-            width: 50%;
-            padding: 1px;
-            vertical-align: top;
-        }
-
-        .rpt-soap-card {
-            background: #fafafa;
-            border: 1px solid #e4e7ec;
-            border-radius: 2px;
-            padding: 3px 5px;
-        }
-
-        .rpt-soap-lbl {
-            font-weight: 700;
-            font-size: 8px;
-            margin-bottom: 1px;
-        }
-
-        .rpt-soap-S .rpt-soap-lbl { color: #2563eb; }
-        .rpt-soap-O .rpt-soap-lbl { color: #7c3aed; }
-        .rpt-soap-A .rpt-soap-lbl { color: #db2777; }
-        .rpt-soap-P .rpt-soap-lbl { color: #16a34a; }
-
-        .rpt-soap-txt {
-            font-size: 7px;
-            color: #444;
-            font-style: italic;
-        }
-
-        /* Pain Scale Bar */
-        .rpt-pain-bar {
-            margin-top: 3px;
-            padding: 3px 6px;
-            background: #fafafa;
-            border: 1px solid #e5e7eb;
-            border-radius: 2px;
-        }
-
-        .rpt-pain-bar-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        .pain-lbl {
-            font-weight: 600;
-            color: #555;
-            font-size: 8px;
-        }
-
-        .pain-val {
-            font-size: 12px;
-            font-weight: 700;
-            color: #db2777;
-        }
-
-        /* ============================================
-           VITAL SIGNS - Compact Grid
-           ============================================ */
-        .rpt-vitals-grid {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        .rpt-vitals-grid td {
-            width: 16.66%;
-            padding: 1px;
-            vertical-align: top;
-        }
-
-        .rpt-vital {
-            background: #fafafa;
-            border: 1px solid #e4e7ec;
-            border-radius: 2px;
-            padding: 3px 2px;
-            text-align: center;
-        }
-
-        .rpt-vital-lbl {
-            font-size: 6px;
-            color: #666;
-            text-transform: uppercase;
-            letter-spacing: 0.1px;
-        }
-
-        .rpt-vital-val {
+        /* ── ALERT BAR ────────────────────────────────────────────── */
+        .alert-bar {
+            background-color: #fdf0f0;
+            border-bottom: 1px solid #f5c5c5;
+            padding: 6px 20px;
             font-size: 10px;
-            font-weight: 700;
-            color: #1e293b;
-        }
-
-        .rpt-vital-unit {
-            font-size: 6px;
-            color: #94a3b8;
-        }
-
-        .rpt-vital-status {
-            font-size: 6px;
+            color: #d04040;
             font-weight: 600;
-            margin-top: 1px;
-            padding: 0 3px;
-            border-radius: 4px;
+        }
+
+        /* ── DOCTOR STRIP ─────────────────────────────────────────── */
+        .doc-strip     { background-color: #eaf3f6; border-bottom: 1px solid #b8d4e0; padding: 7px 20px; }
+        .ds-lbl        { font-size: 8px; color: #7a9aaa; text-transform: uppercase; letter-spacing: 0.12em; }
+        .ds-name       { font-size: 11.5px; color: #053046; font-weight: 600; }
+        .svc-badge     { display: inline-block; font-size: 8.5px; letter-spacing: 0.1em; text-transform: uppercase; background-color: #b8d4e0; color: #053046; padding: 3px 10px; border-radius: 20px; }
+
+        /* ── BODY WRAPPER ─────────────────────────────────────────── */
+        .body { padding: 0 0 20px; }
+
+        /* ── SECTION ──────────────────────────────────────────────── */
+        .section { margin-top: 16px; }
+
+        /* Section header backgrounds — all derived from #053046 */
+        .sec-hdr-s { background-color: #eaf3f6; padding: 5px 10px; border-radius: 4px; margin-bottom: 9px; }
+        .sec-hdr-o { background-color: #e8f1f5; padding: 5px 10px; border-radius: 4px; margin-bottom: 9px; }
+        .sec-hdr-a { background-color: #eaf4f1; padding: 5px 10px; border-radius: 4px; margin-bottom: 9px; }
+        .sec-hdr-p { background-color: #eff5ea; padding: 5px 10px; border-radius: 4px; margin-bottom: 9px; }
+
+        .sec-badge {
             display: inline-block;
+            width: 22px; height: 22px;
+            border-radius: 11px;
+            text-align: center;
+            line-height: 18px;
+            font-size: 11px; font-weight: 700;
+            margin-right: 6px;
+            vertical-align: middle;
         }
+        /* S/O/A/P badges — navy variants, gold text */
+        .sb-s { background-color: #053046; color: #eae1b7; }
+        .sb-o { background-color: #0b4f72; color: #eae1b7; }
+        .sb-a { background-color: #0a5040; color: #eae1b7; }
+        .sb-p { background-color: #3a5010; color: #eae1b7; }
 
-        .status-normal { background: #dcfce7; color: #166534; }
-        .status-warning { background: #fef3c7; color: #92400e; }
-        .status-danger { background: #fee2e2; color: #991b1b; }
+        .sec-title { font-size: 12px; font-weight: 700; color: #053046; vertical-align: middle; }
+        .sec-sub   { font-size: 8px; color: #7a9aaa; text-transform: uppercase; letter-spacing: 0.1em; }
 
-        /* ============================================
-           ANTHROPOMETRY - Inline Compact
-           ============================================ */
-        .rpt-anthro-grid {
-            width: 100%;
-            border-collapse: collapse;
-        }
+        /* ── CARDS ────────────────────────────────────────────────── */
+        .scard         { background-color: #f7f9fc; border: 1px solid #dde3ec; border-radius: 4px; padding: 9px 13px; margin-bottom: 8px; }
+        .scard-title   { font-size: 8px; color: #9aa5b4; text-transform: uppercase; letter-spacing: 0.13em; margin-bottom: 6px; }
+        .scard-title-r { font-size: 8px; color: #d04040; text-transform: uppercase; letter-spacing: 0.13em; margin-bottom: 6px; }
 
-        .rpt-anthro-grid td {
-            width: 25%;
-            padding: 1px;
-            vertical-align: top;
-        }
+        /* ── SOAP NOTE TEXT ───────────────────────────────────────── */
+        .soap-note       { background-color: #fff; border: 1px solid #dde3ec; border-radius: 4px; padding: 9px 13px; margin-bottom: 8px; font-size: 11px; color: #374151; }
+        .soap-note-title { font-size: 8px; color: #9aa5b4; text-transform: uppercase; letter-spacing: 0.13em; margin-bottom: 5px; }
 
-        .rpt-anthro-item {
-            background: #fafafa;
-            border: 1px solid #eee;
-            border-radius: 2px;
-            padding: 2px 4px;
-            font-size: 8px;
-        }
+        /* ── LABEL (small uppercase) ──────────────────────────────── */
+        .lbl { font-size: 8px; color: #9aa5b4; text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 6px; margin-top: 4px; }
 
-        .rpt-anthro-item-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        .rpt-anthro-lbl {
-            color: #666;
-            font-size: 7px;
-        }
-
-        .rpt-anthro-val {
-            font-weight: 600;
-            color: #333;
-            text-align: right;
-            font-size: 8px;
-        }
-
-        /* ============================================
-           SYMPTOMS / TAGS
-           ============================================ */
-        .rpt-tag {
+        /* ── SYMPTOMS — pill tags ─────────────────────────────────── */
+        .sym-tag {
             display: inline-block;
-            padding: 1px 4px;
-            border-radius: 6px;
-            font-size: 7px;
-            font-weight: 600;
-            margin: 0 1px;
+            background-color: #ffffff;
+            border: 1px solid #dde3ec;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 10.5px;
+            margin: 2px 2px;
         }
 
-        .rpt-tag-blue { background: #dbeafe; color: #1e40af; }
-        .rpt-tag-red { background: #fee2e2; color: #991b1b; }
-        .rpt-tag-yellow { background: #fef3c7; color: #92400e; }
-        .rpt-tag-green { background: #dcfce7; color: #166534; }
-        .rpt-tag-purple { background: #ede9fe; color: #6d28d9; }
+        /* ── ALLERGY BLOCKS ───────────────────────────────────────── */
+        .al-block       { border-left: 3px solid #d04040; background-color: #fdf0f0; border-radius: 0 4px 4px 0; padding: 7px 11px; margin-bottom: 7px; }
+        .al-block-amber { border-left: 3px solid #c47a20; background-color: #fef6ec; border-radius: 0 4px 4px 0; padding: 7px 11px; margin-bottom: 7px; }
+        .al-sev-c { display: inline-block; font-size: 8px; font-weight: 700; text-transform: uppercase; padding: 2px 8px; border-radius: 20px; background-color: #d04040; color: #fff; margin-right: 7px; vertical-align: middle; }
+        .al-sev-h { display: inline-block; font-size: 8px; font-weight: 700; text-transform: uppercase; padding: 2px 8px; border-radius: 20px; background-color: #c47a20; color: #fff; margin-right: 7px; vertical-align: middle; }
+        .al-name  { font-size: 11px; font-weight: 600; color: #2e3c52; vertical-align: middle; }
+        .al-lbl   { font-size: 9.5px; color: #9aa5b4; }
+        .al-val   { font-size: 10.5px; color: #2e3c52; }
 
-        /* ============================================
-           DIAGNOSES
-           ============================================ */
-        .rpt-dg-row {
-            padding: 2px 0;
-            border-bottom: 1px solid #f3f4f6;
-        }
+        /* ── HISTORY ITEMS ────────────────────────────────────────── */
+        .hist-item { padding: 4px 0; border-bottom: 1px solid #dde3ec; }
+        .hist-item:last-child { border-bottom: none; padding-bottom: 0; }
+        .hdot     { display: inline-block; width: 5px; height: 5px; border-radius: 3px; background-color: #9aa5b4; vertical-align: middle; margin-right: 7px; }
+        .htxt     { display: inline; font-size: 11px; color: #2e3c52; }
+        .hperson  { font-size: 9.5px; color: #9aa5b4; padding-left: 12px; }
 
-        .rpt-dg-row:last-child {
-            border-bottom: none;
-        }
+        /* ── VITALS GRID ──────────────────────────────────────────── */
+        .vitals-tbl { width: 100%; border-collapse: separate; border-spacing: 1px; background-color: #dde3ec; border-radius: 4px; margin-bottom: 8px; }
+        .vc         { background-color: #ffffff; padding: 9px 13px; vertical-align: top; width: 33.33%; }
+        .vc-lbl     { font-size: 8px; color: #9aa5b4; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 3px; }
+        .vc-val     { font-size: 17px; color: #2e3c52; line-height: 1.1; }
+        .vc-unit    { font-size: 9px; color: #9aa5b4; }
+        .vc-badge   { display: inline-block; margin-top: 4px; font-size: 7.5px; font-weight: 700; text-transform: uppercase; padding: 2px 7px; border-radius: 20px; }
+        .vb-danger  { background-color: #fdf0f0; color: #d04040; }
+        .vb-ok      { background-color: #e6f5f3; color: #2a8a7a; }
+        .vb-warn    { background-color: #fef6ec; color: #c47a20; }
 
-        .rpt-dg-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
+        /* ── PAIN SCALE ───────────────────────────────────────────── */
+        .pain-bar-tbl  { width: 100%; border-collapse: separate; border-spacing: 2px; margin: 4px 0 5px; }
+        .pain-bar-tbl td { height: 7px; border-radius: 2px; }
+        .pain-num      { font-size: 22px; font-weight: 700; color: #c47a20; line-height: 1; }
+        .pain-den      { font-size: 11px; color: #9aa5b4; }
+        .pain-cat      { font-size: 10px; color: #c47a20; font-weight: 600; }
 
-        .rpt-dg-badge {
-            display: inline-block;
-            min-width: 40px;
-            text-align: center;
-            padding: 1px 3px;
-            border-radius: 2px;
-            font-size: 7px;
-            font-weight: 700;
-        }
+        /* ── ANTHROPOMETRY GRID ───────────────────────────────────── */
+        .anthro-tbl { width: 100%; border-collapse: separate; border-spacing: 1px; background-color: #dde3ec; border-radius: 4px; margin-bottom: 8px; }
+        .ac         { background-color: #ffffff; padding: 8px 13px; vertical-align: top; width: 33.33%; }
+        .ac-lbl     { font-size: 8px; color: #9aa5b4; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 2px; }
+        .ac-val     { font-size: 15px; color: #2e3c52; }
+        .ac-unit    { font-size: 9px; color: #9aa5b4; }
+        .ac-interp  { display: inline-block; margin-top: 3px; font-size: 7.5px; font-weight: 700; text-transform: uppercase; padding: 2px 7px; border-radius: 20px; background-color: #fef6ec; color: #c47a20; }
 
-        .badge-initial { background: #dbeafe; color: #1e40af; }
-        .badge-primary { background: #dcfce7; color: #166534; }
-        .badge-secondary { background: #fef3c7; color: #92400e; }
+        /* ── PHYSICAL EXAMINATION ─────────────────────────────────── */
+        .phys-sub-hd { font-size: 9px; font-weight: 700; color: #053046; margin-bottom: 5px; padding-bottom: 3px; border-bottom: 0.5pt solid #b8d4e0; }
+        .exam-tbl    { width: 100%; border-collapse: collapse; }
+        .exam-tbl tr { border-bottom: 1px solid #dde3ec; }
+        .exam-tbl tr:last-child { border-bottom: none; }
+        .exam-tbl td { padding: 6px 10px; font-size: 10.5px; background-color: #fff; }
+        .exam-tbl td:first-child { width: 42%; color: #5a6a80; background-color: #f7f9fc; }
+        .edot        { display: inline-block; width: 5px; height: 5px; border-radius: 3px; background-color: #d04040; margin-right: 5px; vertical-align: middle; }
+        .phys-img    { max-width: 100%; max-height: 185px; border: 1px solid #dde3ec; border-radius: 3px; }
+        .anno-cond   { font-size: 10px; color: #5a6a80; font-style: italic; margin-top: 1px; padding-left: 12px; }
 
-        .rpt-dg-code {
-            font-weight: 700;
-            color: #333;
-            font-size: 8px;
-        }
+        /* ── DIAGNOSES ────────────────────────────────────────────── */
+        .diag-item { padding: 7px 11px; background-color: #fff; border: 1px solid #dde3ec; border-radius: 4px; margin-bottom: 5px; }
+        .diag-item:last-child { margin-bottom: 0; }
+        .dtype     { display: inline-block; font-size: 8px; font-weight: 700; text-transform: uppercase; padding: 2px 9px; border-radius: 20px; min-width: 60px; text-align: center; margin-right: 7px; vertical-align: middle; }
+        .dt-p      { background-color: #053046; color: #eae1b7; }
+        .dt-a      { background-color: #eaf3f6; color: #053046; border: 1px solid #b8d4e0; }
+        .dt-s      { background-color: #f5f7f8; color: #5a6a7a; border: 1px solid #c8d8e0; }
+        .dcode     { font-size: 10.5px; color: #053046; font-weight: 700; margin-right: 5px; vertical-align: middle; }
+        .dname     { font-size: 11px; vertical-align: middle; }
 
-        /* ============================================
-           PRESCRIPTION - Compact Cards
-           ============================================ */
-        .rpt-rx-card {
-            background: #faf5ff;
-            border: 1px solid #ddd6fe;
-            border-radius: 3px;
-            padding: 4px 6px;
-            margin-bottom: 3px;
-            page-break-inside: avoid;
-        }
+        /* ── TREATMENTS ───────────────────────────────────────────── */
+        .tindakan-row  { padding: 7px 11px; background-color: #fff; border: 1px solid #dde3ec; border-radius: 4px; margin-bottom: 5px; }
+        .tindakan-row:last-child { margin-bottom: 0; }
+        .tindakan-name { font-size: 11.5px; font-weight: 600; color: #2e3c52; }
+        .tindakan-ct   { font-size: 9.5px; color: #9aa5b4; margin-left: 5px; }
+        .tx-res        { display: inline-block; font-size: 8px; font-weight: 700; background-color: #e6f5f3; color: #2a8a7a; padding: 2px 8px; border-radius: 20px; float: right; }
 
-        .rpt-rx-header {
-            margin-bottom: 2px;
-        }
+        /* ── PRESCRIPTIONS ────────────────────────────────────────── */
+        .rx-card   { border: 1px solid #b8d4e0; border-radius: 4px; margin-bottom: 8px; }
+        .rx-card:last-child { margin-bottom: 0; }
+        .rx-hdr    { background-color: #eaf3f6; padding: 7px 14px; border-bottom: 1px solid #b8d4e0; }
+        .rx-sym    { font-size: 14px; font-weight: 700; font-style: italic; color: #053046; margin-right: 7px; vertical-align: middle; }
+        .rx-drug   { font-size: 12px; font-weight: 600; color: #053046; vertical-align: middle; }
+        .rx-body   { padding: 10px 14px; background-color: #fff; }
+        .rxf-lbl   { font-size: 8px; color: #9aa5b4; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 2px; }
+        .rxf-val   { font-size: 11px; font-weight: 600; color: #2e3c52; }
 
-        .rpt-rx-header-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
+        /* ── FOOTER / SIGNATURE ───────────────────────────────────── */
+        .footer      { margin-top: 18px; padding-top: 12px; border-top: 1px solid #dde3ec; }
+        .footer-note { font-size: 9px; color: #9aa5b4; line-height: 1.8; }
+        .sig-block   { text-align: center; }
+        .sig-date    { font-size: 10px; color: #9aa5b4; margin-bottom: 7px; }
+        .sig-line    { height: 1px; background-color: #dde3ec; margin-bottom: 5px; }
+        .sig-name    { font-size: 12px; font-weight: 700; color: #2e3c52; }
+        .sig-title   { font-size: 9px; color: #9aa5b4; }
 
-        .rpt-rx-badge {
-            font-size: 8px;
-            font-weight: 700;
-            background: #7c3aed;
-            color: #fff;
-            padding: 1px 4px;
-            border-radius: 2px;
-        }
-
-        .rpt-rx-name {
-            font-size: 9px;
-            font-weight: 700;
-            color: #5b21b6;
-            padding-left: 4px;
-        }
-
-        .rpt-rx-details {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 8px;
-        }
-
-        .rpt-rx-details td {
-            width: 50%;
-            padding: 0;
-            vertical-align: top;
-        }
-
-        .rpt-rx-details .d-lbl {
-            color: #7c3aed;
-            font-weight: 600;
-        }
-
-        .rpt-rx-details .d-val {
-            color: #444;
-        }
-
-        .rpt-rx-indication {
-            margin-top: 2px;
-            padding: 2px 4px;
-            background: #f3e8ff;
-            border-radius: 2px;
-            font-size: 7px;
-            color: #5b21b6;
-        }
-
-        /* ============================================
-           TREATMENTS
-           ============================================ */
-        .rpt-treatment-row {
-            padding: 2px 0;
-            border-bottom: 1px solid #f3f4f6;
-            font-size: 8px;
-        }
-
-        .rpt-treatment-row:last-child {
-            border-bottom: none;
-        }
-
-        .rpt-treatment-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        .rpt-treatment-name {
-            font-weight: 600;
-            color: #333;
-        }
-
-        .rpt-treatment-qty {
-            font-size: 7px;
-            color: #999;
-        }
-
-        .rpt-treatment-result {
-            color: #16a34a;
-            font-weight: 600;
-            font-size: 8px;
-            text-align: right;
-        }
-
-        /* ============================================
-           MEDICAL HISTORY
-           ============================================ */
-        .rpt-hist-label {
-            font-weight: 600;
-            font-size: 8px;
-            color: #555;
-            margin-bottom: 1px;
-        }
-
-        .rpt-hist-row {
-            padding: 1px 0;
-            font-size: 8px;
-        }
-
-        .rpt-hist-sub {
-            font-size: 7px;
-            color: #777;
-        }
-
-        /* ============================================
-           TWO COLUMN LAYOUT
-           ============================================ */
-        .rpt-two-col {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        .rpt-two-col > tbody > tr > td {
-            width: 50%;
-            vertical-align: top;
-        }
-
-        .rpt-two-col > tbody > tr > td:first-child {
-            padding-right: 4px;
-        }
-
-        .rpt-two-col > tbody > tr > td:last-child {
-            padding-left: 4px;
-        }
-
-        /* ============================================
-           SIGNATURE / FOOTER
-           ============================================ */
-        .rpt-sign-section {
-            margin-top: 12px;
-            padding-top: 8px;
-            border-top: 1px dashed #ccc;
-        }
-
-        .rpt-sign-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        .rpt-sig-block {
-            text-align: center;
-            width: 140px;
-        }
-
-        .rpt-sig-line {
-            border-bottom: 1px solid #333;
-            height: 35px;
-            margin-bottom: 2px;
-        }
-
-        .rpt-sig-name {
-            font-size: 8px;
-            font-weight: 600;
-            color: #333;
-        }
-
-        .rpt-sig-title {
-            font-size: 7px;
-            color: #777;
-        }
-
-        .rpt-footer-note {
-            font-size: 7px;
-            color: #aaa;
-            text-align: center;
-            line-height: 1.3;
-        }
-
-        /* ============================================
-           VISIT INFO CARD
-           ============================================ */
-        .rpt-visit-card {
-            background: #f0fdf4;
-            border: 1px solid #86efac;
-            border-radius: 3px;
-            padding: 3px 6px;
-        }
-
-        .rpt-visit-card-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        .rpt-visit-card-table td {
-            padding: 0;
-            font-size: 8px;
-        }
-
-        .rpt-visit-lbl {
-            width: 75px;
-            color: #556070;
-            font-weight: 600;
-        }
-
-        .rpt-visit-val {
-            color: #333;
-        }
-
-        /* ============================================
-           PHYSICAL EXAMINATION - Body Forms with Images
-           ============================================ */
-        .rpt-phys-grid {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        .rpt-phys-grid td {
-            width: 33.33%;
-            padding: 3px;
-            vertical-align: top;
-        }
-
-        .rpt-phys-card {
-            background: #fafafa;
-            border: 1px solid #e4e7ec;
-            border-radius: 3px;
-            padding: 4px;
-            text-align: center;
-        }
-
-        .rpt-phys-label {
-            font-size: 7px;
-            font-weight: 600;
-            color: #003049;
-            text-transform: uppercase;
-            margin-bottom: 3px;
-            padding: 2px 4px;
-            background: #e0f2fe;
-            border-radius: 2px;
-        }
-
-        .rpt-phys-img-container {
-            position: relative;
-            display: inline-block;
-            width: 100%;
-        }
-
-        .rpt-phys-img {
-            max-width: 100%;
-            max-height: 180px;
-            border: 1px solid #ddd;
-            border-radius: 2px;
-            background: #fff;
-            display: block;
-            margin: 0 auto;
-        }
-
-        .rpt-phys-dot {
-            position: absolute;
-            width: 12px;
-            height: 12px;
-            background: #22c55e;
-            border: 2px solid #fff;
-            border-radius: 50%;
-            margin-left: -6px;
-            margin-top: -6px;
-            text-align: center;
-            line-height: 8px;
-            font-size: 7px;
-            font-weight: 700;
-            color: #fff;
-            z-index: 10;
-        }
-
-        .rpt-phys-note {
-            font-size: 6px;
-            color: #888;
-            margin-top: 2px;
-        }
-
-        /* Physical Examination Annotations */
-        .rpt-phys-annotations {
-            margin-top: 4px;
-            text-align: left;
-            font-size: 7px;
-        }
-
-        .rpt-phys-annotation-item {
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 2px;
-            padding: 3px 5px;
-            margin-bottom: 2px;
-        }
-
-        .rpt-phys-annotation-header {
-            display: block;
-            font-weight: 600;
-            color: #334155;
-            margin-bottom: 1px;
-        }
-
-        .rpt-phys-annotation-anatomy {
-            color: #0369a1;
-            font-size: 7px;
-        }
-
-        .rpt-phys-annotation-condition {
-            color: #dc2626;
-            font-weight: 600;
-            font-size: 7px;
-        }
-
-        .rpt-phys-annotation-coords {
-            font-size: 6px;
-            color: #94a3b8;
-            font-style: italic;
-        }
-
-        .rpt-phys-no-annotation {
-            font-size: 6px;
-            color: #94a3b8;
-            font-style: italic;
-            text-align: center;
-            padding: 4px;
-        }
-
-        /* ============================================
-           PAGE BREAK
-           ============================================ */
-        .page-break {
-            page-break-after: always;
-        }
-
-        /* ============================================
-           UTILITIES
-           ============================================ */
-        .text-center { text-align: center; }
-        .text-right { text-align: right; }
-        .text-left { text-align: left; }
-        .mb-4 { margin-bottom: 4px; }
-        .mb-5 { margin-bottom: 5px; }
-        .mt-4 { margin-top: 4px; }
-
-        /* ============================================
-           PRINT MODE ENHANCEMENTS (Browser Print)
-           ============================================ */
-        @media print {
-            body {
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
-                background: #fff !important;
-                padding: 0 !important;
-            }
-            .rpt-wrap {
-                max-width: 100% !important;
-                margin: 0 !important;
-                padding: 0 !important;
-                box-shadow: none !important;
-                border-radius: 0 !important;
-            }
-            .pdf-header {
-                position: fixed !important;
-                top: 0 !important;
-                left: 0 !important;
-                right: 0 !important;
-                margin-bottom: 0 !important;
-            }
-            .pdf-footer {
-                position: fixed !important;
-                bottom: 0 !important;
-                left: 0 !important;
-                right: 0 !important;
-                margin-top: 0 !important;
-            }
-            .rpt-section {
-                margin-bottom: 8px;
-            }
-            .rpt-info-box,
-            .rpt-allergy-box,
-            .rpt-visit-card {
-                margin-bottom: 8px;
-            }
-        }
-
-        /* ============================================
-           RESPONSIVE PHYSICAL EXAM GRID
-           ============================================ */
-        @media screen and (max-width: 600px) {
-            .rpt-phys-grid td {
-                display: block;
-                width: 100%;
-                padding: 5px 0;
-            }
-        }
+        /* ── UTILITIES ────────────────────────────────────────────── */
+        .tl { text-align: left; }
+        .tc { text-align: center; }
+        .tr { text-align: right; }
+        .page-break { page-break-after: always; }
     </style>
 </head>
-<body class="{{ $pdf_mode ?? false ? 'pdf-mode' : 'stream-mode' }}">
-    <!-- ============================================
-         FIXED PDF HEADER
-         ============================================ -->
-    <div class="pdf-header">
-        <table class="pdf-header-table">
-            <tr>
-                <td class="text-left"><strong>{{ $workspace['name'] ?? 'KLINIK' }}</strong></td>
-                <td class="text-center">REKAM MEDIS ELEKTRONIK</td>
-                <td class="text-right">No: {{ $visit_registration['visit_registration_code'] ?? '-' }}</td>
-            </tr>
-        </table>
-    </div>
+<body>
 
-    <!-- ============================================
-         FIXED PDF FOOTER
-         ============================================ -->
-    <div class="pdf-footer">
-        <table class="pdf-footer-table">
-            <tr>
-                <td class="text-left">{{ $visit_registration['visit_registration_code'] ?? '' }}</td>
-                <td class="text-center">Dokumen elektronik - sah tanpa tanda tangan basah</td>
-                <td class="text-right">Dicetak: {{ now()->format('d/m/Y H:i') }}</td>
-            </tr>
-        </table>
-    </div>
+<!-- Fixed Page Header -->
+<div class="phdr">
+    <table>
+        <tr>
+            <td class="tl" style="color:#053046; font-weight:700;">{{ $data['workspace']['name'] ?? 'KLINIK' }}</td>
+            <td class="tc">REKAM MEDIS ELEKTRONIK</td>
+            <td class="tr">No: <strong style="color:#2e3c52;">{{ $data['visit_registration']['visit_registration_code'] ?? '-' }}</strong></td>
+        </tr>
+    </table>
+</div>
 
-<div class="rpt-wrap">
+<!-- Fixed Page Footer -->
+<div class="pftr">
+    <table>
+        <tr>
+            <td class="tl">{{ $data['visit_registration']['visit_registration_code'] ?? '' }}</td>
+            <td class="tc">Dokumen resmi &mdash; sah tanpa tanda tangan basah</td>
+            <td class="tr">Dicetak: {{ now()->format('d M Y H:i') }}</td>
+        </tr>
+    </table>
+</div>
 
-    <!-- ============================================
-         HEADER
-         ============================================ -->
-    <div class="rpt-header">
-        <table class="rpt-header-table">
-            <tr>
-                <td class="rpt-header-logo">
-                    @if(isset($workspace['logo']) && $workspace['logo'])
-                        <img src="{{ $workspace['logo'] }}" alt="Logo">
-                    @else
-                        <img src="{!! backbone_asset('/assets/kalpa-logo.png') !!}" alt="Logo Kalpa">
-                    @endif
-                </td>
-                <td class="rpt-header-content">
-                    <h1>{{ $workspace['name'] ?? 'KLINIK KESEHATAN' }}</h1>
-                    @if(isset($workspace['address']) && $workspace['address'])
-                    <div style="font-size: 7px; color: #666;">{{ $workspace['address'] }}</div>
-                    @endif
-                    @if((isset($workspace['phone']) && $workspace['phone']) || (isset($workspace['email']) && $workspace['email']))
-                    <div style="font-size: 7px; color: #666;">
-                        @if(isset($workspace['phone']) && $workspace['phone'])Telp: {{ $workspace['phone'] }}@endif
-                        @if(isset($workspace['phone']) && $workspace['phone'] && isset($workspace['email']) && $workspace['email']) | @endif
-                        @if(isset($workspace['email']) && $workspace['email'])Email: {{ $workspace['email'] }}@endif
-                    </div>
-                    @endif
-                    <div class="rpt-subtitle" style="margin-top: 3px;">Hasil Pemeriksaan Medis</div>
-                    <div class="rpt-meta">
-                        <table class="rpt-meta-table">
-                            <tr>
-                                <td>No. Kunjungan: <strong>{{ $visit_registration['visit_registration_code'] ?? '-' }}</strong></td>
-                                <td>Tanggal: <strong>{{ $visit_registration['visit_date'] ?? now()->format('d F Y') }}</strong></td>
-                                <td>Layanan: <strong>{{ $visit_registration['medic_service']['name'] ?? '-' }}</strong></td>
-                                <td>Status: <strong>{{ $visit_registration['status'] ?? '-' }}</strong></td>
-                            </tr>
-                        </table>
-                    </div>
-                </td>
-            </tr>
-        </table>
-    </div>
+<div>
 
-    <!-- ============================================
-         PATIENT INFO BOX
-         ============================================ -->
-    <div class="rpt-info-box">
-        <h3>Informasi Pasien</h3>
-        <table class="rpt-info-grid">
+    <!-- ============================================================
+         DOCUMENT HEADER — blue gradient
+         ============================================================ -->
+    <div class="doc-header">
+        <table style="width:100%; border-collapse:collapse;">
             <tr>
-                <td>
-                    <div class="rpt-info-row"><span class="rpt-info-lbl">Nama</span><span class="rpt-info-val">: <strong>{{ $patient['name'] ?? '-' }}</strong></span></div>
-                    <div class="rpt-info-row"><span class="rpt-info-lbl">Tgl Lahir</span><span class="rpt-info-val">: {{ $patient['date_of_birth'] ?? '-' }} @if(isset($patient['age']) && $patient['age'])({{ $patient['age'] }} Thn)@endif</span></div>
-                    <div class="rpt-info-row"><span class="rpt-info-lbl">Jenis Kelamin</span><span class="rpt-info-val">: {{ $patient['gender'] ?? '-' }}</span></div>
-                    <div class="rpt-info-row"><span class="rpt-info-lbl">Gol. Darah</span><span class="rpt-info-val">: {{ $patient['blood_type'] ?? '-' }}</span></div>
+                @if(isset($data['workspace']['logo']) && $data['workspace']['logo'])
+                <td style="width:46px; vertical-align:middle; padding:0; padding-right:10px;">
+                    <img src="{{ $data['workspace']['logo'] }}" alt="Logo" style="width:38px; height:38px; border-radius:4px;">
                 </td>
-                <td>
-                    <div class="rpt-info-row"><span class="rpt-info-lbl">No. RM</span><span class="rpt-info-val">: <strong>{{ $patient['medical_record_number'] ?? '-' }}</strong></span></div>
-                    <div class="rpt-info-row"><span class="rpt-info-lbl">NIK</span><span class="rpt-info-val">: {{ $patient['nik'] ?? '-' }}</span></div>
-                    <div class="rpt-info-row"><span class="rpt-info-lbl">No. IHS</span><span class="rpt-info-val">: {{ $patient['ihs_number'] ?? '-' }}</span></div>
-                    <div class="rpt-info-row"><span class="rpt-info-lbl">No. Telp</span><span class="rpt-info-val">: {{ $patient['phone'] ?? '-' }}</span></div>
-                </td>
-            </tr>
-            <tr>
-                <td colspan="2">
-                    <div class="rpt-info-row"><span class="rpt-info-lbl">Tipe Pasien</span><span class="rpt-info-val">: <span class="rpt-tag rpt-tag-green">{{ $patient['patient_type'] ?? '-' }}</span></span></div>
-                </td>
-            </tr>
-        </table>
-    </div>
-
-    <!-- ============================================
-         PRACTITIONER INFO
-         ============================================ -->
-    <div class="rpt-visit-card mb-5">
-        <table class="rpt-visit-card-table">
-            <tr>
-                <td class="rpt-visit-lbl">Dokter (DPJP)</td>
-                <td class="rpt-visit-val">: <strong>{{ $practitioner['name'] ?? '-' }}</strong></td>
-                <td class="rpt-visit-lbl" style="padding-left: 15px;">Profesi</td>
-                <td class="rpt-visit-val">: {{ $practitioner['profession'] ?? '-' }}</td>
-                @if(isset($practitioner['sip_number']))
-                <td class="rpt-visit-lbl" style="padding-left: 15px;">SIP</td>
-                <td class="rpt-visit-val">: {{ $practitioner['sip_number'] }}</td>
                 @endif
+                <td style="vertical-align:top; padding:0;">
+                    <div class="dh-clinic">{{ $data['workspace']['name'] ?? 'KLINIK KESEHATAN' }}</div>
+                    <div class="dh-sub">Rekam Medis Elektronik</div>
+                </td>
+                <td style="text-align:right; vertical-align:top; padding:0;">
+                    <div class="dh-rm-lbl">No. Rekam Medis</div>
+                    <div class="dh-rm-num">{{ $data['visit_registration']['visit_registration_code'] ?? '-' }}</div>
+                    <div class="dh-rm-date">{{ $data['visit_registration']['visit_date'] ?? now()->format('d F Y') }}</div>
+                </td>
+            </tr>
+        </table>
+        <div class="dh-divider"></div>
+        <table style="width:100%; border-collapse:collapse;">
+            <tr>
+                <td style="width:40%; vertical-align:top; padding:0;">
+                    @php
+                        try {
+                            $dob    = \Carbon\Carbon::parse($data['patient']['date_of_birth'] ?? null);
+                            $diff   = $dob->diff(now());
+                            $ageStr = $diff->y . '.' . $diff->m;
+                        } catch (\Throwable $e) {
+                            $ageStr = null;
+                        }
+                    @endphp
+                    <div class="dh-pf-lbl">Nama Pasien</div>
+                    <div class="dh-pf-val-lg">
+                        {{ $data['patient']['name'] ?? '-' }}
+                        @if($ageStr)
+                        <span style="font-size:10px; font-weight:400; color:#9db8c4; margin-left:6px; vertical-align:middle;">{{ $ageStr }} thn</span>
+                        @endif
+                    </div>
+                </td>
+                <td style="width:25%; vertical-align:top; padding:0;">
+                    <div class="dh-pf-lbl">Tanggal Lahir</div>
+                    <div class="dh-pf-val">{{ $data['patient']['date_of_birth'] ?? '-' }}@if(isset($data['patient']['age']) && $data['patient']['age']) ({{ $data['patient']['age'] }} Thn)@endif</div>
+                </td>
+                <td style="width:20%; vertical-align:top; padding:0;">
+                    <div class="dh-pf-lbl">Jenis Kelamin</div>
+                    <div class="dh-pf-val">{{ $data['patient']['gender'] ?? '-' }}</div>
+                </td>
+                <td style="width:15%; vertical-align:top; padding:0;">
+                    <div class="dh-pf-lbl">Layanan</div>
+                    <div class="dh-pf-val">{{ $data['visit_registration']['medic_service']['name'] ?? '-' }}</div>
+                </td>
             </tr>
         </table>
     </div>
 
-    <!-- ============================================
-         ALLERGY ALERT (if any)
-         ============================================ -->
-    @if(isset($allergies) && count($allergies) > 0)
-    <div class="rpt-allergy-box">
-        <div class="rpt-allergy-header">PERINGATAN ALERGI</div>
-        @foreach($allergies as $allergy)
-        <div class="rpt-allergy-row">
-            <span class="rpt-tag rpt-tag-red">{{ $allergy['allergy_type'] ?? 'Alergi' }}</span>
-            <span class="rpt-allergy-name">{{ $allergy['name'] ?? '-' }}</span>
-            @if(isset($allergy['severity']))
-            <span class="rpt-tag rpt-tag-yellow">{{ $allergy['severity'] }}</span>
-            @endif
-            @if(isset($allergy['allergen']))
-            <div class="rpt-allergy-sub">Allergen: {{ $allergy['allergen'] }}</div>
-            @endif
-        </div>
-        @endforeach
-    </div>
+    <!-- ALLERGY ALERT BAR (conditional) -->
+    @if(!empty($data['soap']['subjectives']['forms']['Allergy']))
+    <div class="alert-bar">&#9888; Peringatan Alergi &mdash; pasien memiliki riwayat alergi obat, lihat detail di bawah</div>
     @endif
 
-    <!-- ============================================
-         SOAP NOTES + Pain Scale
-         ============================================ -->
-    @if(isset($soap))
-    <div class="rpt-section">
-        <div class="rpt-sec-title">Catatan Klinis (SOAP)</div>
-        <div class="rpt-sec-body">
-            <table class="rpt-soap-grid">
+    <!-- DOCTOR STRIP -->
+    <div class="doc-strip">
+        <table style="width:100%; border-collapse:collapse;">
+            <tr>
+                <td style="vertical-align:middle; padding:0;">
+                    <div class="ds-lbl">Dokter Penanggung Jawab (DPJP)</div>
+                    <div class="ds-name">{{ $data['practitioner']['name'] ?? '-' }}</div>
+                </td>
+                <td style="text-align:right; vertical-align:middle; padding:0;">
+                    <span class="svc-badge">{{ $data['practitioner']['profession'] ?? 'Dokter' }}</span>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    @php
+        $soap         = $data['soap'] ?? [];
+        $subjectForms = $soap['subjectives']['forms'] ?? [];
+        $objectForms  = $soap['objectives']['forms'] ?? [];
+        $assessForms  = $soap['assessments']['forms'] ?? [];
+        $planForms    = $soap['plans']['forms'] ?? [];
+    @endphp
+
+    <div class="body">
+
+    <!-- ============================================================
+         S — SUBJECTIVE
+         ============================================================ -->
+    <div class="section">
+        <div class="sec-hdr-s">
+            <table style="width:100%; border-collapse:collapse;">
                 <tr>
-                    <td>
-                        <div class="rpt-soap-card rpt-soap-S">
-                            <div class="rpt-soap-lbl">S - Subjektif</div>
-                            <div class="rpt-soap-txt">{{ $soap['subjective'] ?: '-' }}</div>
-                        </div>
+                    <td style="vertical-align:middle; padding:0;">
+                        <span class="sec-badge sb-s">S</span>
+                        <span class="sec-title">Subjective</span>
                     </td>
-                    <td>
-                        <div class="rpt-soap-card rpt-soap-O">
-                            <div class="rpt-soap-lbl">O - Objektif</div>
-                            <div class="rpt-soap-txt">{{ $soap['objective'] ?: '-' }}</div>
-                        </div>
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <div class="rpt-soap-card rpt-soap-A">
-                            <div class="rpt-soap-lbl">A - Assessment</div>
-                            <div class="rpt-soap-txt">{{ $soap['assessment'] ?: '-' }}</div>
-                        </div>
-                    </td>
-                    <td>
-                        <div class="rpt-soap-card rpt-soap-P">
-                            <div class="rpt-soap-lbl">P - Plan</div>
-                            <div class="rpt-soap-txt">{{ $soap['plan'] ?: '-' }}</div>
-                        </div>
+                    <td style="text-align:right; vertical-align:middle; padding:0;">
+                        <span class="sec-sub">Anamnesis &amp; Keluhan</span>
                     </td>
                 </tr>
             </table>
-
-            <!-- Pain Scale Bar -->
-            @if(isset($pain_scale))
-            <div class="rpt-pain-bar">
-                <table class="rpt-pain-bar-table">
-                    <tr>
-                        <td style="width: 100px;">
-                            <span class="pain-lbl">Skala Nyeri:</span>
-                        </td>
-                        <td style="width: 60px;">
-                            <span class="pain-val">{{ $pain_scale['value'] ?? '0' }}</span>
-                            <span style="color: #999; font-size: 10px;">/10</span>
-                        </td>
-                        <td>
-                            <span class="rpt-tag {{ $pain_scale['badge_class'] == 'success' ? 'rpt-tag-green' : ($pain_scale['badge_class'] == 'warning' ? 'rpt-tag-yellow' : 'rpt-tag-red') }}">
-                                {{ $pain_scale['interpretation'] ?? '-' }}
-                            </span>
-                        </td>
-                    </tr>
-                </table>
-            </div>
-            @endif
         </div>
-    </div>
-    @endif
 
-    <!-- ============================================
-         CHIEF COMPLAINTS / SYMPTOMS
-         ============================================ -->
-    @if(isset($symptoms) && count($symptoms) > 0)
-    <div class="rpt-section">
-        <div class="rpt-sec-title">Keluhan / Simtom</div>
-        <div class="rpt-sec-body">
-            @foreach($symptoms as $symptom)
-            <span class="rpt-tag rpt-tag-blue">{{ $symptom['name'] ?? '-' }}</span>
+        {{-- SubjectNote --}}
+        @if(!empty($subjectForms['SubjectNote']['exam']['note']))
+        <div class="soap-note">
+            <div class="soap-note-title">Catatan Subjektif</div>
+            {{ $subjectForms['SubjectNote']['exam']['note'] }}
+        </div>
+        @endif
+
+        {{-- Symptoms --}}
+        @if(!empty($subjectForms['Symptom']))
+        <div class="scard">
+            <div class="scard-title">Keluhan / Gejala</div>
+            @foreach($subjectForms['Symptom'] as $symptom)
+            <span class="sym-tag">{{ $symptom['exam']['name'] ?? '-' }}</span>
             @endforeach
         </div>
-    </div>
-    @endif
+        @endif
 
-    <!-- ============================================
-         VITAL SIGNS - Single Row 6 Columns
-         ============================================ -->
-    @if(isset($vital_signs) && count($vital_signs) > 0)
-    <div class="rpt-section">
-        <div class="rpt-sec-title">Tanda Vital</div>
-        <div class="rpt-sec-body">
-            <table class="rpt-vitals-grid">
-                <tr>
-                    @foreach($vital_signs as $vital)
-                    <td>
-                        <div class="rpt-vital">
-                            <div class="rpt-vital-lbl">{{ $vital['label'] ?? '-' }}</div>
-                            <div class="rpt-vital-val">{{ $vital['value'] ?? '-' }}<span class="rpt-vital-unit">{{ $vital['unit'] ?? '' }}</span></div>
-                            @if(isset($vital['status']))
-                            <div class="rpt-vital-status status-{{ $vital['status_class'] ?? 'normal' }}">{{ $vital['status'] }}</div>
-                            @endif
-                        </div>
-                    </td>
-                    @endforeach
-                </tr>
-            </table>
-        </div>
-    </div>
-    @endif
-
-    <!-- ============================================
-         ANTHROPOMETRY - Single Row 4 Columns
-         ============================================ -->
-    @if(isset($anthropometry) && count($anthropometry) > 0)
-    <div class="rpt-section">
-        <div class="rpt-sec-title">Antropometri</div>
-        <div class="rpt-sec-body">
-            <table class="rpt-anthro-grid">
-                <tr>
-                    @foreach($anthropometry as $anthro)
-                    <td>
-                        <div class="rpt-anthro-item">
-                            <table class="rpt-anthro-item-table">
-                                <tr>
-                                    <td class="rpt-anthro-lbl">{{ $anthro['label'] ?? '-' }}</td>
-                                    <td class="rpt-anthro-val">{{ $anthro['value'] ?? '-' }} {{ $anthro['unit'] ?? '' }}@if(isset($anthro['interpretation'])) <span style="font-size:6px;color:#888;">({{ $anthro['interpretation'] }})</span>@endif</td>
-                                </tr>
-                            </table>
-                        </div>
-                    </td>
-                    @endforeach
-                </tr>
-            </table>
-        </div>
-    </div>
-    @endif
-
-    <!-- ============================================
-         PHYSICAL EXAMINATION - Body Forms with Images
-         ============================================ -->
-    @if(isset($physical_examinations) && count($physical_examinations) > 0)
-    <div class="rpt-section">
-        <div class="rpt-sec-title">Pemeriksaan Fisik</div>
-        <div class="rpt-sec-body">
-            <table class="rpt-phys-grid">
-                <tr>
-                    @foreach($physical_examinations as $exam)
-                    <td>
-                        <div class="rpt-phys-card">
-                            <div class="rpt-phys-label">{{ $exam['label'] ?? 'Pemeriksaan' }}</div>
-                            @if(isset($exam['image_url']) && $exam['image_url'])
-                            <div class="rpt-phys-img-container">
-                                <img src="{{ $exam['image_url'] }}" alt="{{ $exam['label'] ?? 'Physical Exam' }}" class="rpt-phys-img">
-                                {{-- Render green dots at coordinates --}}
-                                @if(isset($exam['data']) && count($exam['data']) > 0)
-                                    @foreach($exam['data'] as $annotationIdx => $annotation)
-                                        @if(isset($annotation['coodinates']) && count($annotation['coodinates']) > 0)
-                                            @foreach($annotation['coodinates'] as $coord)
-                                                @if(isset($coord['coodinate']) && isset($coord['coodinate']['x']) && isset($coord['coodinate']['y']))
-                                                <div class="rpt-phys-dot"
-                                                     style="left: {{ $coord['coodinate']['x'] }}%; top: {{ $coord['coodinate']['y'] }}%;"
-                                                     title="{{ $annotation['condition'] ?? $annotation['anatomy']['name'] ?? 'Point' }}">{{ $annotationIdx + 1 }}</div>
-                                                @endif
-                                            @endforeach
-                                        @endif
-                                    @endforeach
-                                @endif
-                            </div>
-                            @endif
-
-                            <!-- Annotations Detail Legend -->
-                            @if(isset($exam['has_annotations']) && $exam['has_annotations'] && isset($exam['data']) && count($exam['data']) > 0)
-                            <div class="rpt-phys-annotations">
-                                @foreach($exam['data'] as $annotationIdx => $annotation)
-                                <div class="rpt-phys-annotation-item">
-                                    <span style="display: inline-block; width: 14px; height: 14px; background: #22c55e; color: #fff; font-size: 8px; font-weight: 700; text-align: center; line-height: 14px; border-radius: 50%; margin-right: 4px;">{{ $annotationIdx + 1 }}</span>
-                                    <span class="rpt-phys-annotation-anatomy">{{ $annotation['anatomy']['name'] ?? 'Area' }}</span>
-                                    @if(isset($annotation['condition']) && $annotation['condition'])
-                                    <span class="rpt-phys-annotation-condition"> → {{ $annotation['condition'] }}</span>
-                                    @endif
-                                </div>
-                                @endforeach
-                            </div>
-                            @elseif(!isset($exam['has_annotations']) || !$exam['has_annotations'])
-                            <div class="rpt-phys-no-annotation">Tidak ada anotasi</div>
-                            @endif
-                        </div>
-                    </td>
-                    @endforeach
-                </tr>
-            </table>
-        </div>
-    </div>
-    @endif
-
-    <!-- ============================================
-         DIAGNOSIS - Compact Inline
-         ============================================ -->
-    @if(isset($diagnoses) && count($diagnoses) > 0)
-    <div class="rpt-section">
-        <div class="rpt-sec-title">Diagnosa</div>
-        <div class="rpt-sec-body">
-            @foreach($diagnoses as $diagnosis)
-            <div class="rpt-dg-row">
-                <span class="rpt-dg-badge badge-{{ strtolower($diagnosis['type'] ?? 'secondary') }}">{{ $diagnosis['type_label'] ?? 'Dx' }}</span>
-                <span class="rpt-dg-code">{{ $diagnosis['code'] ?? '-' }} - {{ $diagnosis['name'] ?? '-' }}</span>
-            </div>
-            @endforeach
-        </div>
-    </div>
-    @endif
-
-    <!-- ============================================
-         PRESCRIPTIONS - Compact Cards
-         ============================================ -->
-    @if(isset($prescriptions) && count($prescriptions) > 0)
-    <div class="rpt-section">
-        <div class="rpt-sec-title">Resep</div>
-        <div class="rpt-sec-body">
-            @foreach($prescriptions as $index => $prescription)
-            <div class="rpt-rx-card">
-                <table class="rpt-rx-header-table">
+        {{-- Allergies --}}
+        @if(!empty($subjectForms['Allergy']))
+        <div class="scard">
+            <div class="scard-title-r">&#9888; Riwayat Alergi</div>
+            @foreach($subjectForms['Allergy'] as $allergy)
+            @php
+                $ae = $allergy['exam'] ?? [];
+                $sevScale = intval($ae['allergy_scale'] ?? 0);
+                if ($sevScale >= 4) {
+                    $alBlockClass = 'al-block';
+                    $alSevClass   = 'al-sev-c';
+                } else {
+                    $alBlockClass = 'al-block-amber';
+                    $alSevClass   = 'al-sev-h';
+                }
+            @endphp
+            <div class="{{ $alBlockClass }}">
+                <div style="margin-bottom:5px;">
+                    <span class="{{ $alSevClass }}">{{ $ae['allergy_scale_spell'] ?? ($ae['allergy_scale'] ?? '-') }}</span>
+                    <span class="al-name">{{ $ae['name'] ?? '-' }}</span>
+                </div>
+                <table style="width:100%; border-collapse:collapse;">
                     <tr>
-                        <td style="width: 22px;"><span class="rpt-rx-badge">Rx</span></td>
-                        <td><span class="rpt-rx-name">{{ $prescription['name'] ?? '-' }}</span></td>
-                        <td class="text-right" style="font-size:8px;">
-                            <span class="d-lbl">Jml:</span> <span class="d-val">{{ $prescription['qty'] ?? '-' }}</span> |
-                            <span class="d-lbl">Frek:</span> <span class="d-val">{{ $prescription['frequency'] ?? '-' }}</span>
-                            @if(isset($prescription['timing']) && $prescription['timing'] != '-')
-                            | <span class="d-lbl">Waktu:</span> <span class="d-val">{{ $prescription['timing'] }}</span>
-                            @endif
+                        <td style="width:50%; padding:0; vertical-align:top;">
+                            <div class="al-lbl">Tipe</div>
+                            <div class="al-val">{{ $ae['allergy_type']['name'] ?? '-' }}</div>
                         </td>
-                    </tr>
-                </table>
-                @if(isset($prescription['indication']) && $prescription['indication'] != '-')
-                <div class="rpt-rx-indication">Indikasi: {{ $prescription['indication'] }}</div>
-                @endif
-            </div>
-            @endforeach
-        </div>
-    </div>
-    @endif
-
-    <!-- ============================================
-         CLINICAL TREATMENTS - Compact
-         ============================================ -->
-    @if(isset($treatments) && count($treatments) > 0)
-    <div class="rpt-section">
-        <div class="rpt-sec-title">Tindakan Klinis</div>
-        <div class="rpt-sec-body">
-            @foreach($treatments as $treatment)
-            <div class="rpt-treatment-row">
-                <table class="rpt-treatment-table">
-                    <tr>
-                        <td style="width: auto;">
-                            <span class="rpt-treatment-name">{{ $treatment['name'] ?? '-' }}</span>
-                            <span class="rpt-treatment-qty">x{{ $treatment['qty'] ?? '1' }}</span>
+                        @if(!empty($ae['effects']))
+                        <td style="width:50%; padding:0; vertical-align:top;">
+                            <div class="al-lbl">Efek</div>
+                            <div class="al-val">{{ implode(', ', $ae['effects']) }}</div>
                         </td>
-                        @if(isset($treatment['result']) && $treatment['result'] && $treatment['result'] != '-')
-                        <td style="width: 80px; text-align: right;">
-                            <span class="rpt-tag rpt-tag-green">{{ $treatment['result'] }}</span>
+                        @elseif(!empty($ae['allergen']))
+                        <td style="width:50%; padding:0; vertical-align:top;">
+                            <div class="al-lbl">Alergen</div>
+                            <div class="al-val">{{ $ae['allergen'] }}</div>
                         </td>
                         @endif
                     </tr>
                 </table>
-                @if(isset($treatment['note']) && $treatment['note'] && $treatment['note'] != '-')
-                <div style="font-size: 7px; color: #666; padding-left: 10px; margin-top: 1px; font-style: italic;">
-                    {{ Str::limit($treatment['note'], 200) }}
-                </div>
-                @endif
             </div>
             @endforeach
         </div>
-    </div>
-    @endif
+        @endif
 
-    <!-- ============================================
-         MEDICAL HISTORY - Compact Two Columns
-         ============================================ -->
-    @if((isset($history_illnesses) && count($history_illnesses) > 0) || (isset($family_illnesses) && count($family_illnesses) > 0))
-    <div class="rpt-section">
-        <div class="rpt-sec-title">Riwayat Penyakit</div>
-        <div class="rpt-sec-body">
-            <table class="rpt-two-col">
+        {{-- PatientFamilyIllness — personal history vs family --}}
+        @if(!empty($subjectForms['PatientFamilyIllness']))
+        @php
+            $histItems   = array_values(array_filter($subjectForms['PatientFamilyIllness'], fn($f) => ($f['exam']['type'] ?? '') === 'HistoryIllness'));
+            $familyItems = array_values(array_filter($subjectForms['PatientFamilyIllness'], fn($f) => ($f['exam']['type'] ?? '') === 'FamilyIllness'));
+        @endphp
+        @if(count($histItems) > 0 || count($familyItems) > 0)
+        <table style="width:100%; border-collapse:collapse; table-layout:fixed;">
+            <tr>
+                @if(count($histItems) > 0)
+                <td style="vertical-align:top; padding:0; {{ count($familyItems) > 0 ? 'padding-right:4px;' : '' }}">
+                    <div class="scard">
+                        <div class="scard-title">Riwayat Penyakit Pribadi</div>
+                        @foreach($histItems as $h)
+                        <div class="hist-item">
+                            <span class="hdot"></span>
+                            <span class="htxt">{{ $h['exam']['name'] ?? '-' }}</span>
+                        </div>
+                        @endforeach
+                    </div>
+                </td>
+                @endif
+                @if(count($familyItems) > 0)
+                <td style="vertical-align:top; padding:0; {{ count($histItems) > 0 ? 'padding-left:4px;' : '' }}">
+                    <div class="scard">
+                        <div class="scard-title">Riwayat Penyakit Keluarga</div>
+                        @foreach($familyItems as $f)
+                        <div class="hist-item">
+                            <span class="hdot"></span>
+                            <div style="display:inline-block; vertical-align:middle;">
+                                <div class="htxt">{{ $f['exam']['name'] ?? '-' }}</div>
+                                @if(!empty($f['exam']['family_name']))
+                                <div class="hperson">{{ $f['exam']['family_name'] }}</div>
+                                @endif
+                            </div>
+                        </div>
+                        @endforeach
+                    </div>
+                </td>
+                @endif
+            </tr>
+        </table>
+        @endif
+        @endif
+
+    </div>{{-- /section S --}}
+
+    <!-- ============================================================
+         O — OBJECTIVE
+         ============================================================ -->
+    <div class="section">
+        <div class="sec-hdr-o">
+            <table style="width:100%; border-collapse:collapse;">
                 <tr>
-                    @if(isset($history_illnesses) && count($history_illnesses) > 0)
-                    <td>
-                        <span class="rpt-hist-label">Riwayat Penyakit Pribadi:</span>
-                        @foreach($history_illnesses as $illness)
-                        <div class="rpt-hist-row">
-                            <span class="rpt-tag rpt-tag-blue">{{ $illness['code'] ?? '-' }}</span>
-                            <span style="font-size: 7px; color: #333;">{{ $illness['name'] ?? '-' }}</span>
-                        </div>
-                        @endforeach
+                    <td style="vertical-align:middle; padding:0;">
+                        <span class="sec-badge sb-o">O</span>
+                        <span class="sec-title">Objective</span>
                     </td>
-                    @endif
-                    @if(isset($family_illnesses) && count($family_illnesses) > 0)
-                    <td>
-                        <span class="rpt-hist-label">Riwayat Penyakit Keluarga:</span>
-                        @foreach($family_illnesses as $illness)
-                        <div class="rpt-hist-row">
-                            <span class="rpt-tag rpt-tag-purple">{{ $illness['code'] ?? '-' }}</span>
-                            <span style="font-size: 7px; color: #333;">{{ $illness['name'] ?? '-' }}</span>
-                            <span style="font-size: 6px; color: #888;">({{ $illness['family_name'] ?? '-' }})</span>
-                        </div>
-                        @endforeach
+                    <td style="text-align:right; vertical-align:middle; padding:0;">
+                        <span class="sec-sub">Pemeriksaan Fisik &amp; Vital</span>
                     </td>
-                    @endif
                 </tr>
             </table>
         </div>
-    </div>
-    @endif
 
-    <!-- ============================================
-         SIGNATURE SECTION
-         ============================================ -->
-    <div class="rpt-sign-section">
-        <table class="rpt-sign-table">
+        {{-- ObjectNote --}}
+        @if(!empty($objectForms['ObjectNote']['exam']['note']))
+        <div class="soap-note">
+            <div class="soap-note-title">Catatan Objektif</div>
+            {{ $objectForms['ObjectNote']['exam']['note'] }}
+        </div>
+        @endif
+
+        {{-- VitalSign --}}
+        @if(!empty($objectForms['VitalSign']['exam']))
+        @php $vs = $objectForms['VitalSign']['exam']; @endphp
+        <div class="lbl">Tanda Vital</div>
+        <table class="vitals-tbl">
             <tr>
-                <td style="width: 50%; vertical-align: bottom;">
-                    <div class="rpt-footer-note">
-                        Laporan dicetak secara elektronik<br>
-                        Dokumen resmi dari sistem WELLMED
+                @if(isset($vs['systolic']) || isset($vs['diastolic']))
+                <td class="vc">
+                    <div class="vc-lbl">Tekanan Darah</div>
+                    <div class="vc-val">{{ $vs['systolic'] ?? '-' }}<span class="vc-unit">/</span>{{ $vs['diastolic'] ?? '-' }} <span class="vc-unit">mmHg</span></div>
+                    @if(!empty($vs['blood_pressure_status']))
+                    @php
+                        $bpStatus = $vs['blood_pressure_status'];
+                        $bpClass  = $bpStatus === 'NORMAL' ? 'vb-ok' : (in_array($bpStatus, ['ELEVATED', 'PRE_HYPERTENSION']) ? 'vb-warn' : 'vb-danger');
+                        $bpLabel  = ucwords(strtolower(str_replace('_', ' ', $bpStatus)));
+                    @endphp
+                    <div><span class="vc-badge {{ $bpClass }}">{{ $bpLabel }}</span></div>
+                    @endif
+                </td>
+                @endif
+                @if(isset($vs['pulse_rate']))
+                <td class="vc">
+                    <div class="vc-lbl">Nadi</div>
+                    <div class="vc-val">{{ $vs['pulse_rate'] }} <span class="vc-unit">bpm</span></div>
+                </td>
+                @endif
+                @if(isset($vs['temperature']))
+                <td class="vc">
+                    <div class="vc-lbl">Suhu @if(!empty($vs['temperature_type']))({{ $vs['temperature_type'] }})@endif</div>
+                    <div class="vc-val">{{ $vs['temperature'] }} <span class="vc-unit">&deg;C</span></div>
+                    @if(!empty($vs['temperature_status']))
+                    @php $tClass = $vs['temperature_status'] === 'NORMAL' ? 'vb-ok' : 'vb-warn'; @endphp
+                    <div><span class="vc-badge {{ $tClass }}">{{ $vs['temperature_status'] }}</span></div>
+                    @endif
+                </td>
+                @endif
+            </tr>
+            <tr>
+                @if(isset($vs['respiration_rate']))
+                <td class="vc">
+                    <div class="vc-lbl">Pernapasan</div>
+                    <div class="vc-val">{{ $vs['respiration_rate'] }} <span class="vc-unit">/mnt</span></div>
+                </td>
+                @endif
+                @if(isset($vs['oxygen_saturation']))
+                <td class="vc">
+                    <div class="vc-lbl">Saturasi O&#x2082;</div>
+                    <div class="vc-val">{{ $vs['oxygen_saturation'] }} <span class="vc-unit">%</span></div>
+                    @if(!empty($vs['oxygen_status']))
+                    @php $oClass = $vs['oxygen_status'] === 'NORMAL' ? 'vb-ok' : 'vb-danger'; @endphp
+                    <div><span class="vc-badge {{ $oClass }}">{{ $vs['oxygen_status'] }}</span></div>
+                    @endif
+                </td>
+                @endif
+                @if(!empty($vs['loc']['name']))
+                <td class="vc">
+                    <div class="vc-lbl">Kesadaran</div>
+                    <div style="font-size:12px; font-weight:600; color:#2e3c52; margin-top:5px;">{{ $vs['loc']['name'] }}</div>
+                </td>
+                @endif
+            </tr>
+        </table>
+        @endif
+
+        {{-- PainScale --}}
+        @if(!empty($objectForms['PainScale']['exam']))
+        @php $ps = $objectForms['PainScale']['exam']; $pVal = intval($ps['rating_scale'] ?? 0); @endphp
+        <div class="scard">
+            <div class="scard-title">Skala Nyeri</div>
+            <table class="pain-bar-tbl">
+                <tr>
+                    @for($i = 1; $i <= 10; $i++)
+                    @php
+                        if ($i <= $pVal) {
+                            $pColor = $i <= 3 ? '#2a8a7a' : ($i <= 6 ? '#c47a20' : '#d04040');
+                        } else {
+                            $pColor = '#dde3ec';
+                        }
+                    @endphp
+                    <td style="background-color:{{ $pColor }}; width:10%;"></td>
+                    @endfor
+                    <td style="width:44px; text-align:right; padding-left:4px; vertical-align:middle;">
+                        <span class="pain-num">{{ $pVal }}</span><span class="pain-den"> / 10</span>
+                    </td>
+                </tr>
+            </table>
+            <div class="pain-cat">{{ $ps['scale_result'] ?? '-' }}</div>
+        </div>
+        @endif
+
+        {{-- Anthropometry --}}
+        @if(!empty($objectForms['Anthropometry']['exam']))
+        @php
+            $anth = $objectForms['Anthropometry']['exam'];
+            $anthItems = [];
+            if (isset($anth['weight']))              $anthItems[] = ['label' => 'Berat Badan',  'value' => $anth['weight'],             'unit' => 'kg', 'interp' => null];
+            if (isset($anth['height']))              $anthItems[] = ['label' => 'Tinggi Badan', 'value' => $anth['height'],             'unit' => 'cm', 'interp' => null];
+            if (isset($anth['bmi']))                 $anthItems[] = ['label' => 'BMI',          'value' => $anth['bmi'],                'unit' => '',   'interp' => $anth['bmi_category'] ?? null];
+            if (isset($anth['waist_circumference'])) $anthItems[] = ['label' => 'L. Pinggang',  'value' => $anth['waist_circumference'], 'unit' => 'cm', 'interp' => null];
+            if (isset($anth['hip_circumference']))   $anthItems[] = ['label' => 'L. Pinggul',   'value' => $anth['hip_circumference'],   'unit' => 'cm', 'interp' => null];
+            if (isset($anth['whr']))                 $anthItems[] = ['label' => 'WHR',           'value' => $anth['whr'],                'unit' => '',   'interp' => $anth['whr_risk'] ?? null];
+            if (isset($anth['ideal_weight']))        $anthItems[] = ['label' => 'BB Ideal',      'value' => $anth['ideal_weight'],       'unit' => 'kg', 'interp' => null];
+            $aChunks = array_chunk($anthItems, 3);
+        @endphp
+        <div class="lbl" style="margin-top:2px;">Antropometri</div>
+        <table class="anthro-tbl">
+            @foreach($aChunks as $aRow)
+            <tr>
+                @foreach($aRow as $a)
+                <td class="ac">
+                    <div class="ac-lbl">{{ $a['label'] }}</div>
+                    <div class="ac-val">{{ $a['value'] }} <span class="ac-unit">{{ $a['unit'] }}</span></div>
+                    @if(!empty($a['interp']))<div><span class="ac-interp">{{ $a['interp'] }}</span></div>@endif
+                </td>
+                @endforeach
+                @php for ($p = 0; $p < (3 - count($aRow)); $p++) echo '<td class="ac"></td>'; @endphp
+            </tr>
+            @endforeach
+        </table>
+        @endif
+
+        {{-- PhysicalExamination --}}
+        @if(!empty($objectForms['PhysicalExamination']['exam']))
+        @php
+            $pe = $objectForms['PhysicalExamination']['exam'];
+            $physExams = [];
+            foreach (['body_form', 'muscle_form', 'odontogram'] as $formKey) {
+                if (!empty($pe[$formKey]) && !empty($pe[$formKey]['data'])) {
+                    $physExams[] = [
+                        'type'      => $formKey,
+                        'label'     => $pe[$formKey]['label'] ?? $formKey,
+                        'image_url' => $pe[$formKey]['asset_url'] ?? '',
+                        'data'      => $pe[$formKey]['data'],
+                    ];
+                }
+            }
+        @endphp
+        @if(count($physExams) > 0)
+        <div class="lbl" style="margin-top:2px;">Pemeriksaan Fisik</div>
+        @foreach(array_chunk($physExams, 2) as $examPair)
+        <table style="width:100%; border-collapse:collapse; table-layout:fixed; margin-bottom:8px;">
+            <tr>
+                @foreach($examPair as $examIdx => $exam)
+                <td style="vertical-align:top; padding:0; {{ $examIdx === 0 && count($examPair) > 1 ? 'padding-right:4px;' : '' }}">
+                    <div class="phys-sub-hd">{{ $exam['label'] }}</div>
+                    <table style="width:100%; border-collapse:collapse;">
+                        <tr>
+                            @if($exam['image_url'])
+                            <td style="width:42%; vertical-align:top; padding:0; padding-right:8px;">
+                                <img src="{{ $exam['image_url'] }}" alt="{{ $exam['label'] }}" class="phys-img">
+                            </td>
+                            @endif
+                            <td style="vertical-align:top; padding:0;">
+                                <div style="border:1px solid #dde3ec; border-radius:4px;">
+                                    <table class="exam-tbl">
+                                        @foreach($exam['data'] as $anno)
+                                        <tr>
+                                            <td>{{ $anno['anatomy']['name'] ?? '-' }} @if(!empty($anno['coodinates']))<span style="font-size:9px; color:#9aa5b4;">({{ count($anno['coodinates']) }} titik)</span>@endif</td>
+                                            <td><span class="edot"></span>{{ $anno['condition'] ?? '-' }}</td>
+                                        </tr>
+                                        @endforeach
+                                    </table>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+                @endforeach
+                @if(count($examPair) === 1)<td style="width:50%; padding:0;"></td>@endif
+            </tr>
+        </table>
+        @endforeach
+        @endif
+        @endif
+
+        {{-- BasicDiagnose --}}
+        @if(!empty($objectForms['BasicDiagnose']))
+        <div class="lbl" style="margin-top:2px;">Diagnosa</div>
+        @foreach($objectForms['BasicDiagnose'] as $dx)
+        @php
+            $dxe      = $dx['exam'] ?? [];
+            $dxType   = $dxe['type'] ?? '';
+            $dxClass  = match($dxType) {
+                'PrimaryDiagnose'   => 'dt-p',
+                'InitialDiagnose'   => 'dt-a',
+                'SecondaryDiagnose' => 'dt-s',
+                default             => 'dt-s',
+            };
+            $dxLabel  = match($dxType) {
+                'PrimaryDiagnose'   => 'Primer',
+                'InitialDiagnose'   => 'Awal',
+                'SecondaryDiagnose' => 'Sekunder',
+                default             => 'Dx',
+            };
+        @endphp
+        <div class="diag-item">
+            <span class="dtype {{ $dxClass }}">{{ $dxLabel }}</span>
+            <span class="dcode">{{ $dxe['code'] ?? '-' }}</span>
+            <span class="dname">{{ $dxe['name'] ?? '-' }}</span>
+        </div>
+        @endforeach
+        @endif
+
+    </div>{{-- /section O --}}
+
+    <!-- ============================================================
+         A — ASSESSMENT
+         ============================================================ -->
+    <div class="section">
+        <div class="sec-hdr-a">
+            <table style="width:100%; border-collapse:collapse;">
+                <tr>
+                    <td style="vertical-align:middle; padding:0;">
+                        <span class="sec-badge sb-a">A</span>
+                        <span class="sec-title">Assessment</span>
+                    </td>
+                    <td style="text-align:right; vertical-align:middle; padding:0;">
+                        <span class="sec-sub">Diagnosa &amp; Tindakan</span>
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        {{-- AssessmentNote --}}
+        @if(!empty($assessForms['AssessmentNote']['exam']['note']))
+        <div class="soap-note">
+            <div class="soap-note-title">Catatan Assessment</div>
+            {{ $assessForms['AssessmentNote']['exam']['note'] }}
+        </div>
+        @endif
+
+        {{-- ClinicalTreatment --}}
+        @if(!empty($assessForms['ClinicalTreatment']))
+        <div class="lbl">Tindakan Klinis</div>
+        @foreach($assessForms['ClinicalTreatment'] as $tx)
+        @php $txe = $tx['exam'] ?? []; @endphp
+        <div class="tindakan-row">
+            @if(!empty($txe['result']) && $txe['result'] !== '-')
+            <span class="tx-res">{{ $txe['result'] }}</span>
+            @endif
+            <span class="tindakan-name">{{ $txe['name'] ?? '-' }}</span>
+            <span class="tindakan-ct">&times;{{ $txe['qty'] ?? '1' }}</span>
+            @if(!empty($txe['note']) && $txe['note'] !== '-')
+            <div style="font-size:10px; color:#5a6a80; font-style:italic; margin-top:2px;">{{ $txe['note'] }}</div>
+            @endif
+        </div>
+        @endforeach
+        @endif
+
+    </div>{{-- /section A --}}
+
+    <!-- ============================================================
+         P — PLAN
+         ============================================================ -->
+    <div class="section">
+        <div class="sec-hdr-p">
+            <table style="width:100%; border-collapse:collapse;">
+                <tr>
+                    <td style="vertical-align:middle; padding:0;">
+                        <span class="sec-badge sb-p">P</span>
+                        <span class="sec-title">Plan</span>
+                    </td>
+                    <td style="text-align:right; vertical-align:middle; padding:0;">
+                        <span class="sec-sub">Rencana Terapi</span>
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        {{-- PlanNote --}}
+        @if(!empty($planForms['PlanNote']['exam']['note']))
+        <div class="soap-note">
+            <div class="soap-note-title">Catatan Plan</div>
+            {{ $planForms['PlanNote']['exam']['note'] }}
+        </div>
+        @endif
+
+        {{-- BasicPrescription --}}
+        @if(!empty($planForms['BasicPrescription']))
+        <div class="lbl">Resep</div>
+        @foreach($planForms['BasicPrescription'] as $rx)
+        @php $rxe = $rx['exam'] ?? []; @endphp
+        <div class="rx-card">
+            <div class="rx-hdr">
+                <span class="rx-sym">R/</span>
+                <span class="rx-drug">{{ $rxe['name'] ?? '-' }}</span>
+            </div>
+            <div class="rx-body">
+                <table style="width:100%; border-collapse:collapse;">
+                    <tr>
+                        <td style="width:33.33%; vertical-align:top; padding:0; padding-right:8px;">
+                            <div class="rxf-lbl">Jumlah</div>
+                            <div class="rxf-val">{{ $rxe['qty'] ?? '-' }}</div>
+                        </td>
+                        <td style="width:33.33%; vertical-align:top; padding:0; padding-right:8px;">
+                            <div class="rxf-lbl">Waktu Minum</div>
+                            <div class="rxf-val">
+                                @if(!empty($rxe['dosage_instruction']['divided_times']))
+                                {{ implode(' · ', $rxe['dosage_instruction']['divided_times']) }}
+                                @else
+                                &mdash;
+                                @endif
+                            </div>
+                        </td>
+                        <td style="width:33.33%; vertical-align:top; padding:0;">
+                            <div class="rxf-lbl">Konsumsi</div>
+                            <div class="rxf-val">{{ $rxe['dosage_instruction']['consume_at']['value'] ?? '—' }}</div>
+                        </td>
+                    </tr>
+                </table>
+                @if(!empty($rxe['indication']) && $rxe['indication'] !== '-')
+                <div style="margin-top:7px; font-size:9.5px; color:#5a6a80; background-color:#f7f9fc; padding:4px 8px; border-radius:3px;">
+                    <span style="font-size:8px; color:#9aa5b4; text-transform:uppercase; letter-spacing:0.08em;">Indikasi:</span>
+                    {{ \Illuminate\Support\Str::limit($rxe['indication'], 200) }}
+                </div>
+                @endif
+            </div>
+        </div>
+        @endforeach
+        @endif
+
+    </div>{{-- /section P --}}
+
+    <!-- ============================================================
+         FOOTER / SIGNATURE
+         ============================================================ -->
+    <div class="footer">
+        <table style="width:100%; border-collapse:collapse;">
+            <tr>
+                <td style="width:55%; vertical-align:bottom; padding:0;">
+                    <div class="footer-note">
+                        Laporan ini dicetak secara elektronik dari sistem informasi medis.<br>
+                        Dokumen resmi &mdash; berlaku tanpa tanda tangan basah.<br>
+                        <span style="font-size:8px;">{{ $data['visit_registration']['visit_registration_code'] ?? '' }}</span>
                     </div>
                 </td>
-                <td style="width: 50%; text-align: right;">
-                    <div class="rpt-sig-block" style="display: inline-block;">
-                        <div style="font-size: 8px; color: #555; margin-bottom: 2px;">
-                            {{ $workspace['city'] ?? '' }}, {{ $visit_registration['visit_date'] ?? now()->format('d F Y') }}
-                        </div>
-                        <div class="rpt-sig-line"></div>
-                        <div class="rpt-sig-name">{{ $practitioner['name'] ?? '-' }}</div>
-                        <div class="rpt-sig-title">{{ $practitioner['profession'] ?? 'Dokter' }}@if(isset($practitioner['sip_number'])) | SIP: {{ $practitioner['sip_number'] }}@endif</div>
+                <td style="width:45%; text-align:center; vertical-align:bottom; padding:0;">
+                    <div class="sig-block">
+                        <div class="sig-date">@if(isset($data['workspace']['city']) && $data['workspace']['city']){{ $data['workspace']['city'] }}, @endif{{ $data['visit_registration']['visit_date'] ?? now()->format('d F Y') }}</div>
+                        <div style="height:100px;"></div>
+                        <div class="sig-line"></div>
+                        <div class="sig-name">{{ $data['practitioner']['name'] ?? '-' }}</div>
+                        <div class="sig-title">{{ $data['practitioner']['profession'] ?? 'Dokter' }}@if(isset($data['practitioner']['sip_number']) && $data['practitioner']['sip_number']) &nbsp;|&nbsp; SIP: {{ $data['practitioner']['sip_number'] }}@endif</div>
                     </div>
                 </td>
             </tr>
         </table>
     </div>
+
+    </div>{{-- /.body --}}
 
 </div>
 </body>
