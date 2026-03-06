@@ -93,7 +93,7 @@ class VisitRegistrationEmrExport
         $data = $this->loadDataFromVisitRegistration($visitRegistration);
 
         // Return HTML directly for debugging
-        return response()->view('wellmed::exports.emr.visit-registration', $data);
+        return response()->view('wellmed::exports.emr.visit-registration', ['data' => $data]);
     }
 
     /**
@@ -114,7 +114,7 @@ class VisitRegistrationEmrExport
         $data = $this->loadDataFromVisitRegistration($visitRegistration);
 
         // Generate PDF using DomPDF
-        $pdf = Pdf::loadView('wellmed::exports.emr.visit-registration', $data)
+        $pdf = Pdf::loadView('wellmed::exports.emr.visit-registration', ['data' => $data])
             ->setOptions([
                 'enable_php' => true,
                 'enable_remote' => true,
@@ -164,7 +164,7 @@ class VisitRegistrationEmrExport
         // Load all necessary data
         $data = $this->loadData($export);
         // Generate PDF using DomPDF
-        $pdf = Pdf::loadView('wellmed::exports.emr.visit-registration', $data)
+        $pdf = Pdf::loadView('wellmed::exports.emr.visit-registration', ['data' => $data])
             ->setOptions([
                 'enable_php' => true,
                 'enable_remote' => true,
