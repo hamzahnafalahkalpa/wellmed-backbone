@@ -307,7 +307,7 @@
     </div>
 
     <!-- ALLERGY ALERT BAR (conditional) -->
-    @if(!empty($data['soap']['subjectives']['forms']['Allergy']))
+    @if(!empty($data['soap']['subjectives']['forms']['Allergy']) && count($data['soap']['subjectives']['forms']['Allergy']) > 0)
     <div class="alert-bar">&#9888; Peringatan Alergi &mdash; pasien memiliki riwayat alergi obat, lihat detail di bawah</div>
     @endif
 
@@ -355,7 +355,7 @@
         </div>
 
         {{-- SubjectNote --}}
-        @if(!empty($subjectForms['SubjectNote']['exam']['note']))
+        @if(isset($subjectForms['SubjectNote']) && !empty($subjectForms['SubjectNote']['exam']['note']))
         <div class="soap-note">
             <div class="soap-note-title">Catatan Subjektif</div>
             {{ $subjectForms['SubjectNote']['exam']['note'] }}
@@ -363,7 +363,7 @@
         @endif
 
         {{-- Symptoms --}}
-        @if(!empty($subjectForms['Symptom']))
+        @if(isset($subjectForms['Symptom']) && is_array($subjectForms['Symptom']) && count($subjectForms['Symptom']) > 0)
         <div class="scard">
             <div class="scard-title">Keluhan / Gejala</div>
             @foreach($subjectForms['Symptom'] as $symptom)
@@ -373,7 +373,7 @@
         @endif
 
         {{-- Allergies --}}
-        @if(!empty($subjectForms['Allergy']))
+        @if(isset($subjectForms['Allergy']) && is_array($subjectForms['Allergy']) && count($subjectForms['Allergy']) > 0)
         <div class="scard">
             <div class="scard-title-r">&#9888; Riwayat Alergi</div>
             @foreach($subjectForms['Allergy'] as $allergy)
@@ -418,7 +418,7 @@
         @endif
 
         {{-- PatientFamilyIllness — personal history vs family --}}
-        @if(!empty($subjectForms['PatientFamilyIllness']))
+        @if(isset($subjectForms['PatientFamilyIllness']) && is_array($subjectForms['PatientFamilyIllness']) && count($subjectForms['PatientFamilyIllness']) > 0)
         @php
             $histItems   = array_values(array_filter($subjectForms['PatientFamilyIllness'], fn($f) => ($f['exam']['type'] ?? '') === 'HistoryIllness'));
             $familyItems = array_values(array_filter($subjectForms['PatientFamilyIllness'], fn($f) => ($f['exam']['type'] ?? '') === 'FamilyIllness'));
@@ -483,7 +483,7 @@
         </div>
 
         {{-- ObjectNote --}}
-        @if(!empty($objectForms['ObjectNote']['exam']['note']))
+        @if(isset($objectForms['ObjectNote']) && !empty($objectForms['ObjectNote']['exam']['note']))
         <div class="soap-note">
             <div class="soap-note-title">Catatan Objektif</div>
             {{ $objectForms['ObjectNote']['exam']['note'] }}
@@ -491,7 +491,7 @@
         @endif
 
         {{-- VitalSign --}}
-        @if(!empty($objectForms['VitalSign']['exam']))
+        @if(isset($objectForms['VitalSign']) && !empty($objectForms['VitalSign']['exam']))
         @php $vs = $objectForms['VitalSign']['exam']; @endphp
         <div class="lbl">Tanda Vital</div>
         <table class="vitals-tbl">
@@ -555,7 +555,7 @@
         @endif
 
         {{-- PainScale --}}
-        @if(!empty($objectForms['PainScale']['exam']))
+        @if(isset($objectForms['PainScale']) && !empty($objectForms['PainScale']['exam']))
         @php $ps = $objectForms['PainScale']['exam']; $pVal = intval($ps['rating_scale'] ?? 0); @endphp
         <div class="scard">
             <div class="scard-title">Skala Nyeri</div>
@@ -581,7 +581,7 @@
         @endif
 
         {{-- Anthropometry --}}
-        @if(!empty($objectForms['Anthropometry']['exam']))
+        @if(isset($objectForms['Anthropometry']) && !empty($objectForms['Anthropometry']['exam']))
         @php
             $anth = $objectForms['Anthropometry']['exam'];
             $anthItems = [];
@@ -612,7 +612,7 @@
         @endif
 
         {{-- PhysicalExamination --}}
-        @if(!empty($objectForms['PhysicalExamination']['exam']))
+        @if(isset($objectForms['PhysicalExamination']) && !empty($objectForms['PhysicalExamination']['exam']))
         @php
             $pe = $objectForms['PhysicalExamination']['exam'];
             $physExams = [];
@@ -666,7 +666,7 @@
         @endif
 
         {{-- BasicDiagnose --}}
-        @if(!empty($objectForms['BasicDiagnose']))
+        @if(isset($objectForms['BasicDiagnose']) && is_array($objectForms['BasicDiagnose']) && count($objectForms['BasicDiagnose']) > 0)
         <div class="lbl" style="margin-top:2px;">Diagnosa</div>
         @foreach($objectForms['BasicDiagnose'] as $dx)
         @php
@@ -714,7 +714,7 @@
         </div>
 
         {{-- AssessmentNote --}}
-        @if(!empty($assessForms['AssessmentNote']['exam']['note']))
+        @if(isset($assessForms['AssessmentNote']) && !empty($assessForms['AssessmentNote']['exam']['note']))
         <div class="soap-note">
             <div class="soap-note-title">Catatan Assessment</div>
             {{ $assessForms['AssessmentNote']['exam']['note'] }}
@@ -722,7 +722,7 @@
         @endif
 
         {{-- ClinicalTreatment --}}
-        @if(!empty($assessForms['ClinicalTreatment']))
+        @if(isset($assessForms['ClinicalTreatment']) && is_array($assessForms['ClinicalTreatment']) && count($assessForms['ClinicalTreatment']) > 0)
         <div class="lbl">Tindakan Klinis</div>
         @foreach($assessForms['ClinicalTreatment'] as $tx)
         @php $txe = $tx['exam'] ?? []; @endphp
@@ -760,7 +760,7 @@
         </div>
 
         {{-- PlanNote --}}
-        @if(!empty($planForms['PlanNote']['exam']['note']))
+        @if(isset($planForms['PlanNote']) && !empty($planForms['PlanNote']['exam']['note']))
         <div class="soap-note">
             <div class="soap-note-title">Catatan Plan</div>
             {{ $planForms['PlanNote']['exam']['note'] }}
@@ -768,7 +768,7 @@
         @endif
 
         {{-- BasicPrescription --}}
-        @if(!empty($planForms['BasicPrescription']))
+        @if(isset($planForms['BasicPrescription']) && is_array($planForms['BasicPrescription']) && count($planForms['BasicPrescription']) > 0)
         <div class="lbl">Resep</div>
         @foreach($planForms['BasicPrescription'] as $rx)
         @php $rxe = $rx['exam'] ?? []; @endphp
@@ -828,7 +828,7 @@
                 </td>
                 <td style="width:45%; text-align:center; vertical-align:bottom; padding:0;">
                     <div class="sig-block">
-                        <div class="sig-date">@if(isset($data['workspace']['city']) && $data['workspace']['city']){{ $data['workspace']['city'] }}, @endif{{ $data['visit_registration']['visit_date'] ?? now()->format('d F Y') }}</div>
+                        <div class="sig-date">{{ $data['visit_registration']['visit_date'] ?? now()->format('d F Y') }}</div>
                         <div style="height:100px;"></div>
                         <div class="sig-line"></div>
                         <div class="sig-name">{{ $data['practitioner']['name'] ?? '-' }}</div>
