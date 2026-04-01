@@ -1,6 +1,6 @@
 <?php
 
-namespace Projects\Hq\Models;
+namespace Projects\WellmedBackbone\Models;
 
 use Hanafalah\LaravelHasProps\Concerns\HasProps;
 use Hanafalah\LaravelSupport\Models\Unicode\Unicode;
