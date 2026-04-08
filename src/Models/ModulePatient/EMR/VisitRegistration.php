@@ -47,7 +47,7 @@ class VisitRegistration extends EMRVisitRegistration
      * @var array
      */
     protected array $elastic_config = [
-        'enabled' => false,
+        'enabled' => true,
         'index_name' => 'visit_registration',
         'variables' => [
             // === Core Identity Fields ===
