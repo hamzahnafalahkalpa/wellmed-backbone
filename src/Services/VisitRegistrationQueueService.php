@@ -217,6 +217,74 @@ class VisitRegistrationQueueService
     }
 
     /**
+     * Reserve next queue number without incrementing the counter.
+     * Returns the number that WILL be assigned.
+     */
+    public function reserveNextQueueNumber(?int $tenantId = null): int
+    {
+        try {
+            $tenantId = $tenantId ?? tenancy()->tenant->getKey();
+            $document = $this->getOrCreateQueueDocument($tenantId);
+            $nextNumber = ($document['count'] ?? 0) + 1;
+
+            Log::channel('elasticsearch')->debug('Queue number reserved', [
+                'tenant_id' => $tenantId,
+                'reserved_number' => $nextNumber
+            ]);
+
+            return $nextNumber;
+        } catch (\Throwable $e) {
+            Log::channel('elasticsearch')->error('Failed to reserve queue number', [
+                'error' => $e->getMessage(),
+                'tenant_id' => $tenantId ?? null
+            ]);
+
+            // Fallback: return timestamp-based number to avoid duplicates
+            return (int) now()->format('His');
+        }
+    }
+
+    /**
+     * Confirm and commit the queue number by incrementing the counter.
+     * Should be called after successful registration.
+     */
+    public function confirmQueueNumber(?int $tenantId = null): bool
+    {
+        try {
+            $tenantId = $tenantId ?? tenancy()->tenant->getKey();
+
+            // Get current document
+            $document = $this->getOrCreateQueueDocument($tenantId);
+
+            // Increment count
+            $newCount = ($document['count'] ?? 0) + 1;
+
+            // Update document
+            $document['count'] = $newCount;
+            $document['updated_at'] = now()->toIso8601String();
+
+            $result = $this->storeDocument($document, $tenantId);
+
+            if ($result['success']) {
+                Log::channel('elasticsearch')->debug('Queue number confirmed', [
+                    'tenant_id' => $tenantId,
+                    'queue_number' => $newCount
+                ]);
+            }
+
+            return $result['success'];
+
+        } catch (\Throwable $e) {
+            Log::channel('elasticsearch')->error('Failed to confirm queue number', [
+                'error' => $e->getMessage(),
+                'tenant_id' => $tenantId ?? null
+            ]);
+
+            return false;
+        }
+    }
+
+    /**
      * Store document in Elasticsearch.
      */
     protected function storeDocument(array $document, int $tenantId): array
