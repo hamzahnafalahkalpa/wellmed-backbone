@@ -3,7 +3,7 @@
 use Hanafalah\LaravelPermission\Enums\Permission\Type;
 
 return [
-    'name'       => 'Kepegawaian', 
+    'name'       => 'Kepegawaian',
     'alias'      => 'api.employee-management',
     'icon'       => 'clarity:employee-group-solid',
     'type'       => Type::MENU->value,

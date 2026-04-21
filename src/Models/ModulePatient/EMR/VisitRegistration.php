@@ -48,6 +48,7 @@ class VisitRegistration extends EMRVisitRegistration
      */
     protected array $elastic_config = [
         'enabled' => true,
+        'sync' => true,  // 👈 SYNC MODE: Update langsung tanpa queue
         'index_name' => 'visit_registration',
         'variables' => [
             // === Core Identity Fields ===
